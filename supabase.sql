@@ -13,7 +13,6 @@ declare
   c_name text;
   c_code text;
   u_id uuid := auth.uid();
-  clue_count integer;
 begin
 
   if u_id is null then
@@ -21,9 +20,6 @@ begin
   end if;
 
 
-  /*
-    Procura primeiro a campanha oficial.
-  */
   select
     id,
     name,
@@ -38,10 +34,6 @@ begin
   limit 1;
 
 
-  /*
-    Se já existir alguma campanha criada
-    no projeto, reutiliza a mais antiga.
-  */
   if c_id is null then
 
     select
@@ -59,10 +51,6 @@ begin
   end if;
 
 
-  /*
-    Se não existir nenhuma campanha,
-    cria a única campanha oficial.
-  */
   if c_id is null then
 
     c_name :=
@@ -92,10 +80,6 @@ begin
   end if;
 
 
-  /*
-    Registra o usuário anônimo como membro
-    da única mesa.
-  */
   insert into public.players(
     user_id,
     campaign_id,
@@ -116,19 +100,11 @@ begin
     display_name = 'Jogador';
 
 
-  /*
-    Cria as pistas e objetos iniciais
-    apenas se a mesa ainda estiver vazia.
-  */
-  select
-    count(*)
-  into
-    clue_count
-  from public.clues
-  where campaign_id = c_id;
-
-
-  if clue_count = 0 then
+  if not exists(
+    select 1
+    from public.clues
+    where campaign_id = c_id
+  ) then
 
     perform public.seed_campaign(
       c_id,
@@ -146,7 +122,6 @@ begin
 
 end;
 $$;
-
 
 grant execute
 on function public.enter_main_campaign()
