@@ -55,16 +55,142 @@ async function bootstrap(){
 }
 
 /* ---------- setup modal ---------- */
-const setupModal=$("#setupModal"), joinForm=$("#joinForm"), createForm=$("#createForm");
-$("#joinTab").addEventListener("click",()=>toggleSetupTab("join")); $("#createTab").addEventListener("click",()=>toggleSetupTab("create"));
-function toggleSetupTab(tab){ $("#joinTab").classList.toggle("active",tab==="join"); $("#createTab").classList.toggle("active",tab==="create"); joinForm.hidden=tab!=="join"; createForm.hidden=tab!=="create"; }
-function closeSetup(){ setupModal.classList.remove("open"); setupModal.setAttribute("aria-hidden","true"); }
-function openSetup(){ setupModal.classList.add("open"); setupModal.setAttribute("aria-hidden","false"); }
-$("#localModeBtn").addEventListener("click",()=>{ appMode="local"; campaignId="local"; campaignCode="LOCAL"; playerName=$("#joinName").value.trim()||"Mesa"; playerRole="player"; localStorage.setItem(localKeys.session,JSON.stringify({campaignId,campaignCode,playerName,playerRole})); loadLocalData(); closeSetup(); toast("Modo local ativo — o quadro ficará neste navegador."); });
-joinForm.addEventListener("submit",async e=>{e.preventDefault(); if(!supabaseReady){toast("Configure o Supabase primeiro ou use o modo local.");return;} const code=$("#joinCode").value.trim().toUpperCase(), name=$("#joinName").value.trim()||"Jogador"; try{ const {data,error}=await supabase.rpc("join_campaign",{campaign_code:code,p_display_name:name}); if(error) throw error; const row=data?.[0]; if(!row)throw new Error("CAMPAIGN_NOT_FOUND"); campaignId=row.campaign_id; campaignCode=code; playerName=name; playerRole=row.player_role; localStorage.setItem(localKeys.session,JSON.stringify({campaignId,campaignCode,playerName,playerRole})); await loadCampaignData(); closeSetup(); subscribeRealtime(); toast(`Você entrou em ${row.campaign_name}.`);}catch(err){console.error(err);toast(`Não foi possível entrar: ${err.message||"código inválido"}`);}});
-createForm.addEventListener("submit",async e=>{e.preventDefault(); if(!supabaseReady){toast("Configure o Supabase primeiro.");return;} const name=$("#createName").value.trim()||"O Som que Não Deveria Existir", player=$("#createPlayerName").value.trim()||"Mestre"; try{const {data,error}=await supabase.rpc("create_campaign",{campaign_name:name,p_display_name:player}); if(error)throw error; const row=data?.[0]; if(!row)throw new Error("CREATE_FAILED"); campaignId=row.campaign_id; campaignCode=row.campaign_code; playerName=player; playerRole="master"; localStorage.setItem(localKeys.session,JSON.stringify({campaignId,campaignCode,playerName,playerRole})); await loadCampaignData(); closeSetup(); subscribeRealtime(); toast(`Mesa criada. Código: ${campaignCode}`); $("#setupResult").hidden=false; $("#setupResult").textContent=`Código da mesa: ${campaignCode}`;}catch(err){console.error(err);toast(`Não foi possível criar a mesa: ${err.message||"erro desconhecido"}`);}});
-$("#sessionButton").addEventListener("click",()=>openSetup());
+/* ---------- setup modal ---------- */
 
+const setupModal = $("#setupModal");
+const joinForm = $("#joinForm");
+
+function closeSetup(){
+  setupModal.classList.remove("open");
+  setupModal.setAttribute("aria-hidden","true");
+}
+
+function openSetup(){
+  setupModal.classList.add("open");
+  setupModal.setAttribute("aria-hidden","false");
+
+  $("#joinName").value = playerName || "";
+
+  setTimeout(() => {
+    $("#joinName").focus();
+  }, 50);
+}
+
+$("#localModeBtn").addEventListener("click", () => {
+
+  appMode = "local";
+  campaignId = "local";
+  campaignCode = "LOCAL";
+
+  playerName =
+    $("#joinName").value.trim() || "Jogador";
+
+  playerRole = "player";
+
+  localStorage.setItem(
+    localKeys.session,
+    JSON.stringify({
+      campaignId,
+      campaignCode,
+      playerName,
+      playerRole
+    })
+  );
+
+  loadLocalData();
+  closeSetup();
+
+  toast(
+    "Modo local ativo — o quadro ficará neste navegador."
+  );
+});
+
+joinForm.addEventListener("submit", async e => {
+
+  e.preventDefault();
+
+  const name =
+    $("#joinName").value.trim() || "Jogador";
+
+  if(!supabaseReady){
+    toast(
+      "Configure o Supabase primeiro ou use o modo local."
+    );
+    return;
+  }
+
+  try{
+
+    const {
+      data,
+      error
+    } = await supabase.rpc(
+      "enter_main_campaign",
+      {
+        p_display_name: name
+      }
+    );
+
+    if(error){
+      throw error;
+    }
+
+    const row = data?.[0];
+
+    if(!row){
+      throw new Error(
+        "MAIN_CAMPAIGN_NOT_FOUND"
+      );
+    }
+
+    campaignId =
+      row.campaign_id;
+
+    campaignCode =
+      row.campaign_code;
+
+    playerName =
+      name;
+
+    playerRole =
+      "player";
+
+    localStorage.setItem(
+      localKeys.session,
+      JSON.stringify({
+        campaignId,
+        campaignCode,
+        playerName,
+        playerRole
+      })
+    );
+
+    await loadCampaignData();
+
+    closeSetup();
+
+    subscribeRealtime();
+
+    toast(
+      "Você entrou na investigação."
+    );
+
+  }catch(err){
+
+    console.error(err);
+
+    toast(
+      `Não foi possível entrar: ${
+        err.message || "erro desconhecido"
+      }`
+    );
+  }
+});
+
+$("#sessionButton").addEventListener(
+  "click",
+  () => openSetup()
+);
 /* ---------- local dataset ---------- */
 const seedLocal=[
  {id:"sangue",title:"SANGUE",clue_type:"PISTA",context:"Praça / condição do ritual",notes:"",x:6,y:13,rotation:0},
