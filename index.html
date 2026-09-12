@@ -9,10 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  >
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
 </head>
@@ -43,16 +40,6 @@
     </nav>
 
     <div class="topbar-actions">
-
-      <button
-        class="session-chip"
-        id="sessionButton"
-        type="button"
-        data-sound="panel"
-      >
-        <span class="dot"></span>
-        <span id="sessionLabel">ENTRAR</span>
-      </button>
 
       <button
         class="sound-toggle"
@@ -209,7 +196,9 @@
             −
           </button>
 
-          <strong id="zoomLabel">100%</strong>
+          <strong id="zoomLabel">
+            100%
+          </strong>
 
           <button
             class="zoom-btn"
@@ -225,17 +214,26 @@
 
         <div class="board-status">
 
-          <b id="cardCount">0</b>
+          <b id="cardCount">
+            0
+          </b>
+
           pistas
 
           <i></i>
 
-          <b id="connectionCount">0</b>
+          <b id="connectionCount">
+            0
+          </b>
+
           conexões
 
           <i></i>
 
-          <b id="onlineCount">—</b>
+          <b id="onlineCount">
+            — 
+          </b>
+
           online
 
         </div>
@@ -252,7 +250,7 @@
           </span>
 
           <span id="syncStatus">
-            modo local
+            conectando...
           </span>
 
         </div>
@@ -260,7 +258,10 @@
 
         <div class="evidence-board" id="evidenceBoard">
 
-          <div class="board-canvas" id="boardCanvas">
+          <div
+            class="board-canvas"
+            id="boardCanvas"
+          >
 
             <svg
               class="connections"
@@ -282,15 +283,21 @@
 
 
       <div class="board-note">
+
         <strong>ATENÇÃO:</strong>
+
         as informações do quadro pertencem à investigação.
         Anotações são compartilhadas com a mesa quando o Supabase estiver conectado.
+
       </div>
 
     </section>
 
 
-    <section class="section characters-section" id="personagens">
+    <section
+      class="section characters-section"
+      id="personagens"
+    >
 
       <div class="section-heading">
 
@@ -301,7 +308,9 @@
             ARQUIVO HUMANO
           </p>
 
-          <h2>PERSONAGENS</h2>
+          <h2>
+            PERSONAGENS
+          </h2>
 
         </div>
 
@@ -322,7 +331,6 @@
           ></div>
 
           <div class="character-overlay"></div>
-
 
           <div class="character-info">
 
@@ -372,7 +380,6 @@
 
           <div class="character-overlay"></div>
 
-
           <div class="character-info">
 
             <span class="card-type">
@@ -421,7 +428,6 @@
 
           <div class="character-overlay"></div>
 
-
           <div class="character-info">
 
             <span class="card-type">
@@ -462,7 +468,10 @@
     </section>
 
 
-    <section class="section locations-section" id="locais">
+    <section
+      class="section locations-section"
+      id="locais"
+    >
 
       <div class="section-heading">
 
@@ -639,7 +648,10 @@
     </section>
 
 
-    <section class="section objects-section" id="objetos">
+    <section
+      class="section objects-section"
+      id="objetos"
+    >
 
       <div class="section-heading">
 
@@ -667,7 +679,10 @@
     </section>
 
 
-    <section class="section documents-section" id="documentos">
+    <section
+      class="section documents-section"
+      id="documentos"
+    >
 
       <div class="section-heading">
 
@@ -689,30 +704,18 @@
 
       <div class="documents-grid">
 
-
         <button
           class="document-card"
           data-document="report"
           type="button"
           data-sound="document"
         >
-
-          <span>
-            DOCUMENTO 17
-          </span>
-
-          <strong>
-            RELATÓRIO ENCONTRADO
-          </strong>
-
+          <span>DOCUMENTO 17</span>
+          <strong>RELATÓRIO ENCONTRADO</strong>
           <small>
             Registro acústico + preparação + manifestação
           </small>
-
-          <b>
-            ABRIR ↗
-          </b>
-
+          <b>ABRIR ↗</b>
         </button>
 
 
@@ -722,23 +725,12 @@
           type="button"
           data-sound="document"
         >
-
-          <span>
-            ANOTAÇÃO
-          </span>
-
-          <strong>
-            A FRASE DO QUINTO
-          </strong>
-
+          <span>ANOTAÇÃO</span>
+          <strong>A FRASE DO QUINTO</strong>
           <small>
             Uma instrução curta que contradiz o protocolo
           </small>
-
-          <b>
-            ABRIR ↗
-          </b>
-
+          <b>ABRIR ↗</b>
         </button>
 
 
@@ -748,23 +740,12 @@
           type="button"
           data-sound="document"
         >
-
-          <span>
-            CAIXA DE PROVAS
-          </span>
-
-          <strong>
-            MAPA + RECIBOS
-          </strong>
-
+          <span>CAIXA DE PROVAS</span>
+          <strong>MAPA + RECIBOS</strong>
           <small>
             Locais, horários e objetos recuperados
           </small>
-
-          <b>
-            ABRIR ↗
-          </b>
-
+          <b>ABRIR ↗</b>
         </button>
 
       </div>
@@ -772,7 +753,10 @@
     </section>
 
 
-    <section class="section events-section" id="eventos">
+    <section
+      class="section events-section"
+      id="eventos"
+    >
 
       <div class="section-heading">
 
@@ -797,15 +781,11 @@
 
         <article>
 
-          <time>
-            02:12
-          </time>
+          <time>02:12</time>
 
           <div>
 
-            <span>
-              01
-            </span>
+            <span>01</span>
 
             <h3>
               SINO REGISTRADO
@@ -838,15 +818,11 @@
 
         <article>
 
-          <time>
-            02:16
-          </time>
+          <time>02:16</time>
 
           <div>
 
-            <span>
-              02
-            </span>
+            <span>02</span>
 
             <h3>
               RITUAL PREPARADO
@@ -879,15 +855,11 @@
 
         <article>
 
-          <time>
-            02:17
-          </time>
+          <time>02:17</time>
 
           <div>
 
-            <span>
-              03
-            </span>
+            <span>03</span>
 
             <h3>
               SANGUE ENCONTRADO
@@ -920,15 +892,11 @@
 
         <article>
 
-          <time>
-            02:20
-          </time>
+          <time>02:20</time>
 
           <div>
 
-            <span>
-              04
-            </span>
+            <span>04</span>
 
             <h3>
               MANIFESTAÇÃO
@@ -966,87 +934,6 @@
   </main>
 
 
-  <!-- ==========================================================
-       ENTRADA NA ÚNICA MESA COMPARTILHADA
-       ========================================================== -->
-
-  <div
-    class="setup-modal open"
-    id="setupModal"
-    aria-hidden="false"
-  >
-
-    <div class="modal-backdrop"></div>
-
-    <article class="setup-card">
-
-      <span class="eyebrow">
-        <span></span>
-        MESA VIRTUAL
-      </span>
-
-
-      <h2>
-        ENTRAR NA <em>INVESTIGAÇÃO</em>
-      </h2>
-
-
-      <p id="setupMessage">
-        Esta investigação possui uma única mesa compartilhada.
-        Digite seu nome para entrar.
-      </p>
-
-
-      <form id="joinForm">
-
-        <label>
-          SEU NOME
-
-          <input
-            id="joinName"
-            maxlength="30"
-            autocomplete="name"
-            placeholder="Como a mesa deve te chamar?"
-            required
-          >
-
-        </label>
-
-
-        <button
-          class="primary-btn"
-          type="submit"
-        >
-          ENTRAR NA INVESTIGAÇÃO →
-        </button>
-
-      </form>
-
-
-      <div
-        class="setup-result"
-        id="setupResult"
-        hidden
-      ></div>
-
-
-      <button
-        class="local-mode-btn"
-        id="localModeBtn"
-        type="button"
-      >
-        CONTINUAR EM MODO LOCAL
-      </button>
-
-    </article>
-
-  </div>
-
-
-  <!-- ==========================================================
-       MODAL DE DOCUMENTOS
-       ========================================================== -->
-
   <div
     class="document-modal"
     id="documentModal"
@@ -1080,10 +967,6 @@
 
   </div>
 
-
-  <!-- ==========================================================
-       MODAL DE EDIÇÃO
-       ========================================================== -->
 
   <div
     class="editor-modal"
@@ -1156,10 +1039,6 @@
   </div>
 
 
-  <!-- ==========================================================
-       NOVA PISTA
-       ========================================================== -->
-
   <div
     class="new-card-modal"
     id="newCardModal"
@@ -1190,7 +1069,6 @@
         ADICIONAR AO QUADRO
       </h2>
 
-
       <label>
 
         <span>
@@ -1204,7 +1082,6 @@
         >
 
       </label>
-
 
       <label>
 
@@ -1220,7 +1097,6 @@
 
       </label>
 
-
       <label>
 
         <span>
@@ -1234,7 +1110,6 @@
         >
 
       </label>
-
 
       <div class="editor-actions">
 
@@ -1253,10 +1128,6 @@
 
   </div>
 
-
-  <!-- ==========================================================
-       SOM
-       ========================================================== -->
 
   <aside
     class="sound-panel"
@@ -1332,7 +1203,7 @@
     </span>
 
     <span id="footerState">
-      MODO LOCAL
+      CONECTANDO...
     </span>
 
   </footer>
