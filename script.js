@@ -1,220 +1,4464 @@
-/* ---------- config / startup ---------- */
+/* ============================================================
+   O SOM QUE NÃO DEVERIA EXISTIR
+   MURAL VIRTUAL — MESA ÚNICA / INTERFACE ROBUSTA
+   ============================================================ */
 
-function hasSupabaseConfig(){
+(() => {
+  "use strict";
 
-  return Boolean(
-    config.url &&
-    config.anonKey &&
-    !String(config.url).startsWith("COLE_AQUI") &&
-    !String(config.anonKey).startsWith("COLE_AQUI")
-  );
-}
+  /* ============================================================
+     UTILIDADES
+     ============================================================ */
+
+  const $ = (selector, root = document) =>
+    root.querySelector(selector);
+
+  const $$ = (selector, root = document) =>
+    [...root.querySelectorAll(selector)];
 
 
-function setSync(label, connected){
+  function on(selector, event, callback) {
+    const element = $(selector);
 
-  const syncStatus =
-    $("#syncStatus");
-
-  if(syncStatus){
-    syncStatus.textContent = label;
+    if (element) {
+      element.addEventListener(event, callback);
+    }
   }
 
 
-  const footerState =
-    $("#footerState");
-
-  if(footerState){
-
-    footerState.textContent =
-      connected
-        ? "MESA COMPARTILHADA"
-        : "MODO LOCAL";
-
+  function escapeHtml(value) {
+    return String(value ?? "").replace(
+      /[&<>'"]/g,
+      char =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "'": "&#39;",
+          '"': "&quot;"
+        })[char]
+    );
   }
-}
 
 
-/* ---------- Supabase ---------- */
+  /* ============================================================
+     CONFIGURAÇÃO
+     ============================================================ */
 
-async function initSupabase(){
+  const config =
+    window.SUPABASE_CONFIG || {};
 
-  if(
-    !hasSupabaseConfig() ||
-    !window.supabase?.createClient
-  ){
+  const localKeys = {
+    cards: "sinosLocalCards",
+    connections: "sinosConnections",
+    objects: "sinosObjects",
+    notes: "sinosNotes",
+    sounds: "sinosUISounds"
+  };
 
-    appMode = "local";
 
-    setSync(
-      "modo local",
-      false
+  let supabase = null;
+  let supabaseReady = false;
+  let realtimeChannel = null;
+
+  let appMode = "local";
+
+  let campaignId = null;
+  let campaignCode = "LOCAL";
+
+  let currentUser = null;
+
+
+  let cards = [];
+  let objects = [];
+  let connections = [];
+
+  let selectedCard = null;
+  let draggingCard = null;
+  let dragMoved = false;
+
+  let connectingMode = false;
+  let zoom = 1;
+
+  let editingNote = null;
+
+  let toastTimer = null;
+  let noteTimer = null;
+
+
+  /* ============================================================
+     SEMENTE LOCAL
+     ============================================================ */
+
+  const seedCards = [
+    {
+      id: "sangue",
+      title: "SANGUE",
+      clue_type: "PISTA",
+      context: "Praça / condição do ritual",
+      notes: "",
+      x: 6,
+      y: 13,
+      rotation: 0
+    },
+
+    {
+      id: "medo",
+      title: "MEDO",
+      clue_type: "PISTA",
+      context: "Atenção / amplificação",
+      notes: "",
+      x: 39,
+      y: 8,
+      rotation: 0
+    },
+
+    {
+      id: "grupo",
+      title: "GRUPO",
+      clue_type: "PISTA",
+      context: "Pessoas coordenadas",
+      notes: "",
+      x: 70,
+      y: 16,
+      rotation: 0
+    },
+
+    {
+      id: "fragmentos",
+      title: "FRAGMENTOS",
+      clue_type: "PISTA",
+      context: "Metal / ressonância",
+      notes: "",
+      x: 13,
+      y: 59,
+      rotation: 0
+    },
+
+    {
+      id: "sino",
+      title: "SINO ANTECIPADO",
+      clue_type: "ANOMALIA",
+      context: "Registro acústico",
+      notes: "",
+      x: 45,
+      y: 49,
+      rotation: 0
+    },
+
+    {
+      id: "quinto",
+      title: "QUINTO CÍRCULO",
+      clue_type: "PISTA",
+      context: "Símbolos / ritual",
+      notes: "",
+      x: 72,
+      y: 58,
+      rotation: 0
+    },
+
+    {
+      id: "sombra",
+      title: "SOMBRA SEM OBJETO",
+      clue_type: "MANIFESTAÇÃO",
+      context: "Presença visual",
+      notes: "",
+      x: 37,
+      y: 78,
+      rotation: 0
+    }
+  ];
+
+
+  const seedObjects = [
+    {
+      id: "radio",
+      name: "RÁDIO",
+      object_type: "ÁUDIO",
+      description:
+        "Um rádio que perdeu sinal por um segundo.",
+      content:
+        "O aparelho registra um ruído impossível de localizar.",
+      x: 8,
+      y: 7
+    },
+
+    {
+      id: "fragmento-obj",
+      name: "FRAGMENTO",
+      object_type: "EVIDÊNCIA",
+      description:
+        "Peça de metal escuro sem ferrugem.",
+      content:
+        "Reage ao sangue e vibra perto de outro fragmento.",
+      x: 91,
+      y: 15
+    },
+
+    {
+      id: "chave",
+      name: "CHAVE",
+      object_type: "OBJETO",
+      description:
+        "Chave de ferro escuro.",
+      content:
+        "Há indícios de que abre uma porta associada à escola municipal.",
+      x: 87,
+      y: 80
+    },
+
+    {
+      id: "foto",
+      name: "FOTOGRAFIA",
+      object_type: "DOCUMENTO",
+      description:
+        "Fotografia de uma praça vazia.",
+      content:
+        "Três fotografias mostram círculos de sangue em locais diferentes.",
+      x: 7,
+      y: 82
+    },
+
+    {
+      id: "mapa",
+      name: "MAPA",
+      object_type: "DOCUMENTO",
+      description:
+        "Mapa com cinco locais marcados.",
+      content:
+        "Praça Santa Cecília, Apartamento 18, Túnel ferroviário, Escola municipal e Torre sem nome.",
+      x: 91,
+      y: 57
+    }
+  ];
+
+
+  /* ============================================================
+     SOM
+     ============================================================ */
+
+  let audioContext = null;
+
+  let uiSoundsEnabled =
+    localStorage.getItem(
+      localKeys.sounds
+    ) !== "false";
+
+
+  const frequencies = {
+    D3: 146.83,
+    F3: 174.61,
+    A3: 220,
+    C4: 261.63,
+    D4: 293.66,
+    F4: 349.23,
+    A4: 440,
+    C5: 523.25,
+    D5: 587.33
+  };
+
+
+  function getAudioContext() {
+    if (!audioContext) {
+
+      const AudioCtx =
+        window.AudioContext ||
+        window.webkitAudioContext;
+
+      if (!AudioCtx) {
+        return null;
+      }
+
+      audioContext =
+        new AudioCtx();
+    }
+
+    if (
+      audioContext.state ===
+      "suspended"
+    ) {
+      audioContext.resume().catch(() => {});
+    }
+
+    return audioContext;
+  }
+
+
+  function tone(
+    note,
+    duration = 0.07,
+    delay = 0,
+    type = "sine",
+    volume = 0.025
+  ) {
+
+    if (!uiSoundsEnabled) {
+      return;
+    }
+
+    const ctx =
+      getAudioContext();
+
+    if (!ctx) {
+      return;
+    }
+
+    const oscillator =
+      ctx.createOscillator();
+
+    const gain =
+      ctx.createGain();
+
+    const now =
+      ctx.currentTime + delay;
+
+    oscillator.type =
+      type;
+
+    oscillator.frequency.value =
+      frequencies[note] || note;
+
+    gain.gain.setValueAtTime(
+      0.0001,
+      now
     );
 
-    return false;
+    gain.gain.exponentialRampToValueAtTime(
+      volume,
+      now + 0.008
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      0.0001,
+      now + duration
+    );
+
+    oscillator
+      .connect(gain)
+      .connect(ctx.destination);
+
+    oscillator.start(now);
+
+    oscillator.stop(
+      now +
+      duration +
+      0.02
+    );
   }
 
 
-  try{
+  function playSound(
+    type = "click"
+  ) {
 
-    supabase =
-      window.supabase.createClient(
-        config.url,
-        config.anonKey
+    if (!uiSoundsEnabled) {
+      return;
+    }
+
+    switch (type) {
+
+      case "nav":
+        tone(
+          "D4",
+          0.05,
+          0,
+          "triangle",
+          0.022
+        );
+
+        tone(
+          "A4",
+          0.09,
+          0.035,
+          "sine",
+          0.014
+        );
+        break;
+
+
+      case "panel":
+        tone(
+          "F4",
+          0.06,
+          0,
+          "triangle",
+          0.022
+        );
+
+        tone(
+          "A4",
+          0.08,
+          0.04,
+          "sine",
+          0.014
+        );
+        break;
+
+
+      case "document":
+        tone(
+          "A3",
+          0.08,
+          0,
+          "triangle",
+          0.022
+        );
+
+        tone(
+          "D4",
+          0.11,
+          0.05,
+          "sine",
+          0.014
+        );
+        break;
+
+
+      case "edit":
+        tone(
+          "A4",
+          0.05,
+          0,
+          "triangle",
+          0.022
+        );
+
+        tone(
+          "C5",
+          0.08,
+          0.035,
+          "sine",
+          0.014
+        );
+        break;
+
+
+      case "save":
+        tone(
+          "D4",
+          0.06,
+          0,
+          "triangle",
+          0.022
+        );
+
+        tone(
+          "F4",
+          0.06,
+          0.05,
+          "triangle",
+          0.018
+        );
+
+        tone(
+          "A4",
+          0.1,
+          0.1,
+          "sine",
+          0.013
+        );
+        break;
+
+
+      case "enter":
+        tone(
+          "D3",
+          0.11,
+          0,
+          "sine",
+          0.025
+        );
+
+        tone(
+          "A3",
+          0.14,
+          0.08,
+          "sine",
+          0.02
+        );
+
+        tone(
+          "D4",
+          0.18,
+          0.18,
+          "triangle",
+          0.012
+        );
+        break;
+
+
+      case "connect":
+        tone(
+          "D4",
+          0.07,
+          0,
+          "triangle",
+          0.025
+        );
+
+        tone(
+          "A4",
+          0.09,
+          0.07,
+          "triangle",
+          0.02
+        );
+
+        tone(
+          "D4",
+          0.12,
+          0.14,
+          "sine",
+          0.014
+        );
+        break;
+
+
+      case "danger":
+        tone(
+          "F4",
+          0.05,
+          0,
+          "triangle",
+          0.02
+        );
+
+        tone(
+          "D4",
+          0.09,
+          0.05,
+          "sine",
+          0.014
+        );
+        break;
+
+
+      default:
+        tone(
+          "D4",
+          0.06,
+          0,
+          "triangle",
+          0.022
+        );
+    }
+  }
+
+
+  function toast(message) {
+
+    const element =
+      $("#toast");
+
+    if (!element) {
+      return;
+    }
+
+    element.textContent =
+      message;
+
+    element.classList.add(
+      "show"
+    );
+
+    clearTimeout(
+      toastTimer
+    );
+
+    toastTimer =
+      setTimeout(
+        () =>
+          element.classList.remove(
+            "show"
+          ),
+        2400
+      );
+  }
+
+
+  /* ============================================================
+     SUPABASE
+     ============================================================ */
+
+  function getSupabaseUrl() {
+
+    if (!config.url) {
+      return "";
+    }
+
+    const raw =
+      String(config.url).trim();
+
+    if (
+      raw.startsWith("//")
+    ) {
+      return (
+        window.location.protocol +
+        raw
+      );
+    }
+
+    return raw;
+  }
+
+
+  function hasSupabaseConfig() {
+
+    const url =
+      getSupabaseUrl();
+
+    const key =
+      String(
+        config.anonKey || ""
+      ).trim();
+
+    return Boolean(
+      url &&
+      key &&
+      (
+        url.startsWith("http://") ||
+        url.startsWith("https://")
+      )
+    );
+  }
+
+
+  function setSync(
+    text,
+    connected = false
+  ) {
+
+    const sync =
+      $("#syncStatus");
+
+    if (sync) {
+      sync.textContent =
+        text;
+    }
+
+    const footer =
+      $("#footerState");
+
+    if (footer) {
+
+      footer.textContent =
+        connected
+          ? "MESA COMPARTILHADA"
+          : "MODO LOCAL";
+    }
+  }
+
+
+  async function initSupabase() {
+
+    if (
+      !hasSupabaseConfig() ||
+      !window.supabase?.createClient
+    ) {
+
+      appMode =
+        "local";
+
+      setSync(
+        "modo local",
+        false
       );
 
-
-    const {
-      data,
-      error
-    } =
-      await supabase.auth.getSession();
-
-
-    if(error){
-      throw error;
+      return false;
     }
 
 
-    currentUser =
-      data.session?.user || null;
+    try {
+
+      supabase =
+        window.supabase.createClient(
+          getSupabaseUrl(),
+          config.anonKey
+        );
 
 
-    if(!currentUser){
-
-      const result =
-        await supabase.auth.signInAnonymously();
+      const sessionResult =
+        await supabase.auth.getSession();
 
 
-      if(result.error){
-        throw result.error;
+      if (
+        sessionResult.error
+      ) {
+        throw sessionResult.error;
       }
 
 
       currentUser =
-        result.data.user;
+        sessionResult.data
+          ?.session
+          ?.user ||
+        null;
+
+
+      if (!currentUser) {
+
+        const authResult =
+          await supabase.auth
+            .signInAnonymously();
+
+
+        if (
+          authResult.error
+        ) {
+          throw authResult.error;
+        }
+
+
+        currentUser =
+          authResult.data?.user ||
+          null;
+      }
+
+
+      if (!currentUser) {
+        throw new Error(
+          "USUARIO_ANONIMO_NAO_CRIADO"
+        );
+      }
+
+
+      supabaseReady =
+        true;
+
+      appMode =
+        "supabase";
+
+
+      setSync(
+        "Supabase conectado",
+        false
+      );
+
+
+      return true;
+
+    } catch (error) {
+
+      console.error(
+        "Supabase:",
+        error
+      );
+
+
+      supabase =
+        null;
+
+      supabaseReady =
+        false;
+
+      appMode =
+        "local";
+
+
+      setSync(
+        "modo local",
+        false
+      );
+
+
+      return false;
+    }
+  }
+
+
+  /* ============================================================
+     MESA ÚNICA
+     ============================================================ */
+
+  async function enterMainCampaign() {
+
+    if (
+      !supabaseReady ||
+      !supabase
+    ) {
+      return false;
     }
 
 
-    if(!currentUser){
+    /*
+      O banco precisa possuir esta RPC.
+      Caso ela ainda não exista, o erro é capturado
+      pelo bootstrap e o site continua funcionando localmente.
+    */
+
+    const result =
+      await supabase.rpc(
+        "enter_main_campaign"
+      );
+
+
+    if (result.error) {
+      throw result.error;
+    }
+
+
+    const row =
+      result.data?.[0];
+
+
+    if (!row) {
       throw new Error(
-        "USUARIO_ANONIMO_NAO_CRIADO"
+        "MESA_PRINCIPAL_NAO_ENCONTRADA"
       );
     }
 
 
-    supabaseReady = true;
-    appMode = "supabase";
+    campaignId =
+      row.campaign_id;
 
 
-    setSync(
-      "Supabase conectado",
-      false
-    );
+    campaignCode =
+      row.campaign_code ||
+      "PONTO03";
 
 
     return true;
-
-  }catch(error){
-
-    console.error(
-      "Erro de conexão com Supabase:",
-      error
-    );
+  }
 
 
-    supabaseReady = false;
-    appMode = "local";
+  /* ============================================================
+     DADOS LOCAIS
+     ============================================================ */
+
+  function loadLocalData() {
+
+    const savedCards =
+      localStorage.getItem(
+        localKeys.cards
+      );
+
+
+    cards =
+      savedCards
+        ? safeJson(
+            savedCards,
+            structuredClone(seedCards)
+          )
+        : structuredClone(
+            seedCards
+          );
+
+
+    const savedObjects =
+      localStorage.getItem(
+        localKeys.objects
+      );
+
+
+    objects =
+      savedObjects
+        ? safeJson(
+            savedObjects,
+            structuredClone(seedObjects)
+          )
+        : structuredClone(
+            seedObjects
+          );
+
+
+    const savedConnections =
+      localStorage.getItem(
+        localKeys.connections
+      );
+
+
+    connections =
+      savedConnections
+        ? safeJson(
+            savedConnections,
+            []
+          )
+        : [];
+
+
+    applyLocalNotes();
+
+
+    renderAll();
 
 
     setSync(
       "modo local",
       false
     );
-
-
-    return false;
   }
-}
 
 
-/* ---------- entrada automática na única mesa ---------- */
+  function safeJson(
+    value,
+    fallback
+  ) {
 
-async function enterMainCampaign(){
+    try {
+      return JSON.parse(
+        value
+      );
+    } catch {
+      return fallback;
+    }
+  }
 
-  if(!supabaseReady){
 
-    throw new Error(
-      "SUPABASE_NAO_PRONTO"
+  function saveLocal() {
+
+    localStorage.setItem(
+      localKeys.cards,
+      JSON.stringify(cards)
     );
 
+    localStorage.setItem(
+      localKeys.objects,
+      JSON.stringify(objects)
+    );
+
+    localStorage.setItem(
+      localKeys.connections,
+      JSON.stringify(connections)
+    );
   }
 
 
-  const {
-    data,
-    error
-  } =
-    await supabase.rpc(
-      "enter_main_campaign"
+  /* ============================================================
+     DADOS DO SUPABASE
+     ============================================================ */
+
+  async function loadCampaignData() {
+
+    if (
+      appMode !==
+      "supabase"
+    ) {
+      loadLocalData();
+      return;
+    }
+
+
+    const cluesResult =
+      await supabase
+        .from("clues")
+        .select("*")
+        .eq(
+          "campaign_id",
+          campaignId
+        )
+        .order(
+          "created_at",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (cluesResult.error) {
+      throw cluesResult.error;
+    }
+
+
+    const objectsResult =
+      await supabase
+        .from("objects")
+        .select("*")
+        .eq(
+          "campaign_id",
+          campaignId
+        )
+        .order(
+          "created_at",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (
+      objectsResult.error
+    ) {
+      throw objectsResult.error;
+    }
+
+
+    const connectionsResult =
+      await supabase
+        .from("connections")
+        .select(
+          "id,campaign_id,clue_a,clue_b"
+        )
+        .eq(
+          "campaign_id",
+          campaignId
+        );
+
+
+    if (
+      connectionsResult.error
+    ) {
+      throw connectionsResult.error;
+    }
+
+
+    cards =
+      cluesResult.data || [];
+
+
+    objects =
+      objectsResult.data || [];
+
+
+    connections =
+      connectionsResult.data || [];
+
+
+    await loadEntityNotes();
+
+
+    renderAll();
+
+
+    setSync(
+      "sincronizado",
+      true
+    );
+  }
+
+
+  async function loadEntityNotes() {
+
+    if (
+      appMode !==
+      "supabase"
+    ) {
+
+      applyLocalNotes();
+
+      return;
+    }
+
+
+    const result =
+      await supabase
+        .from("entity_notes")
+        .select("*")
+        .eq(
+          "campaign_id",
+          campaignId
+        );
+
+
+    if (result.error) {
+      throw result.error;
+    }
+
+
+    window._entityNotes =
+      result.data || [];
+
+
+    renderEntityNotes();
+  }
+
+
+  function applyLocalNotes() {
+
+    const saved =
+      safeJson(
+        localStorage.getItem(
+          localKeys.notes
+        ) || "{}",
+        {}
+      );
+
+
+    window._entityNotes =
+      Object.entries(
+        saved
+      ).map(
+        ([key, text]) => {
+
+          const separator =
+            key.indexOf(":");
+
+          return {
+
+            entity_kind:
+              key.slice(
+                0,
+                separator
+              ),
+
+            entity_key:
+              key.slice(
+                separator + 1
+              ),
+
+            author_name:
+              "Jogador",
+
+            text
+
+          };
+        }
+      );
+
+
+    renderEntityNotes();
+  }
+
+
+  /* ============================================================
+     RENDERIZAÇÃO
+     ============================================================ */
+
+  function renderAll() {
+
+    renderCards();
+    renderObjects();
+    renderConnections();
+    renderEntityNotes();
+    applyImageAssets();
+    filterCards();
+
+  }
+
+
+  function renderCards() {
+
+    const canvas =
+      $("#boardCanvas");
+
+    if (!canvas) {
+      return;
+    }
+
+
+    canvas
+      .querySelectorAll(
+        ".evidence-card"
+      )
+      .forEach(
+        card =>
+          card.remove()
+      );
+
+
+    cards.forEach(
+      (card, index) => {
+
+        const element =
+          document.createElement(
+            "article"
+          );
+
+
+        element.className =
+          "evidence-card";
+
+
+        element.dataset.id =
+          String(card.id);
+
+
+        element.dataset.title =
+          card.title ||
+          "";
+
+
+        element.dataset.type =
+          card.clue_type ||
+          "";
+
+
+        element.dataset.context =
+          card.context ||
+          "";
+
+
+        element.style.left =
+          `${Number(
+            card.x ?? 10
+          )}%`;
+
+
+        element.style.top =
+          `${Number(
+            card.y ?? 10
+          )}%`;
+
+
+        element.style.setProperty(
+          "--rotation",
+          `${Number(
+            card.rotation || 0
+          )}deg`
+        );
+
+
+        element.innerHTML = `
+
+          <div class="card-pin"></div>
+
+          <span class="card-number">
+            ${String(index + 1).padStart(2,"0")}
+          </span>
+
+          <span class="card-type">
+            ${escapeHtml(
+              card.clue_type ||
+              "PISTA"
+            )}
+          </span>
+
+          <h3>
+            ${escapeHtml(
+              card.title ||
+              "SEM TÍTULO"
+            )}
+          </h3>
+
+          <p class="card-context">
+            ${escapeHtml(
+              card.context ||
+              ""
+            )}
+          </p>
+
+          <div class="card-notes-wrap">
+
+            <span class="card-notes-label">
+              ANOTAÇÕES DA EQUIPE
+            </span>
+
+            <textarea
+              class="card-notes"
+              data-card-notes
+              placeholder="Escreva aqui..."
+            ></textarea>
+
+          </div>
+
+          <button
+            class="mini-edit"
+            type="button"
+            data-sound="edit"
+          >
+            EDITAR
+          </button>
+
+          ${
+            isCreatedCard(card)
+              ? `
+                <button
+                  class="mini-delete"
+                  type="button"
+                  data-sound="danger"
+                >
+                  ×
+                </button>
+              `
+              : ""
+          }
+
+        `;
+
+
+        canvas.appendChild(
+          element
+        );
+
+
+        const textarea =
+          $(
+            "[data-card-notes]",
+            element
+          );
+
+
+        textarea.value =
+          card.notes ||
+          "";
+
+
+        textarea.addEventListener(
+          "pointerdown",
+          event =>
+            event.stopPropagation()
+        );
+
+
+        textarea.addEventListener(
+          "click",
+          event =>
+            event.stopPropagation()
+        );
+
+
+        textarea.addEventListener(
+          "input",
+          () =>
+            saveCardNotes(
+              card.id,
+              textarea.value
+            )
+        );
+
+
+        wireCard(
+          element
+        );
+
+      }
+    );
+  }
+
+
+  function isCreatedCard(
+    card
+  ) {
+
+    return ![
+      "sangue",
+      "medo",
+      "grupo",
+      "fragmentos",
+      "sino",
+      "quinto",
+      "sombra"
+    ].includes(
+      String(card.id)
+    );
+  }
+
+
+  function renderObjects() {
+
+    const layer =
+      $("#boardObjectLayer");
+
+    const grid =
+      $("#objectGrid");
+
+
+    if (!layer || !grid) {
+      return;
+    }
+
+
+    layer.innerHTML =
+      "";
+
+    grid.innerHTML =
+      "";
+
+
+    objects.forEach(
+      object => {
+
+        const boardObject =
+          document.createElement(
+            "button"
+          );
+
+
+        boardObject.type =
+          "button";
+
+        boardObject.className =
+          "board-object";
+
+
+        boardObject.style.left =
+          `${Number(
+            object.x ?? 50
+          )}%`;
+
+
+        boardObject.style.top =
+          `${Number(
+            object.y ?? 50
+          )}%`;
+
+
+        boardObject.innerHTML = `
+
+          <span>
+
+            ${escapeHtml(
+              object.name
+            )}
+
+            <small>
+              ${escapeHtml(
+                object.object_type ||
+                "OBJETO"
+              )}
+            </small>
+
+          </span>
+
+        `;
+
+
+        boardObject.addEventListener(
+          "click",
+          event => {
+
+            event.stopPropagation();
+
+            openObject(
+              object
+            );
+
+          }
+        );
+
+
+        layer.appendChild(
+          boardObject
+        );
+
+
+        const tile =
+          document.createElement(
+            "button"
+          );
+
+
+        tile.type =
+          "button";
+
+        tile.className =
+          "object-tile";
+
+
+        tile.dataset.sound =
+          "document";
+
+
+        tile.innerHTML = `
+
+          <span>
+            ${escapeHtml(
+              object.object_type ||
+              "OBJETO"
+            )}
+          </span>
+
+          <strong>
+            ${escapeHtml(
+              object.name
+            )}
+          </strong>
+
+          <small>
+            ABRIR ↗
+          </small>
+
+        `;
+
+
+        tile.addEventListener(
+          "click",
+          () =>
+            openObject(
+              object
+            )
+        );
+
+
+        grid.appendChild(
+          tile
+        );
+
+      }
+    );
+  }
+
+
+  function renderConnections() {
+
+    const svg =
+      $("#connections");
+
+    const canvas =
+      $("#boardCanvas");
+
+
+    if (!svg || !canvas) {
+      return;
+    }
+
+
+    svg.innerHTML =
+      "";
+
+
+    connections.forEach(
+      connection => {
+
+        const aId =
+          connection.clue_a ||
+          connection[0];
+
+        const bId =
+          connection.clue_b ||
+          connection[1];
+
+
+        const a =
+          canvas.querySelector(
+            `[data-id="${CSS.escape(String(aId))}"]`
+          );
+
+
+        const b =
+          canvas.querySelector(
+            `[data-id="${CSS.escape(String(bId))}"]`
+          );
+
+
+        if (!a || !b) {
+          return;
+        }
+
+
+        const p1 =
+          cardCenter(a);
+
+        const p2 =
+          cardCenter(b);
+
+
+        const line =
+          document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+
+
+        line.setAttribute(
+          "x1",
+          p1.x
+        );
+
+
+        line.setAttribute(
+          "y1",
+          p1.y
+        );
+
+
+        line.setAttribute(
+          "x2",
+          p2.x
+        );
+
+
+        line.setAttribute(
+          "y2",
+          p2.y
+        );
+
+
+        line.classList.add(
+          "connection-line"
+        );
+
+
+        if (
+          selectedCard === a ||
+          selectedCard === b
+        ) {
+
+          line.classList.add(
+            "highlight"
+          );
+        }
+
+
+        svg.appendChild(
+          line
+        );
+
+      }
     );
 
 
-  if(error){
-    throw error;
+    const cardCount =
+      $("#cardCount");
+
+    const connectionCount =
+      $("#connectionCount");
+
+
+    if (cardCount) {
+      cardCount.textContent =
+        cards.length;
+    }
+
+
+    if (connectionCount) {
+      connectionCount.textContent =
+        connections.length;
+    }
   }
 
 
-  const row =
-    data?.[0];
+  function renderEntityNotes() {
+
+    const allNotes =
+      window._entityNotes ||
+      [];
 
 
-  if(!row){
+    $$(".shared-notes")
+      .forEach(
+        box => {
 
-    throw new Error(
-      "MESA_PRINCIPAL_NAO_ENCONTRADA"
+          const kind =
+            box.dataset.noteKind;
+
+          const key =
+            box.dataset.noteKey;
+
+
+          box.innerHTML =
+            "";
+
+
+          allNotes
+            .filter(
+              note =>
+                note.entity_kind ===
+                  kind &&
+                note.entity_key ===
+                  key &&
+                note.text?.trim()
+            )
+            .slice(-4)
+            .forEach(
+              note => {
+
+                const line =
+                  document.createElement(
+                    "div"
+                  );
+
+
+                line.className =
+                  "note-line";
+
+
+                line.innerHTML = `
+
+                  <strong>
+                    ${escapeHtml(
+                      note.author_name ||
+                      "Jogador"
+                    )}
+                  </strong>
+
+                  ${escapeHtml(
+                    note.text
+                  )}
+
+                `;
+
+
+                box.appendChild(
+                  line
+                );
+
+              }
+            );
+
+        }
+      );
+  }
+
+
+  function applyImageAssets() {
+
+    $$(".image-slot[data-asset]")
+      .forEach(
+        element => {
+
+          const path =
+            element.dataset.asset;
+
+
+          const image =
+            new Image();
+
+
+          image.onload =
+            () => {
+
+              element.style.setProperty(
+                "--location-image",
+                `url("${path}")`
+              );
+
+
+              element.classList.add(
+                "has-image"
+              );
+
+
+              if (
+                element.classList.contains(
+                  "character-bg"
+                )
+              ) {
+
+                element.style.backgroundImage =
+                  `url("${path}")`;
+              }
+            };
+
+
+          image.src =
+            path;
+
+        }
+      );
+  }
+
+
+  function filterCards() {
+
+    const input =
+      $("#boardSearch");
+
+    if (!input) {
+      return;
+    }
+
+
+    const query =
+      input.value
+        .trim()
+        .toLowerCase();
+
+
+    cards.forEach(
+      card => {
+
+        const element =
+          $(
+            `#boardCanvas [data-id="${CSS.escape(String(card.id))}"]`
+          );
+
+
+        if (!element) {
+          return;
+        }
+
+
+        const text =
+          [
+            card.title,
+            card.context,
+            card.clue_type,
+            card.notes
+          ]
+          .join(" ")
+          .toLowerCase();
+
+
+        element.classList.toggle(
+          "dimmed",
+          Boolean(
+            query &&
+            !text.includes(query)
+          )
+        );
+
+      }
+    );
+  }
+
+
+  function cardCenter(
+    element
+  ) {
+
+    return {
+
+      x:
+        element.offsetLeft +
+        element.offsetWidth / 2,
+
+      y:
+        element.offsetTop +
+        element.offsetHeight / 2
+
+    };
+  }
+
+
+  /* ============================================================
+     INTERAÇÃO DAS PISTAS
+     ============================================================ */
+
+  function wireCard(
+    card
+  ) {
+
+    card.addEventListener(
+      "pointerdown",
+      event =>
+        beginDrag(
+          card,
+          event
+        )
     );
 
+
+    card.addEventListener(
+      "pointermove",
+      event =>
+        moveDrag(
+          card,
+          event
+        )
+    );
+
+
+    card.addEventListener(
+      "pointerup",
+      () =>
+        endDrag(
+          card
+        )
+    );
+
+
+    card.addEventListener(
+      "pointercancel",
+      () =>
+        endDrag(
+          card
+        )
+    );
+
+
+    card.addEventListener(
+      "click",
+      event => {
+
+        if (dragMoved) {
+
+          dragMoved =
+            false;
+
+          return;
+        }
+
+
+        if (
+          event.target.closest(
+            "textarea,button"
+          )
+        ) {
+
+          return;
+        }
+
+
+        if (connectingMode) {
+
+          if (!selectedCard) {
+
+            selectCard(
+              card
+            );
+
+          } else if (
+            selectedCard !== card
+          ) {
+
+            toggleConnection(
+              selectedCard.dataset.id,
+              card.dataset.id
+            );
+
+            selectCard(
+              null
+            );
+
+          }
+
+
+          return;
+        }
+
+
+        selectCard(
+          card
+        );
+      }
+    );
+
+
+    const editButton =
+      $(".mini-edit", card);
+
+
+    if (editButton) {
+
+      editButton.addEventListener(
+        "click",
+        event => {
+
+          event.stopPropagation();
+
+          openCardEditor(
+            card.dataset.id
+          );
+        }
+      );
+    }
+
+
+    const deleteButton =
+      $(".mini-delete", card);
+
+
+    if (deleteButton) {
+
+      deleteButton.addEventListener(
+        "click",
+        event => {
+
+          event.stopPropagation();
+
+          deleteCard(
+            card.dataset.id
+          );
+        }
+      );
+    }
   }
 
 
-  campaignId =
-    row.campaign_id;
+  function beginDrag(
+    card,
+    event
+  ) {
+
+    if (
+      event.target.closest(
+        "textarea,button"
+      )
+    ) {
+      return;
+    }
 
 
-  campaignCode =
-    row.campaign_code ||
-    "PONTO03";
+    draggingCard =
+      card;
+
+    dragMoved =
+      false;
 
 
-  playerName =
-    "Jogador";
+    card.classList.add(
+      "dragging"
+    );
 
 
-  playerRole =
-    "player";
+    if (
+      card.setPointerCapture
+    ) {
+
+      try {
+
+        card.setPointerCapture(
+          event.pointerId
+        );
+
+      } catch {}
+    }
 
 
-  return row;
-}
+    const rect =
+      card.getBoundingClientRect();
 
 
-/* ---------- inicialização ---------- */
-
-async function bootstrap(){
-
-  const connected =
-    await initSupabase();
+    const board =
+      $("#evidenceBoard")
+        .getBoundingClientRect();
 
 
-  /*
-    Supabase funcionando:
-    entra automaticamente na única mesa.
-  */
+    card.dataset.offsetX =
+      (
+        event.clientX -
+        rect.left
+      ) /
+      zoom;
 
-  if(connected){
 
-    try{
+    card.dataset.offsetY =
+      (
+        event.clientY -
+        rect.top
+      ) /
+      zoom;
+
+
+    card.dataset.boardLeft =
+      board.left;
+
+    card.dataset.boardTop =
+      board.top;
+  }
+
+
+  function moveDrag(
+    card,
+    event
+  ) {
+
+    if (
+      draggingCard !==
+      card
+    ) {
+      return;
+    }
+
+
+    dragMoved =
+      true;
+
+
+    const boardElement =
+      $("#evidenceBoard");
+
+
+    const canvas =
+      $("#boardCanvas");
+
+
+    if (
+      !boardElement ||
+      !canvas
+    ) {
+      return;
+    }
+
+
+    const boardRect =
+      boardElement.getBoundingClientRect();
+
+
+    const x =
+      (
+        event.clientX -
+        boardRect.left +
+        boardElement.scrollLeft
+      ) /
+      zoom -
+      Number(
+        card.dataset.offsetX
+      );
+
+
+    const y =
+      (
+        event.clientY -
+        boardRect.top +
+        boardElement.scrollTop
+      ) /
+      zoom -
+      Number(
+        card.dataset.offsetY
+      );
+
+
+    const maxX =
+      Math.max(
+        0,
+        canvas.clientWidth -
+        card.offsetWidth
+      );
+
+
+    const maxY =
+      Math.max(
+        0,
+        canvas.clientHeight -
+        card.offsetHeight
+      );
+
+
+    const finalX =
+      Math.max(
+        0,
+        Math.min(
+          x,
+          maxX
+        )
+      );
+
+
+    const finalY =
+      Math.max(
+        0,
+        Math.min(
+          y,
+          maxY
+        )
+      );
+
+
+    card.style.left =
+      `${
+        finalX /
+        canvas.clientWidth *
+        100
+      }%`;
+
+
+    card.style.top =
+      `${
+        finalY /
+        canvas.clientHeight *
+        100
+      }%`;
+
+
+    const model =
+      cards.find(
+        item =>
+          String(item.id) ===
+          String(card.dataset.id)
+      );
+
+
+    if (model) {
+
+      model.x =
+        parseFloat(
+          card.style.left
+        );
+
+      model.y =
+        parseFloat(
+          card.style.top
+        );
+    }
+
+
+    renderConnections();
+  }
+
+
+  async function endDrag(
+    card
+  ) {
+
+    if (
+      draggingCard !==
+      card
+    ) {
+      return;
+    }
+
+
+    draggingCard =
+      null;
+
+
+    card.classList.remove(
+      "dragging"
+    );
+
+
+    if (!dragMoved) {
+      return;
+    }
+
+
+    const model =
+      cards.find(
+        item =>
+          String(item.id) ===
+          String(card.dataset.id)
+      );
+
+
+    if (!model) {
+      return;
+    }
+
+
+    await saveCardPosition(
+      model
+    );
+  }
+
+
+  function selectCard(
+    card
+  ) {
+
+    if (selectedCard) {
+
+      selectedCard.classList.remove(
+        "selected"
+      );
+    }
+
+
+    selectedCard =
+      card;
+
+
+    if (selectedCard) {
+
+      selectedCard.classList.add(
+        "selected"
+      );
+    }
+
+
+    renderConnections();
+  }
+
+
+  /* ============================================================
+     CONEXÕES
+     ============================================================ */
+
+  async function toggleConnection(
+    firstId,
+    secondId
+  ) {
+
+    const [
+      a,
+      b
+    ] =
+      [
+        String(firstId),
+        String(secondId)
+      ]
+      .sort();
+
+
+    if (
+      appMode ===
+      "supabase"
+    ) {
+
+      try {
+
+        const existing =
+          connections.find(
+            connection =>
+              String(
+                connection.clue_a ||
+                connection[0]
+              ) === a &&
+              String(
+                connection.clue_b ||
+                connection[1]
+              ) === b
+          );
+
+
+        if (existing) {
+
+          const result =
+            await supabase
+              .from("connections")
+              .delete()
+              .eq(
+                "id",
+                existing.id
+              );
+
+
+          if (result.error) {
+            throw result.error;
+          }
+
+        } else {
+
+          const result =
+            await supabase
+              .from("connections")
+              .insert({
+
+                campaign_id:
+                  campaignId,
+
+                clue_a:
+                  a,
+
+                clue_b:
+                  b,
+
+                created_by:
+                  currentUser?.id ||
+                  null
+
+              });
+
+
+          if (result.error) {
+            throw result.error;
+          }
+        }
+
+
+        return;
+
+      } catch (error) {
+
+        console.error(
+          "Conexão:",
+          error
+        );
+
+        toast(
+          "A conexão não pôde ser sincronizada."
+        );
+
+        return;
+      }
+    }
+
+
+    const index =
+      connections.findIndex(
+        connection =>
+          String(
+            connection.clue_a ||
+            connection[0]
+          ) === a &&
+          String(
+            connection.clue_b ||
+            connection[1]
+          ) === b
+      );
+
+
+    if (index >= 0) {
+
+      connections.splice(
+        index,
+        1
+      );
+
+    } else {
+
+      connections.push([
+        a,
+        b
+      ]);
+    }
+
+
+    saveLocal();
+
+    renderConnections();
+
+    playSound(
+      "connect"
+    );
+  }
+
+
+  /* ============================================================
+     SALVAMENTO
+     ============================================================ */
+
+  async function saveCardPosition(
+    card
+  ) {
+
+    if (
+      appMode !==
+      "supabase"
+    ) {
+
+      saveLocal();
+
+      return;
+    }
+
+
+    const result =
+      await supabase
+        .from("clues")
+        .update({
+
+          x:
+            Number(card.x),
+
+          y:
+            Number(card.y)
+
+        })
+        .eq(
+          "id",
+          card.id
+        );
+
+
+    if (result.error) {
+
+      console.error(
+        result.error
+      );
+
+    }
+  }
+
+
+  function saveCardNotes(
+    id,
+    text
+  ) {
+
+    const card =
+      cards.find(
+        item =>
+          String(item.id) ===
+          String(id)
+      );
+
+
+    if (card) {
+      card.notes =
+        text;
+    }
+
+
+    clearTimeout(
+      noteTimer
+    );
+
+
+    noteTimer =
+      setTimeout(
+        async () => {
+
+          if (
+            appMode ===
+            "supabase"
+          ) {
+
+            const result =
+              await supabase
+                .from("clues")
+                .update({
+                  notes:
+                    text
+                })
+                .eq(
+                  "id",
+                  id
+                );
+
+
+            if (
+              result.error
+            ) {
+
+              console.error(
+                result.error
+              );
+            }
+
+          } else {
+
+            saveLocal();
+          }
+
+        },
+        250
+      );
+
+
+    filterCards();
+  }
+
+
+  /* ============================================================
+     NOVA PISTA
+     ============================================================ */
+
+  function openNewCard() {
+
+    const modal =
+      $("#newCardModal");
+
+
+    if (!modal) {
+      return;
+    }
+
+
+    modal.classList.add(
+      "open"
+    );
+
+
+    modal.setAttribute(
+      "aria-hidden",
+      "false"
+    );
+
+
+    const title =
+      $("#newCardTitle");
+
+
+    if (title) {
+      title.focus();
+    }
+  }
+
+
+  function closeNewCard() {
+
+    const modal =
+      $("#newCardModal");
+
+
+    if (!modal) {
+      return;
+    }
+
+
+    modal.classList.remove(
+      "open"
+    );
+
+
+    modal.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+  }
+
+
+  async function createCard() {
+
+    const title =
+      $("#newCardTitle")
+        ?.value
+        .trim();
+
+
+    const type =
+      $("#newCardType")
+        ?.value
+        .trim();
+
+
+    const context =
+      $("#newCardContext")
+        ?.value
+        .trim();
+
+
+    if (!title) {
+
+      toast(
+        "Dê um título à pista."
+      );
+
+      return;
+    }
+
+
+    const newCard = {
+
+      title,
+
+      clue_type:
+        type ||
+        "PISTA",
+
+      context:
+        context ||
+        "",
+
+      notes:
+        "",
+
+      x:
+        25 +
+        Math.random() *
+        50,
+
+      y:
+        20 +
+        Math.random() *
+        55,
+
+      rotation:
+        Math.random() *
+        2 -
+        1
+
+    };
+
+
+    if (
+      appMode ===
+      "supabase"
+    ) {
+
+      try {
+
+        const result =
+          await supabase
+            .from("clues")
+            .insert({
+
+              ...newCard,
+
+              campaign_id:
+                campaignId,
+
+              created_by:
+                currentUser?.id ||
+                null
+
+            })
+            .select()
+            .single();
+
+
+        if (
+          result.error
+        ) {
+          throw result.error;
+        }
+
+
+        cards.push(
+          result.data
+        );
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+        toast(
+          "Não foi possível criar a pista."
+        );
+
+        return;
+      }
+
+    } else {
+
+      newCard.id =
+        crypto.randomUUID();
+
+
+      cards.push(
+        newCard
+      );
+
+
+      saveLocal();
+    }
+
+
+    renderCards();
+
+    renderConnections();
+
+    closeNewCard();
+
+
+    $("#newCardTitle").value =
+      "";
+
+    $("#newCardType").value =
+      "";
+
+    $("#newCardContext").value =
+      "";
+
+
+    toast(
+      "Nova pista adicionada."
+    );
+  }
+
+
+  /* ============================================================
+     EDITAR / EXCLUIR PISTA
+     ============================================================ */
+
+  function openCardEditor(
+    id
+  ) {
+
+    const card =
+      cards.find(
+        item =>
+          String(item.id) ===
+          String(id)
+      );
+
+
+    if (!card) {
+      return;
+    }
+
+
+    editingNote = {
+
+      kind:
+        "clue",
+
+      key:
+        id,
+
+      card
+
+    };
+
+
+    const title =
+      $("#editorTitle");
+
+
+    const text =
+      $("#editorText");
+
+
+    if (title) {
+      title.textContent =
+        card.title ||
+        "ANOTAÇÃO";
+    }
+
+
+    if (text) {
+      text.value =
+        card.notes ||
+        "";
+    }
+
+
+    const modal =
+      $("#editorModal");
+
+
+    if (modal) {
+
+      modal.classList.add(
+        "open"
+      );
+
+
+      modal.setAttribute(
+        "aria-hidden",
+        "false"
+      );
+
+    }
+  }
+
+
+  async function deleteCard(
+    id
+  ) {
+
+    if (
+      !confirm(
+        "Excluir esta pista do quadro?"
+      )
+    ) {
+      return;
+    }
+
+
+    if (
+      appMode ===
+      "supabase"
+    ) {
+
+      const result =
+        await supabase
+          .from("clues")
+          .delete()
+          .eq(
+            "id",
+            id
+          );
+
+
+      if (
+        result.error
+      ) {
+
+        toast(
+          "Não foi possível excluir a pista."
+        );
+
+        return;
+      }
+    }
+
+
+    cards =
+      cards.filter(
+        card =>
+          String(card.id) !==
+          String(id)
+      );
+
+
+    connections =
+      connections.filter(
+        connection =>
+          String(
+            connection.clue_a ||
+            connection[0]
+          ) !== String(id) &&
+          String(
+            connection.clue_b ||
+            connection[1]
+          ) !== String(id)
+      );
+
+
+    if (
+      appMode !==
+      "supabase"
+    ) {
+
+      saveLocal();
+    }
+
+
+    renderAll();
+
+
+    toast(
+      "Pista excluída."
+    );
+  }
+
+
+  function closeEditor() {
+
+    const modal =
+      $("#editorModal");
+
+
+    if (!modal) {
+      return;
+    }
+
+
+    modal.classList.remove(
+      "open"
+    );
+
+
+    modal.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+
+
+    editingNote =
+      null;
+  }
+
+
+  async function saveEditor() {
+
+    if (!editingNote) {
+      return;
+    }
+
+
+    const text =
+      $("#editorText")
+        ?.value
+        .trim() || "";
+
+
+    if (
+      editingNote.kind ===
+      "clue"
+    ) {
+
+      const card =
+        cards.find(
+          item =>
+            String(item.id) ===
+            String(
+              editingNote.key
+            )
+        );
+
+
+      if (card) {
+
+        card.notes =
+          text;
+
+        await saveCardNotes(
+          editingNote.key,
+          text
+        );
+      }
+
+    } else {
+
+      await saveEntityNote(
+        editingNote.kind,
+        editingNote.key,
+        text
+      );
+    }
+
+
+    closeEditor();
+
+    renderEntityNotes();
+
+    renderCards();
+
+
+    playSound(
+      "save"
+    );
+  }
+
+
+  /* ============================================================
+     ANOTAÇÕES DE PERSONAGENS / LOCAIS / EVENTOS
+     ============================================================ */
+
+  function openEntityEditor(
+    button
+  ) {
+
+    editingNote = {
+
+      kind:
+        button.dataset.noteKind,
+
+      key:
+        button.dataset.noteKey
+
+    };
+
+
+    const existing =
+      (
+        window._entityNotes ||
+        []
+      ).find(
+        note =>
+          note.entity_kind ===
+            editingNote.kind &&
+          note.entity_key ===
+            editingNote.key &&
+          note.user_id ===
+            currentUser?.id
+      );
+
+
+    const title =
+      $("#editorTitle");
+
+    const text =
+      $("#editorText");
+
+
+    if (title) {
+      title.textContent =
+        "ANOTAÇÃO";
+    }
+
+
+    if (text) {
+      text.value =
+        existing?.text ||
+        "";
+    }
+
+
+    const modal =
+      $("#editorModal");
+
+
+    if (modal) {
+
+      modal.classList.add(
+        "open"
+      );
+
+      modal.setAttribute(
+        "aria-hidden",
+        "false"
+      );
+    }
+  }
+
+
+  async function saveEntityNote(
+    kind,
+    key,
+    text
+  ) {
+
+    if (
+      appMode ===
+      "supabase"
+    ) {
+
+      try {
+
+        const result =
+          await supabase
+            .from("entity_notes")
+            .upsert(
+              {
+
+                campaign_id:
+                  campaignId,
+
+                entity_kind:
+                  kind,
+
+                entity_key:
+                  key,
+
+                user_id:
+                  currentUser.id,
+
+                author_name:
+                  "Jogador",
+
+                text
+
+              },
+              {
+
+                onConflict:
+                  "campaign_id,entity_kind,entity_key,user_id"
+
+              }
+            )
+            .select()
+            .single();
+
+
+        if (
+          result.error
+        ) {
+          throw result.error;
+        }
+
+
+        const current =
+          window._entityNotes ||
+          [];
+
+
+        window._entityNotes = [
+          ...current.filter(
+            note =>
+              !(
+                note.entity_kind ===
+                  kind &&
+                note.entity_key ===
+                  key &&
+                note.user_id ===
+                  currentUser.id
+              )
+          ),
+
+          result.data
+        ];
+
+
+        renderEntityNotes();
+
+        return;
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+        toast(
+          "Não foi possível salvar a anotação."
+        );
+
+        return;
+      }
+    }
+
+
+    const localNotes =
+      safeJson(
+        localStorage.getItem(
+          localKeys.notes
+        ) || "{}",
+        {}
+      );
+
+
+    localNotes[
+      `${kind}:${key}`
+    ] =
+      text;
+
+
+    localStorage.setItem(
+      localKeys.notes,
+      JSON.stringify(
+        localNotes
+      )
+    );
+
+
+    applyLocalNotes();
+  }
+
+
+  /* ============================================================
+     OBJETOS
+     ============================================================ */
+
+  function openObject(
+    object
+  ) {
+
+    const type =
+      $("#modalType");
+
+    const title =
+      $("#modalTitle");
+
+    const content =
+      $("#modalContent");
+
+    const modal =
+      $("#documentModal");
+
+
+    if (
+      !type ||
+      !title ||
+      !content ||
+      !modal
+    ) {
+      return;
+    }
+
+
+    type.textContent =
+      object.object_type ||
+      "OBJETO";
+
+
+    title.textContent =
+      object.name;
+
+
+    content.innerHTML = `
+
+      <p>
+
+        <strong>
+          ${escapeHtml(
+            object.description ||
+            ""
+          )}
+        </strong>
+
+      </p>
+
+      <p>
+        ${escapeHtml(
+          object.content ||
+          ""
+        )}
+      </p>
+
+    `;
+
+
+    modal.classList.add(
+      "open"
+    );
+
+
+    modal.setAttribute(
+      "aria-hidden",
+      "false"
+    );
+  }
+
+
+  /* ============================================================
+     DOCUMENTOS
+     ============================================================ */
+
+  const documents = {
+
+    report: {
+
+      type:
+        "DOCUMENTO 17 — EXTRATO",
+
+      title:
+        "Relatório encontrado",
+
+      html: `
+
+        <div class="paper">
+
+          <p>
+            <strong>02:12</strong>
+            — registro acústico identificado.
+          </p>
+
+          <p>
+            <strong>02:16</strong>
+            — preparação do estímulo.
+          </p>
+
+          <p>
+            <strong>02:17</strong>
+            — presença de sangue.
+          </p>
+
+          <p>
+            <strong>02:20</strong>
+            — manifestação.
+          </p>
+
+          <hr>
+
+          <p>
+            <strong>OBSERVAÇÃO:</strong>
+            o som foi registrado antes da
+            preparação do estímulo.
+          </p>
+
+          <p>
+            <strong>OBSERVAÇÃO COMPLEMENTAR:</strong>
+            não repetir o procedimento sem autorização.
+          </p>
+
+          <p class="hand">
+            Quem autorizou?
+          </p>
+
+        </div>
+
+      `
+    },
+
+
+    fifth: {
+
+      type:
+        "ANOTAÇÃO MANUSCRITA",
+
+      title:
+        "A frase do quinto",
+
+      html: `
+
+        <div class="paper">
+
+          <p class="hand">
+            “Não é o quinto que abre.<br>
+            É o quinto que chama.<br>
+            Não faça o quinto tocar.”
+          </p>
+
+        </div>
+
+      `
+    },
+
+
+    box: {
+
+      type:
+        "CAIXA DE PROVAS",
+
+      title:
+        "Mapa + recibos",
+
+      html: `
+
+        <div class="paper">
+
+          <p>
+            <strong>LOCAIS:</strong>
+            Praça Santa Cecília,
+            Apartamento 18,
+            Túnel ferroviário,
+            Escola municipal,
+            Torre sem nome.
+          </p>
+
+          <p>
+            <strong>HORÁRIOS:</strong>
+            02:12 • 02:40 • 03:05 • 03:30 • 03:55
+          </p>
+
+          <p>
+            <strong>OBJETOS:</strong>
+            fotografias,
+            recibos de metal e velas,
+            lista de horários
+            e uma chave de ferro escuro.
+          </p>
+
+          <p class="hand">
+            O quinto não é convocado.<br>
+            O quinto convoca.
+          </p>
+
+        </div>
+
+      `
+    }
+
+  };
+
+
+  function openDocument(
+    key
+  ) {
+
+    const documentData =
+      documents[key];
+
+
+    if (!documentData) {
+      return;
+    }
+
+
+    const type =
+      $("#modalType");
+
+    const title =
+      $("#modalTitle");
+
+    const content =
+      $("#modalContent");
+
+    const modal =
+      $("#documentModal");
+
+
+    if (
+      !type ||
+      !title ||
+      !content ||
+      !modal
+    ) {
+      return;
+    }
+
+
+    type.textContent =
+      documentData.type;
+
+
+    title.textContent =
+      documentData.title;
+
+
+    content.innerHTML =
+      documentData.html;
+
+
+    modal.classList.add(
+      "open"
+    );
+
+
+    modal.setAttribute(
+      "aria-hidden",
+      "false"
+    );
+  }
+
+
+  function closeDocument() {
+
+    const modal =
+      $("#documentModal");
+
+
+    if (!modal) {
+      return;
+    }
+
+
+    modal.classList.remove(
+      "open"
+    );
+
+
+    modal.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+  }
+
+
+  /* ============================================================
+     SOM
+     ============================================================ */
+
+  function toggleSoundPanel() {
+
+    const panel =
+      $("#soundPanel");
+
+
+    if (!panel) {
+      return;
+    }
+
+
+    panel.classList.toggle(
+      "open"
+    );
+
+
+    panel.setAttribute(
+      "aria-hidden",
+      String(
+        !panel.classList.contains(
+          "open"
+        )
+      )
+    );
+  }
+
+
+  function toggleInterfaceSounds() {
+
+    uiSoundsEnabled =
+      !uiSoundsEnabled;
+
+
+    localStorage.setItem(
+      localKeys.sounds,
+      String(
+        uiSoundsEnabled
+      )
+    );
+
+
+    const text =
+      uiSoundsEnabled
+        ? "SONS DE INTERFACE: ON"
+        : "SONS DE INTERFACE: OFF";
+
+
+    const button =
+      $("#interfaceSoundToggle");
+
+
+    if (button) {
+      button.textContent =
+        text;
+    }
+
+
+    if (uiSoundsEnabled) {
+      playSound(
+        "save"
+      );
+    }
+  }
+
+
+  function handleAudioFile(
+    event
+  ) {
+
+    const file =
+      event.target.files?.[0];
+
+
+    if (!file) {
+      return;
+    }
+
+
+    const audio =
+      $("#ambientAudio");
+
+
+    if (!audio) {
+      return;
+    }
+
+
+    const url =
+      URL.createObjectURL(
+        file
+      );
+
+
+    audio.src =
+      url;
+
+
+    audio
+      .play()
+      .catch(() => {});
+  }
+
+
+  /* ============================================================
+     ZOOM
+     ============================================================ */
+
+  function setZoom(
+    value
+  ) {
+
+    zoom =
+      Number(
+        Math.max(
+          0.75,
+          Math.min(
+            1.35,
+            value
+          )
+        ).toFixed(2)
+      );
+
+
+    const canvas =
+      $("#boardCanvas");
+
+
+    const label =
+      $("#zoomLabel");
+
+
+    if (canvas) {
+
+      canvas.style.transform =
+        `scale(${zoom})`;
+    }
+
+
+    if (label) {
+
+      label.textContent =
+        `${Math.round(
+          zoom * 100
+        )}%`;
+    }
+
+
+    renderConnections();
+  }
+
+
+  /* ============================================================
+     BOTÃO ABRIR QUADRO
+     ============================================================ */
+
+  function openBoard() {
+
+    const board =
+      $("#boardSection");
+
+
+    if (!board) {
+      return;
+    }
+
+
+    board.scrollIntoView({
+      behavior:
+        "smooth",
+      block:
+        "start"
+    });
+  }
+
+
+  /* ============================================================
+     REALTIME
+     ============================================================ */
+
+  function subscribeRealtime() {
+
+    if (
+      appMode !==
+      "supabase" ||
+      !supabase
+    ) {
+      return;
+    }
+
+
+    if (realtimeChannel) {
+
+      supabase.removeChannel(
+        realtimeChannel
+      );
+    }
+
+
+    realtimeChannel =
+      supabase
+        .channel(
+          `campaign-${campaignId}`
+        )
+
+
+        .on(
+          "postgres_changes",
+          {
+            event:
+              "*",
+            schema:
+              "public",
+            table:
+              "clues",
+            filter:
+              `campaign_id=eq.${campaignId}`
+          },
+          payload => {
+
+            if (
+              payload.eventType ===
+              "INSERT"
+            ) {
+
+              if (
+                !cards.some(
+                  card =>
+                    card.id ===
+                    payload.new.id
+                )
+              ) {
+
+                cards.push(
+                  payload.new
+                );
+              }
+            }
+
+
+            if (
+              payload.eventType ===
+              "UPDATE"
+            ) {
+
+              const index =
+                cards.findIndex(
+                  card =>
+                    card.id ===
+                    payload.new.id
+                );
+
+
+              if (index >= 0) {
+
+                cards[index] = {
+
+                  ...cards[index],
+
+                  ...payload.new
+
+                };
+              }
+            }
+
+
+            if (
+              payload.eventType ===
+              "DELETE"
+            ) {
+
+              cards =
+                cards.filter(
+                  card =>
+                    card.id !==
+                    payload.old.id
+                );
+            }
+
+
+            renderCards();
+            renderConnections();
+            filterCards();
+
+          }
+        )
+
+
+        .on(
+          "postgres_changes",
+          {
+            event:
+              "*",
+            schema:
+              "public",
+            table:
+              "connections",
+            filter:
+              `campaign_id=eq.${campaignId}`
+          },
+          payload => {
+
+            if (
+              payload.eventType ===
+              "INSERT"
+            ) {
+
+              if (
+                !connections.some(
+                  connection =>
+                    connection.id ===
+                    payload.new.id
+                )
+              ) {
+
+                connections.push(
+                  payload.new
+                );
+              }
+            }
+
+
+            if (
+              payload.eventType ===
+              "UPDATE"
+            ) {
+
+              const index =
+                connections.findIndex(
+                  connection =>
+                    connection.id ===
+                    payload.new.id
+                );
+
+
+              if (index >= 0) {
+
+                connections[index] =
+                  payload.new;
+              }
+            }
+
+
+            if (
+              payload.eventType ===
+              "DELETE"
+            ) {
+
+              connections =
+                connections.filter(
+                  connection =>
+                    connection.id !==
+                    payload.old.id
+                );
+            }
+
+
+            renderConnections();
+
+          }
+        )
+
+
+        .on(
+          "postgres_changes",
+          {
+            event:
+              "*",
+            schema:
+              "public",
+            table:
+              "entity_notes",
+            filter:
+              `campaign_id=eq.${campaignId}`
+          },
+          payload => {
+
+            if (
+              !window._entityNotes
+            ) {
+
+              window._entityNotes =
+                [];
+            }
+
+
+            if (
+              payload.eventType ===
+              "INSERT"
+            ) {
+
+              if (
+                !window._entityNotes.some(
+                  note =>
+                    note.id ===
+                    payload.new.id
+                )
+              ) {
+
+                window._entityNotes.push(
+                  payload.new
+                );
+              }
+            }
+
+
+            if (
+              payload.eventType ===
+              "UPDATE"
+            ) {
+
+              const index =
+                window._entityNotes.findIndex(
+                  note =>
+                    note.id ===
+                    payload.new.id
+                );
+
+
+              if (index >= 0) {
+
+                window._entityNotes[index] =
+                  payload.new;
+              }
+            }
+
+
+            if (
+              payload.eventType ===
+              "DELETE"
+            ) {
+
+              window._entityNotes =
+                window._entityNotes.filter(
+                  note =>
+                    note.id !==
+                    payload.old.id
+                );
+            }
+
+
+            renderEntityNotes();
+
+          }
+        )
+
+
+        .subscribe(
+          status => {
+
+            if (
+              status ===
+              "SUBSCRIBED"
+            ) {
+
+              setSync(
+                "tempo real",
+                true
+              );
+            }
+
+          }
+        );
+  }
+
+
+  /* ============================================================
+     NAVEGAÇÃO ATIVA
+     ============================================================ */
+
+  function initNavigationObserver() {
+
+    if (
+      !window.IntersectionObserver
+    ) {
+      return;
+    }
+
+
+    const observer =
+      new IntersectionObserver(
+        entries => {
+
+          entries.forEach(
+            entry => {
+
+              if (
+                !entry.isIntersecting
+              ) {
+                return;
+              }
+
+
+              $$(".main-nav a")
+                .forEach(
+                  link => {
+
+                    const href =
+                      link.getAttribute(
+                        "href"
+                      );
+
+
+                    link.classList.toggle(
+                      "active",
+                      href ===
+                      `#${entry.target.id}`
+                    );
+
+                  }
+                );
+
+            }
+          );
+
+        },
+        {
+          rootMargin:
+            "-35% 0px -55% 0px"
+        }
+      );
+
+
+    $$(
+      "main section[id]"
+    )
+    .forEach(
+      section =>
+        observer.observe(
+          section
+        )
+    );
+  }
+
+
+  /* ============================================================
+     EVENTOS DA INTERFACE
+     ============================================================ */
+
+  function bindEvents() {
+
+    on(
+      "#soundToggle",
+      "click",
+      () => {
+
+        playSound(
+          "panel"
+        );
+
+        toggleSoundPanel();
+      }
+    );
+
+
+    on(
+      "#interfaceSoundToggle",
+      "click",
+      toggleInterfaceSounds
+    );
+
+
+    on(
+      "#audioFile",
+      "change",
+      handleAudioFile
+    );
+
+
+    on(
+      "#enterBoard",
+      "click",
+      () => {
+
+        playSound(
+          "enter"
+        );
+
+        openBoard();
+      }
+    );
+
+
+    on(
+      "#addCardBtn",
+      "click",
+      () => {
+
+        playSound(
+          "save"
+        );
+
+        openNewCard();
+      }
+    );
+
+
+    on(
+      "#createCard",
+      "click",
+      () => {
+
+        playSound(
+          "save"
+        );
+
+        createCard();
+      }
+    );
+
+
+    on(
+      "#connectionMode",
+      "click",
+      () => {
+
+        connectingMode =
+          !connectingMode;
+
+
+        const button =
+          $("#connectionMode");
+
+
+        const hint =
+          $("#connectionHint");
+
+
+        if (button) {
+
+          button.classList.toggle(
+            "active",
+            connectingMode
+          );
+        }
+
+
+        if (hint) {
+
+          hint.textContent =
+            connectingMode
+              ? "modo conectar ativo • clique em duas pistas"
+              : "arraste • escreva • conecte • todos veem as mudanças";
+        }
+
+
+        selectCard(
+          null
+        );
+
+
+        playSound(
+          "connect"
+        );
+      }
+    );
+
+
+    on(
+      "#resetBoard",
+      "click",
+      () => {
+
+        seedCards.forEach(
+          original => {
+
+            const card =
+              cards.find(
+                item =>
+                  String(
+                    item.title
+                  ) ===
+                  String(
+                    original.title
+                  )
+              );
+
+
+            if (!card) {
+              return;
+            }
+
+
+            card.x =
+              original.x;
+
+            card.y =
+              original.y;
+
+
+            const element =
+              $(
+                `#boardCanvas [data-id="${CSS.escape(String(card.id))}"]`
+              );
+
+
+            if (element) {
+
+              element.style.left =
+                `${original.x}%`;
+
+              element.style.top =
+                `${original.y}%`;
+            }
+
+
+            saveCardPosition(
+              card
+            );
+
+          }
+        );
+
+
+        renderConnections();
+
+
+        toast(
+          "Posições reposicionadas."
+        );
+
+
+        playSound(
+          "save"
+        );
+      }
+    );
+
+
+    on(
+      "#boardSearch",
+      "input",
+      filterCards
+    );
+
+
+    on(
+      "#zoomIn",
+      "click",
+      () => {
+
+        setZoom(
+          zoom + 0.1
+        );
+
+        playSound(
+          "click"
+        );
+      }
+    );
+
+
+    on(
+      "#zoomOut",
+      "click",
+      () => {
+
+        setZoom(
+          zoom - 0.1
+        );
+
+        playSound(
+          "click"
+        );
+      }
+    );
+
+
+    $(
+      "#cancelEditor"
+    )?.addEventListener(
+      "click",
+      closeEditor
+    );
+
+
+    $(
+      "#saveEditor"
+    )?.addEventListener(
+      "click",
+      saveEditor
+    );
+
+
+    $$(
+      "[data-close-editor]"
+    )
+    .forEach(
+      element =>
+        element.addEventListener(
+          "click",
+          closeEditor
+        )
+    );
+
+
+    $$(
+      "[data-close-modal]"
+    )
+    .forEach(
+      element =>
+        element.addEventListener(
+          "click",
+          closeDocument
+        )
+    );
+
+
+    $$(
+      "[data-close-new-card]"
+    )
+    .forEach(
+      element =>
+        element.addEventListener(
+          "click",
+          closeNewCard
+        )
+    );
+
+
+    $$(
+      ".entity-note-btn"
+    )
+    .forEach(
+      button =>
+        button.addEventListener(
+          "click",
+          () => {
+
+            playSound(
+              "edit"
+            );
+
+            openEntityEditor(
+              button
+            );
+          }
+        )
+    );
+
+
+    $$(
+      ".document-card"
+    )
+    .forEach(
+      button =>
+        button.addEventListener(
+          "click",
+          () => {
+
+            playSound(
+              "document"
+            );
+
+            openDocument(
+              button.dataset.document
+            );
+          }
+        )
+    );
+
+
+    $$(".main-nav a")
+      .forEach(
+        link =>
+          link.addEventListener(
+            "click",
+            () =>
+              playSound(
+                "nav"
+              )
+          )
+      );
+
+
+    const brand =
+      $(".brand");
+
+
+    if (brand) {
+
+      brand.addEventListener(
+        "click",
+        () =>
+          playSound(
+            "nav"
+          )
+      );
+    }
+
+
+    document.addEventListener(
+      "click",
+      event => {
+
+        const element =
+          event.target.closest(
+            "button,a"
+          );
+
+
+        if (!element) {
+          return;
+        }
+
+
+        if (
+          element.closest(
+            ".document-card,.main-nav,.brand"
+          )
+        ) {
+          return;
+        }
+
+
+        const sound =
+          element.dataset.sound;
+
+
+        if (
+          sound &&
+          ![
+            "panel",
+            "nav",
+            "document",
+            "save",
+            "edit",
+            "danger",
+            "enter",
+            "connect"
+          ].includes(
+            sound
+          )
+        ) {
+
+          playSound(
+            sound
+          );
+        }
+
+      }
+    );
+
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key !==
+          "Escape"
+        ) {
+          return;
+        }
+
+
+        closeDocument();
+
+        closeEditor();
+
+        closeNewCard();
+
+
+        const panel =
+          $("#soundPanel");
+
+
+        if (panel) {
+
+          panel.classList.remove(
+            "open"
+          );
+
+          panel.setAttribute(
+            "aria-hidden",
+            "true"
+          );
+        }
+
+      }
+    );
+
+
+    window.addEventListener(
+      "resize",
+      () =>
+        renderConnections()
+    );
+  }
+
+
+  /* ============================================================
+     INICIALIZAÇÃO
+     ============================================================ */
+
+  async function start() {
+
+    /*
+      PRIMEIRO:
+      a interface sempre funciona.
+    */
+
+    bindEvents();
+
+    initNavigationObserver();
+
+    loadLocalData();
+
+
+    /*
+      DEPOIS:
+      tentamos conectar ao Supabase.
+      Se der qualquer erro, nada da interface quebra.
+    */
+
+    const connected =
+      await initSupabase();
+
+
+    if (!connected) {
+      return;
+    }
+
+
+    try {
 
       await enterMainCampaign();
 
@@ -222,24 +4466,18 @@ async function bootstrap(){
 
       subscribeRealtime();
 
-      setSync(
-        "tempo real",
-        true
-      );
 
-      return;
-
-    }catch(error){
+    } catch (error) {
 
       console.error(
-        "Erro ao carregar a mesa:",
+        "Mesa compartilhada:",
         error
       );
 
 
       /*
-        Caso o banco ainda não esteja pronto,
-        o site não fica inutilizado.
+        Não deixa o erro do banco matar
+        o restante do site.
       */
 
       appMode =
@@ -251,40 +4489,40 @@ async function bootstrap(){
       campaignCode =
         "LOCAL";
 
+
       loadLocalData();
 
 
-      toast(
-        "A mesa compartilhada não pôde ser carregada. Modo local ativado."
+      setSync(
+        "modo local",
+        false
       );
 
 
-      return;
+      toast(
+        "Banco indisponível. O mural continua funcionando neste navegador."
+      );
     }
   }
 
 
-  /*
-    Sem Supabase:
-    o site funciona localmente.
-  */
+  if (
+    document.readyState ===
+    "loading"
+  ) {
 
-  campaignId =
-    "local";
+    document.addEventListener(
+      "DOMContentLoaded",
+      start,
+      {
+        once: true
+      }
+    );
 
-  campaignCode =
-    "LOCAL";
+  } else {
 
-  playerName =
-    "Jogador";
+    start();
 
-  playerRole =
-    "player";
+  }
 
-
-  loadLocalData();
-
-}
-
-
-/* ---------- local dataset ---------- */
+})();
