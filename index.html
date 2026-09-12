@@ -127,19 +127,45 @@
     </section>
   </main>
 
-  <div class="setup-modal open" id="setupModal" aria-hidden="false">
-    <div class="modal-backdrop"></div>
-    <article class="setup-card">
-      <span class="eyebrow"><span></span> MESA VIRTUAL</span>
-      <h2>ENTRAR NA <em>INVESTIGAÇÃO</em></h2>
-      <p id="setupMessage">Primeiro configure o Supabase no arquivo <code>config.js</code>. Depois você poderá criar ou entrar em uma mesa.</p>
-      <div class="setup-tabs"><button class="setup-tab active" id="joinTab" type="button">ENTRAR</button><button class="setup-tab" id="createTab" type="button">CRIAR MESA</button></div>
-      <form id="joinForm"><label>CÓDIGO DA MESA<input id="joinCode" autocomplete="off" maxlength="8" placeholder="Ex.: 7F2K9"></label><label>SEU NOME<input id="joinName" maxlength="30" placeholder="Como a mesa deve te chamar?"></label><button class="primary-btn" type="submit">ENTRAR NA MESA →</button></form>
-      <form id="createForm" hidden><label>NOME DA MESA<input id="createName" maxlength="50" value="O Som que Não Deveria Existir"></label><label>SEU NOME<input id="createPlayerName" maxlength="30" placeholder="Nome do mestre"></label><button class="primary-btn" type="submit">CRIAR MESA →</button></form>
-      <div class="setup-result" id="setupResult" hidden></div>
-      <button class="local-mode-btn" id="localModeBtn" type="button">CONTINUAR EM MODO LOCAL</button>
-    </article>
-  </div>
+<div class="setup-modal open" id="setupModal" aria-hidden="false">
+  <div class="modal-backdrop"></div>
+
+  <article class="setup-card">
+    <span class="eyebrow">
+      <span></span> MESA VIRTUAL
+    </span>
+
+    <h2>ENTRAR NA <em>INVESTIGAÇÃO</em></h2>
+
+    <p id="setupMessage">
+      Esta investigação possui uma única mesa compartilhada.
+      Digite seu nome para entrar.
+    </p>
+
+    <form id="joinForm">
+      <label>
+        SEU NOME
+        <input
+          id="joinName"
+          maxlength="30"
+          autocomplete="name"
+          placeholder="Como a mesa deve te chamar?"
+          required
+        >
+      </label>
+
+      <button class="primary-btn" type="submit">
+        ENTRAR NA INVESTIGAÇÃO →
+      </button>
+    </form>
+
+    <div class="setup-result" id="setupResult" hidden></div>
+
+    <button class="local-mode-btn" id="localModeBtn" type="button">
+      CONTINUAR EM MODO LOCAL
+    </button>
+  </article>
+</div>
 
   <div class="document-modal" id="documentModal" aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><article class="document-viewer"><button class="modal-close" data-close-modal type="button">×</button><span id="modalType">DOCUMENTO</span><h2 id="modalTitle"></h2><div id="modalContent"></div></article></div>
 
