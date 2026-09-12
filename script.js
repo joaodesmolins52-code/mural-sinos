@@ -1,14 +1,12 @@
 /* ============================================================
    O SOM QUE NÃO DEVERIA EXISTIR — MURAL V2
-   - Supabase: auth anônima + mesa única + realtime
-   - fallback localStorage quando não configurado
+   MESA ÚNICA / ENTRADA AUTOMÁTICA
    ============================================================ */
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 const localKeys = {
-  session: "sinosSession",
   positions: "sinosPositions",
   connections: "sinosConnections",
   notes: "sinosNotes",
@@ -16,16 +14,19 @@ const localKeys = {
   uiSounds: "sinosUISounds"
 };
 
-const config = window.SUPABASE_CONFIG || {};
+const config =
+  window.SUPABASE_CONFIG || {};
 
 let supabase = null;
 let supabaseReady = false;
 let realtimeChannels = [];
 
 let appMode = "local";
+
 let campaignId = null;
-let campaignCode = null;
-let playerName = "";
+let campaignCode = "PONTO03";
+
+let playerName = "Jogador";
 let playerRole = "player";
 let currentUser = null;
 
@@ -36,18 +37,24 @@ let connections = [];
 let selectedCard = null;
 let dragging = null;
 let dragMoved = false;
+
 let connectingMode = false;
 let zoom = 1;
 
 let editingNote = null;
 
 
-/* ---------- feedback / audio ---------- */
+/* ============================================================
+   SOM
+   ============================================================ */
 
 let audioContext = null;
 
 let uiSoundsEnabled =
-  localStorage.getItem(localKeys.uiSounds) !== "false";
+  localStorage.getItem(
+    localKeys.uiSounds
+  ) !== "false";
+
 
 const noteHz = {
   D3: 146.83,
@@ -67,12 +74,22 @@ const noteHz = {
 function getAudio(){
 
   if(!audioContext){
+
     audioContext =
-      new (window.AudioContext || window.webkitAudioContext)();
+      new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )();
+
   }
 
-  if(audioContext.state === "suspended"){
+  if(
+    audioContext.state ===
+    "suspended"
+  ){
+
     audioContext.resume();
+
   }
 
   return audioContext;
@@ -91,10 +108,12 @@ function tone(
     return;
   }
 
-  const ctx = getAudio();
+  const ctx =
+    getAudio();
 
   const now =
-    ctx.currentTime + delay;
+    ctx.currentTime +
+    delay;
 
   const osc =
     ctx.createOscillator();
@@ -130,18 +149,22 @@ function tone(
   osc.start(now);
 
   osc.stop(
-    now + duration + .02
+    now +
+    duration +
+    .02
   );
 }
 
 
-function playUISound(kind = "click"){
+function playUISound(
+  kind = "click"
+){
 
   if(!uiSoundsEnabled){
     return;
   }
 
-  const m = {
+  const sounds = {
 
     click: () =>
       tone(
@@ -153,6 +176,7 @@ function playUISound(kind = "click"){
       ),
 
     nav: () => {
+
       tone(
         "D4",
         .05,
@@ -168,9 +192,11 @@ function playUISound(kind = "click"){
         "sine",
         .018
       );
+
     },
 
     panel: () => {
+
       tone(
         "F4",
         .06,
@@ -186,9 +212,11 @@ function playUISound(kind = "click"){
         "sine",
         .018
       );
+
     },
 
     card: () => {
+
       tone(
         "D4",
         .07,
@@ -204,9 +232,11 @@ function playUISound(kind = "click"){
         "sine",
         .02
       );
+
     },
 
     connect: () => {
+
       tone(
         "D4",
         .08,
@@ -230,6 +260,7 @@ function playUISound(kind = "click"){
         "sine",
         .015
       );
+
     },
 
     tool: () =>
@@ -242,6 +273,7 @@ function playUISound(kind = "click"){
       ),
 
     edit: () => {
+
       tone(
         "A4",
         .05,
@@ -257,9 +289,11 @@ function playUISound(kind = "click"){
         "sine",
         .017
       );
+
     },
 
     save: () => {
+
       tone(
         "D4",
         .06,
@@ -283,9 +317,11 @@ function playUISound(kind = "click"){
         "sine",
         .016
       );
+
     },
 
     enter: () => {
+
       tone(
         "D3",
         .12,
@@ -309,9 +345,11 @@ function playUISound(kind = "click"){
         "triangle",
         .013
       );
+
     },
 
     document: () => {
+
       tone(
         "A3",
         .08,
@@ -327,9 +365,11 @@ function playUISound(kind = "click"){
         "sine",
         .016
       );
+
     },
 
     danger: () => {
+
       tone(
         "F4",
         .06,
@@ -345,11 +385,15 @@ function playUISound(kind = "click"){
         "sine",
         .017
       );
+
     }
 
   };
 
-  (m[kind] || m.click)();
+  (
+    sounds[kind] ||
+    sounds.click
+  )();
 }
 
 
@@ -361,7 +405,9 @@ function toast(msg){
   el.textContent =
     msg;
 
-  el.classList.add("show");
+  el.classList.add(
+    "show"
+  );
 
   clearTimeout(
     toast.timer
@@ -370,7 +416,9 @@ function toast(msg){
   toast.timer =
     setTimeout(
       () =>
-        el.classList.remove("show"),
+        el.classList.remove(
+          "show"
+        ),
       2400
     );
 }
@@ -389,51 +437,70 @@ document.addEventListener(
       return;
     }
 
-    if(t.closest("textarea,input")){
+    if(
+      t.closest(
+        "textarea,input"
+      )
+    ){
       return;
     }
 
     playUISound(
-      t.dataset.sound || "click"
+      t.dataset.sound ||
+      "click"
     );
+
   }
 );
 
 
-/* ---------- config / startup ---------- */
+/* ============================================================
+   SUPABASE
+   ============================================================ */
 
 function hasSupabaseConfig(){
 
   return Boolean(
     config.url &&
     config.anonKey &&
-    !String(config.url).startsWith("COLE_AQUI") &&
-    !String(config.anonKey).startsWith("COLE_AQUI")
+    !String(
+      config.url
+    ).startsWith(
+      "COLE_AQUI"
+    ) &&
+    !String(
+      config.anonKey
+    ).startsWith(
+      "COLE_AQUI"
+    )
   );
 }
 
 
-function setSync(label, connected){
+function setSync(
+  label,
+  connected
+){
 
-  $("#syncStatus").textContent =
-    label;
+  const sync =
+    $("#syncStatus");
 
-  $("#sessionLabel").textContent =
-    connected
-      ? playerName.toUpperCase()
-      : "ENTRAR";
+  if(sync){
+    sync.textContent =
+      label;
+  }
 
-  $("#sessionButton")
-    .classList
-    .toggle(
-      "connected",
+  const footer =
+    $("#footerState");
+
+  if(footer){
+
+    footer.textContent =
       connected
-    );
+        ? "MESA COMPARTILHADA"
+        : "MODO LOCAL";
 
-  $("#footerState").textContent =
-    connected
-      ? "MESA COMPARTILHADA"
-      : "MODO LOCAL";
+  }
 }
 
 
@@ -478,22 +545,31 @@ async function initSupabase(){
 
 
     currentUser =
-      data.session?.user || null;
+      data.session?.user ||
+      null;
 
 
     if(!currentUser){
 
-      const res =
-        await supabase.auth.signInAnonymously();
+      const response =
+        await supabase.auth
+          .signInAnonymously();
 
 
-      if(res.error){
-        throw res.error;
+      if(response.error){
+        throw response.error;
       }
 
 
       currentUser =
-        res.data.user;
+        response.data.user;
+    }
+
+
+    if(!currentUser){
+      throw new Error(
+        "ANONYMOUS_AUTH_FAILED"
+      );
     }
 
 
@@ -505,7 +581,7 @@ async function initSupabase(){
 
 
     setSync(
-      "Supabase pronto",
+      "Supabase conectado",
       false
     );
 
@@ -514,20 +590,22 @@ async function initSupabase(){
 
   }catch(err){
 
-    console.error(err);
+    console.error(
+      "Supabase:",
+      err
+    );
+
+
+    supabaseReady =
+      false;
 
     appMode =
       "local";
 
 
     setSync(
-      "falha no Supabase — modo local",
+      "modo local",
       false
-    );
-
-
-    toast(
-      "Não foi possível conectar ao Supabase. O site continua em modo local."
     );
 
 
@@ -536,49 +614,14 @@ async function initSupabase(){
 }
 
 
-/* ---------- sessão ---------- */
+/* ============================================================
+   ENTRADA AUTOMÁTICA NA MESA ÚNICA
+   ============================================================ */
 
-async function restoreSession(){
-
-  const saved =
-    JSON.parse(
-      localStorage.getItem(
-        localKeys.session
-      ) || "null"
-    );
-
-
-  /*
-    A partir de agora só usamos o nome salvo.
-
-    Caso exista uma sessão antiga contendo
-    campaignId/campaignCode, ela será ignorada.
-  */
-
-  if(saved?.playerName){
-
-    playerName =
-      saved.playerName;
-
-    playerRole =
-      "player";
-
-    return true;
-  }
-
-
-  return false;
-}
-
-
-/* ---------- mesa única ---------- */
-
-async function enterMainCampaign(name){
+async function enterMainCampaign(){
 
   if(!supabaseReady){
-    throw new Error(
-      "SUPABASE_NOT_READY"
-    );
+    return false;
   }
 
 
@@ -587,10 +630,7 @@ async function enterMainCampaign(name){
     error
   } =
     await supabase.rpc(
-      "enter_main_campaign",
-      {
-        p_display_name: name
-      }
+      "enter_main_campaign"
     );
 
 
@@ -613,35 +653,27 @@ async function enterMainCampaign(name){
   campaignId =
     row.campaign_id;
 
+
   campaignCode =
-    row.campaign_code;
+    row.campaign_code ||
+    "PONTO03";
+
 
   playerName =
-    name;
+    "Jogador";
+
 
   playerRole =
     "player";
 
 
-  /*
-    Não precisamos mais salvar código
-    de mesa no navegador.
-  */
-
-  localStorage.setItem(
-    localKeys.session,
-    JSON.stringify({
-      playerName,
-      playerRole
-    })
-  );
-
-
-  return row;
+  return true;
 }
 
 
-/* ---------- inicialização ---------- */
+/* ============================================================
+   INICIALIZAÇÃO
+   ============================================================ */
 
 async function bootstrap(){
 
@@ -649,57 +681,37 @@ async function bootstrap(){
     await initSupabase();
 
 
-  const hasPreviousName =
-    await restoreSession();
+  if(!connected){
 
+    loadLocalData();
 
-  /*
-    Se já existe um jogador neste navegador,
-    ele entra automaticamente na mesa única.
-  */
-
-  if(
-    connected &&
-    hasPreviousName
-  ){
-
-    try{
-
-      await enterMainCampaign(
-        playerName
-      );
-
-      await loadCampaignData();
-
-      closeSetup();
-
-      subscribeRealtime();
-
-      return;
-
-    }catch(err){
-
-      console.error(err);
-
-      localStorage.removeItem(
-        localKeys.session
-      );
-
-      playerName =
-        "";
-    }
+    return;
   }
 
 
-  /*
-    Sem Supabase, uma sessão local pode
-    continuar normalmente.
-  */
+  try{
 
-  if(
-    !connected &&
-    hasPreviousName
-  ){
+    await enterMainCampaign();
+
+    await loadCampaignData();
+
+    subscribeRealtime();
+
+  }catch(err){
+
+    console.error(
+      "Entrada automática:",
+      err
+    );
+
+
+    toast(
+      "Não foi possível carregar a mesa compartilhada. Modo local ativado."
+    );
+
+
+    appMode =
+      "local";
 
     campaignId =
       "local";
@@ -707,278 +719,199 @@ async function bootstrap(){
     campaignCode =
       "LOCAL";
 
-    playerRole =
-      "player";
-
-
     loadLocalData();
 
-    closeSetup();
-
-    return;
   }
 
-
-  /*
-    Primeiro acesso.
-  */
-
-  if(!hasSupabaseConfig()){
-
-    $("#setupMessage").innerHTML =
-      `Configure <code>config.js</code> com a URL e a chave anon pública do Supabase para habilitar o mural compartilhado. Você também pode testar tudo em <strong>modo local</strong>.`;
-
-  }else{
-
-    $("#setupMessage").textContent =
-      "Esta investigação possui uma única mesa compartilhada. Digite seu nome para entrar.";
-  }
 }
 
 
-/* ---------- setup modal ---------- */
-
-const setupModal =
-  $("#setupModal");
-
-const joinForm =
-  $("#joinForm");
-
-
-function closeSetup(){
-
-  setupModal.classList.remove(
-    "open"
-  );
-
-  setupModal.setAttribute(
-    "aria-hidden",
-    "true"
-  );
-}
-
-
-function openSetup(){
-
-  setupModal.classList.add(
-    "open"
-  );
-
-  setupModal.setAttribute(
-    "aria-hidden",
-    "false"
-  );
-
-
-  $("#joinName").value =
-    playerName || "";
-
-
-  setTimeout(
-    () =>
-      $("#joinName").focus(),
-    50
-  );
-}
-
-
-/* ---------- modo local ---------- */
-
-$("#localModeBtn")
-  .addEventListener(
-    "click",
-    () => {
-
-      appMode =
-        "local";
-
-      campaignId =
-        "local";
-
-      campaignCode =
-        "LOCAL";
-
-
-      playerName =
-        $("#joinName")
-          .value
-          .trim() ||
-        "Jogador";
-
-
-      playerRole =
-        "player";
-
-
-      localStorage.setItem(
-        localKeys.session,
-        JSON.stringify({
-          playerName,
-          playerRole
-        })
-      );
-
-
-      loadLocalData();
-
-      closeSetup();
-
-
-      toast(
-        "Modo local ativo — o quadro ficará neste navegador."
-      );
-    }
-  );
-
-
-/* ---------- entrada na mesa única ---------- */
-
-joinForm.addEventListener(
-  "submit",
-  async e => {
-
-    e.preventDefault();
-
-
-    const name =
-      $("#joinName")
-        .value
-        .trim() ||
-      "Jogador";
-
-
-    if(!supabaseReady){
-
-      toast(
-        "Configure o Supabase primeiro ou use o modo local."
-      );
-
-      return;
-    }
-
-
-    try{
-
-      await enterMainCampaign(
-        name
-      );
-
-
-      await loadCampaignData();
-
-      closeSetup();
-
-      subscribeRealtime();
-
-
-      toast(
-        "Você entrou na investigação."
-      );
-
-    }catch(err){
-
-      console.error(err);
-
-
-      toast(
-        `Não foi possível entrar: ${
-          err.message ||
-          "erro desconhecido"
-        }`
-      );
-    }
-  }
-);
-
-
-/* ---------- botão de sessão ---------- */
-
-$("#sessionButton")
-  .addEventListener(
-    "click",
-    () => openSetup()
-  );
-
-
-/* ---------- local dataset ---------- */
+/* ============================================================
+   DADOS LOCAIS
+   ============================================================ */
 
 const seedLocal = [
 
   {
-    id: "sangue",
-    title: "SANGUE",
-    clue_type: "PISTA",
-    context: "Praça / condição do ritual",
-    notes: "",
-    x: 6,
-    y: 13,
-    rotation: 0
+    id:
+      "sangue",
+
+    title:
+      "SANGUE",
+
+    clue_type:
+      "PISTA",
+
+    context:
+      "Praça / condição do ritual",
+
+    notes:
+      "",
+
+    x:
+      6,
+
+    y:
+      13,
+
+    rotation:
+      0
   },
 
   {
-    id: "medo",
-    title: "MEDO",
-    clue_type: "PISTA",
-    context: "Atenção / amplificação",
-    notes: "",
-    x: 39,
-    y: 8,
-    rotation: 0
+    id:
+      "medo",
+
+    title:
+      "MEDO",
+
+    clue_type:
+      "PISTA",
+
+    context:
+      "Atenção / amplificação",
+
+    notes:
+      "",
+
+    x:
+      39,
+
+    y:
+      8,
+
+    rotation:
+      0
   },
 
   {
-    id: "grupo",
-    title: "GRUPO",
-    clue_type: "PISTA",
-    context: "Pessoas coordenadas",
-    notes: "",
-    x: 70,
-    y: 16,
-    rotation: 0
+    id:
+      "grupo",
+
+    title:
+      "GRUPO",
+
+    clue_type:
+      "PISTA",
+
+    context:
+      "Pessoas coordenadas",
+
+    notes:
+      "",
+
+    x:
+      70,
+
+    y:
+      16,
+
+    rotation:
+      0
   },
 
   {
-    id: "fragmentos",
-    title: "FRAGMENTOS",
-    clue_type: "PISTA",
-    context: "Metal / ressonância",
-    notes: "",
-    x: 13,
-    y: 59,
-    rotation: 0
+    id:
+      "fragmentos",
+
+    title:
+      "FRAGMENTOS",
+
+    clue_type:
+      "PISTA",
+
+    context:
+      "Metal / ressonância",
+
+    notes:
+      "",
+
+    x:
+      13,
+
+    y:
+      59,
+
+    rotation:
+      0
   },
 
   {
-    id: "sino",
-    title: "SINO ANTECIPADO",
-    clue_type: "ANOMALIA",
-    context: "Registro acústico",
-    notes: "",
-    x: 45,
-    y: 49,
-    rotation: 0
+    id:
+      "sino",
+
+    title:
+      "SINO ANTECIPADO",
+
+    clue_type:
+      "ANOMALIA",
+
+    context:
+      "Registro acústico",
+
+    notes:
+      "",
+
+    x:
+      45,
+
+    y:
+      49,
+
+    rotation:
+      0
   },
 
   {
-    id: "quinto",
-    title: "QUINTO CÍRCULO",
-    clue_type: "PISTA",
-    context: "Símbolos / ritual",
-    notes: "",
-    x: 72,
-    y: 58,
-    rotation: 0
+    id:
+      "quinto",
+
+    title:
+      "QUINTO CÍRCULO",
+
+    clue_type:
+      "PISTA",
+
+    context:
+      "Símbolos / ritual",
+
+    notes:
+      "",
+
+    x:
+      72,
+
+    y:
+      58,
+
+    rotation:
+      0
   },
 
   {
-    id: "sombra",
-    title: "SOMBRA SEM OBJETO",
-    clue_type: "MANIFESTAÇÃO",
-    context: "Presença visual",
-    notes: "",
-    x: 37,
-    y: 78,
-    rotation: 0
+    id:
+      "sombra",
+
+    title:
+      "SOMBRA SEM OBJETO",
+
+    clue_type:
+      "MANIFESTAÇÃO",
+
+    context:
+      "Presença visual",
+
+    notes:
+      "",
+
+    x:
+      37,
+
+    y:
+      78,
+
+    rotation:
+      0
   }
 
 ];
@@ -987,53 +920,118 @@ const seedLocal = [
 const seedObjects = [
 
   {
-    id: "radio",
-    name: "RÁDIO",
-    object_type: "ÁUDIO",
-    description: "Um rádio que perdeu sinal por um segundo.",
-    content: "O aparelho registra um ruído impossível de localizar.",
-    x: 8,
-    y: 7
+    id:
+      "radio",
+
+    name:
+      "RÁDIO",
+
+    object_type:
+      "ÁUDIO",
+
+    description:
+      "Um rádio que perdeu sinal por um segundo.",
+
+    content:
+      "O aparelho registra um ruído impossível de localizar.",
+
+    x:
+      8,
+
+    y:
+      7
   },
 
   {
-    id: "fragmento-obj",
-    name: "FRAGMENTO",
-    object_type: "EVIDÊNCIA",
-    description: "Peça de metal escuro sem ferrugem.",
-    content: "Reage ao sangue e vibra perto de outro fragmento.",
-    x: 91,
-    y: 15
+    id:
+      "fragmento-obj",
+
+    name:
+      "FRAGMENTO",
+
+    object_type:
+      "EVIDÊNCIA",
+
+    description:
+      "Peça de metal escuro sem ferrugem.",
+
+    content:
+      "Reage ao sangue e vibra perto de outro fragmento.",
+
+    x:
+      91,
+
+    y:
+      15
   },
 
   {
-    id: "chave",
-    name: "CHAVE",
-    object_type: "OBJETO",
-    description: "Chave de ferro escuro.",
-    content: "Há indícios de que abre uma porta associada à escola municipal.",
-    x: 87,
-    y: 80
+    id:
+      "chave",
+
+    name:
+      "CHAVE",
+
+    object_type:
+      "OBJETO",
+
+    description:
+      "Chave de ferro escuro.",
+
+    content:
+      "Há indícios de que abre uma porta associada à escola municipal.",
+
+    x:
+      87,
+
+    y:
+      80
   },
 
   {
-    id: "foto",
-    name: "FOTOGRAFIA",
-    object_type: "DOCUMENTO",
-    description: "Fotografia de uma praça vazia.",
-    content: "Três fotografias mostram círculos de sangue em locais diferentes.",
-    x: 7,
-    y: 82
+    id:
+      "foto",
+
+    name:
+      "FOTOGRAFIA",
+
+    object_type:
+      "DOCUMENTO",
+
+    description:
+      "Fotografia de uma praça vazia.",
+
+    content:
+      "Três fotografias mostram círculos de sangue em locais diferentes.",
+
+    x:
+      7,
+
+    y:
+      82
   },
 
   {
-    id: "mapa",
-    name: "MAPA",
-    object_type: "DOCUMENTO",
-    description: "Mapa com cinco locais marcados.",
-    content: "Praça Santa Cecília, Apartamento 18, Túnel ferroviário, Escola municipal e Torre sem nome.",
-    x: 91,
-    y: 57
+    id:
+      "mapa",
+
+    name:
+      "MAPA",
+
+    object_type:
+      "DOCUMENTO",
+
+    description:
+      "Mapa com cinco locais marcados.",
+
+    content:
+      "Praça Santa Cecília, Apartamento 18, Túnel ferroviário, Escola municipal e Torre sem nome.",
+
+    x:
+      91,
+
+    y:
+      57
   }
 
 ];
@@ -1045,7 +1043,8 @@ function loadLocalData(){
     JSON.parse(
       localStorage.getItem(
         "sinosLocalCards"
-      ) || "null"
+      ) ||
+      "null"
     ) ||
     structuredClone(
       seedLocal
@@ -1056,7 +1055,8 @@ function loadLocalData(){
     JSON.parse(
       localStorage.getItem(
         localKeys.connections
-      ) || "[]"
+      ) ||
+      "[]"
     );
 
 
@@ -1064,7 +1064,8 @@ function loadLocalData(){
     JSON.parse(
       localStorage.getItem(
         localKeys.objects
-      ) || "null"
+      ) ||
+      "null"
     ) ||
     structuredClone(
       seedObjects
@@ -1072,7 +1073,6 @@ function loadLocalData(){
 
 
   renderAll();
-
 
   setSync(
     "modo local",
@@ -1085,29 +1085,43 @@ function saveLocal(){
 
   localStorage.setItem(
     "sinosLocalCards",
-    JSON.stringify(cards)
+    JSON.stringify(
+      cards
+    )
   );
 
 
   localStorage.setItem(
     localKeys.connections,
-    JSON.stringify(connections)
+    JSON.stringify(
+      connections
+    )
   );
 
 
   localStorage.setItem(
     localKeys.objects,
-    JSON.stringify(objects)
+    JSON.stringify(
+      objects
+    )
   );
 }
 
 
-/* ---------- Supabase data ---------- */
+/* ============================================================
+   SUPABASE DATA
+   ============================================================ */
 
 async function loadCampaignData(){
 
-  if(appMode !== "supabase"){
-    return loadLocalData();
+  if(
+    appMode !==
+    "supabase"
+  ){
+
+    loadLocalData();
+
+    return;
   }
 
 
@@ -1191,7 +1205,10 @@ async function loadCampaignData(){
 
 async function loadEntityNotes(){
 
-  if(appMode !== "supabase"){
+  if(
+    appMode !==
+    "supabase"
+  ){
 
     applyLocalEntityNotes();
 
@@ -1224,37 +1241,47 @@ async function loadEntityNotes(){
 
 function applyLocalEntityNotes(){
 
-  const n =
+  const notes =
     JSON.parse(
       localStorage.getItem(
         localKeys.notes
-      ) || "{}"
+      ) ||
+      "{}"
     );
 
 
   window._entityNotes =
-    Object.entries(n)
-      .map(
-        ([key, text]) => ({
-          entity_kind:
-            key.split(":")[0],
+    Object.entries(
+      notes
+    ).map(
+      ([key,text]) => {
 
-          entity_key:
-            key.split(":")[1],
+        const [
+          entity_kind,
+          entity_key
+        ] =
+          key.split(":");
 
+
+        return {
+          entity_kind,
+          entity_key,
           author_name:
-            playerName || "Mesa",
-
+            "Jogador",
           text
-        })
-      );
+        };
+
+      }
+    );
 
 
   renderEntityNotes();
 }
 
 
-/* ---------- render board ---------- */
+/* ============================================================
+   RENDER
+   ============================================================ */
 
 function cardNumber(index){
 
@@ -1270,16 +1297,12 @@ function cardNumber(index){
 function renderAll(){
 
   renderCards();
-
   renderObjects();
-
   renderConnections();
-
   renderEntityNotes();
-
   applyImageAssets();
-
   filterCards();
+
 }
 
 
@@ -1294,38 +1317,40 @@ function renderCards(){
       ".evidence-card"
     )
     .forEach(
-      c =>
-        c.remove()
+      card =>
+        card.remove()
     );
 
 
   if(!cards.length){
 
-    const e =
+    const empty =
       document.createElement(
         "div"
       );
 
-    e.className =
+    empty.className =
       "evidence-card empty-card";
 
-    e.style.left =
+    empty.style.left =
       "40%";
 
-    e.style.top =
+    empty.style.top =
       "35%";
 
-    e.textContent =
+    empty.textContent =
       "NENHUMA PISTA";
 
-    canvas.appendChild(e);
+    canvas.appendChild(
+      empty
+    );
 
     return;
   }
 
 
   cards.forEach(
-    (card, i) => {
+    (card,index) => {
 
       const el =
         document.createElement(
@@ -1341,18 +1366,6 @@ function renderCards(){
         card.id;
 
 
-      el.dataset.title =
-        card.title;
-
-
-      el.dataset.type =
-        card.clue_type;
-
-
-      el.dataset.context =
-        card.context || "";
-
-
       el.style.left =
         `${Number(card.x)}%`;
 
@@ -1363,30 +1376,38 @@ function renderCards(){
 
       el.style.setProperty(
         "--rotation",
-        `${Number(card.rotation || 0)}deg`
+        `${Number(
+          card.rotation ||
+          0
+        )}deg`
       );
 
 
       el.innerHTML = `
+
         <div class="card-pin"></div>
 
         <span class="card-number">
-          ${cardNumber(i)}
+          ${cardNumber(index)}
         </span>
 
         <span class="card-type">
           ${escapeHtml(
-            card.clue_type || "PISTA"
+            card.clue_type ||
+            "PISTA"
           )}
         </span>
 
         <h3>
-          ${escapeHtml(card.title)}
+          ${escapeHtml(
+            card.title
+          )}
         </h3>
 
         <p class="card-context">
           ${escapeHtml(
-            card.context || ""
+            card.context ||
+            ""
           )}
         </p>
 
@@ -1413,8 +1434,16 @@ function renderCards(){
         </button>
 
         ${
-          !String(card.id).match(
-            /^(sangue|medo|grupo|fragmentos|sino|quinto|sombra)$/
+          ![
+            "sangue",
+            "medo",
+            "grupo",
+            "fragmentos",
+            "sino",
+            "quinto",
+            "sombra"
+          ].includes(
+            String(card.id)
           )
 
             ? `
@@ -1422,7 +1451,6 @@ function renderCards(){
                 class="mini-delete"
                 type="button"
                 data-sound="danger"
-                title="Excluir"
               >
                 ×
               </button>
@@ -1430,46 +1458,52 @@ function renderCards(){
 
             : ""
         }
+
       `;
 
 
-      canvas.appendChild(el);
+      canvas.appendChild(
+        el
+      );
 
 
-      wireCard(el);
+      wireCard(
+        el
+      );
 
 
-      const ta =
+      const textarea =
         $(
           "[data-card-notes]",
           el
         );
 
 
-      ta.value =
-        card.notes || "";
+      textarea.value =
+        card.notes ||
+        "";
 
 
-      ta.addEventListener(
+      textarea.addEventListener(
         "pointerdown",
         e =>
           e.stopPropagation()
       );
 
 
-      ta.addEventListener(
+      textarea.addEventListener(
         "click",
         e =>
           e.stopPropagation()
       );
 
 
-      ta.addEventListener(
+      textarea.addEventListener(
         "input",
         () =>
           debouncedSaveCardNotes(
             card.id,
-            ta.value
+            textarea.value
           )
       );
 
@@ -1497,47 +1531,59 @@ function renderObjects(){
   objects.forEach(
     obj => {
 
-      const o =
+      const boardObject =
         document.createElement(
           "button"
         );
 
 
-      o.className =
+      boardObject.type =
+        "button";
+
+      boardObject.className =
         "board-object";
 
 
-      o.style.left =
+      boardObject.style.left =
         `${obj.x}%`;
 
 
-      o.style.top =
+      boardObject.style.top =
         `${obj.y}%`;
 
 
-      o.innerHTML = `
+      boardObject.innerHTML = `
+
         <span>
 
-          ${escapeHtml(obj.name)}
+          ${escapeHtml(
+            obj.name
+          )}
 
           <small>
             ${escapeHtml(
-              obj.object_type || "OBJETO"
+              obj.object_type ||
+              "OBJETO"
             )}
           </small>
 
         </span>
+
       `;
 
 
-      o.addEventListener(
+      boardObject.addEventListener(
         "click",
         () =>
-          openObject(obj)
+          openObject(
+            obj
+          )
       );
 
 
-      layer.appendChild(o);
+      layer.appendChild(
+        boardObject
+      );
 
 
       const tile =
@@ -1546,39 +1592,47 @@ function renderObjects(){
         );
 
 
+      tile.type =
+        "button";
+
       tile.className =
         "object-tile";
 
 
-      tile.type =
-        "button";
-
-
       tile.innerHTML = `
+
         <span>
           ${escapeHtml(
-            obj.object_type || "OBJETO"
+            obj.object_type ||
+            "OBJETO"
           )}
         </span>
 
         <strong>
-          ${escapeHtml(obj.name)}
+          ${escapeHtml(
+            obj.name
+          )}
         </strong>
 
         <small>
           ABRIR ↗
         </small>
+
       `;
 
 
       tile.addEventListener(
         "click",
         () =>
-          openObject(obj)
+          openObject(
+            obj
+          )
       );
 
 
-      grid.appendChild(tile);
+      grid.appendChild(
+        tile
+      );
 
     }
   );
@@ -1598,20 +1652,16 @@ function renderConnections(){
     "";
 
 
-  svg.setAttribute(
-    "viewBox",
-    `0 0 ${canvas.clientWidth} ${canvas.clientHeight}`
-  );
-
-
   connections.forEach(
-    c => {
+    connection => {
 
       const aId =
-        c.clue_a || c[0];
+        connection.clue_a ||
+        connection[0];
 
       const bId =
-        c.clue_b || c[1];
+        connection.clue_b ||
+        connection[1];
 
 
       const a =
@@ -1634,6 +1684,7 @@ function renderConnections(){
       const p1 =
         cardCenter(a);
 
+
       const p2 =
         cardCenter(b);
 
@@ -1650,18 +1701,15 @@ function renderConnections(){
         p1.x
       );
 
-
       line.setAttribute(
         "y1",
         p1.y
       );
 
-
       line.setAttribute(
         "x2",
         p2.x
       );
-
 
       line.setAttribute(
         "y2",
@@ -1685,21 +1733,26 @@ function renderConnections(){
         line.classList.add(
           "highlight"
         );
+
       }
 
 
-      svg.appendChild(line);
+      svg.appendChild(
+        line
+      );
 
     }
   );
 
 
-  $("#cardCount").textContent =
-    cards.length;
+  $("#cardCount")
+    .textContent =
+      cards.length;
 
 
-  $("#connectionCount").textContent =
-    connections.length;
+  $("#connectionCount")
+    .textContent =
+      connections.length;
 }
 
 
@@ -1722,20 +1775,23 @@ function renderEntityNotes(){
 
         const notes =
           (
-            window._entityNotes || []
+            window._entityNotes ||
+            []
           )
           .filter(
-            n =>
-              n.entity_kind === kind &&
-              n.entity_key === key &&
-              n.text?.trim()
+            note =>
+              note.entity_kind ===
+                kind &&
+              note.entity_key ===
+                key &&
+              note.text?.trim()
           );
 
 
         notes
           .slice(-4)
           .forEach(
-            n => {
+            note => {
 
               const row =
                 document.createElement(
@@ -1748,17 +1804,25 @@ function renderEntityNotes(){
 
 
               row.innerHTML = `
+
                 <strong>
                   ${escapeHtml(
-                    n.author_name || "Mesa"
+                    note.author_name ||
+                    "Jogador"
                   )}
                 </strong>
 
-                ${escapeHtml(n.text)}
+                ${escapeHtml(
+                  note.text
+                )}
+
               `;
 
 
-              box.appendChild(row);
+              box.appendChild(
+                row
+              );
+
             }
           );
 
@@ -1781,34 +1845,37 @@ function applyImageAssets(){
           new Image();
 
 
-        img.onload = () => {
+        img.onload =
+          () => {
 
-          el.style.setProperty(
-            "--location-image",
-            `url("${path}")`
-          );
-
-
-          el.classList.add(
-            "has-image"
-          );
+            el.style.setProperty(
+              "--location-image",
+              `url("${path}")`
+            );
 
 
-          if(
-            el.classList.contains(
-              "character-bg"
-            )
-          ){
+            el.classList.add(
+              "has-image"
+            );
 
-            el.style.backgroundImage =
-              `url("${path}")`;
-          }
 
-        };
+            if(
+              el.classList.contains(
+                "character-bg"
+              )
+            ){
+
+              el.style.backgroundImage =
+                `url("${path}")`;
+
+            }
+
+          };
 
 
         img.src =
           path;
+
       }
     );
 }
@@ -1829,7 +1896,9 @@ function filterCards(){
       const el =
         $(
           "#boardCanvas [data-id=\"" +
-          CSS.escape(card.id) +
+          CSS.escape(
+            card.id
+          ) +
           "\"]"
         );
 
@@ -1839,12 +1908,13 @@ function filterCards(){
       }
 
 
-      const hay = [
-        card.title,
-        card.context,
-        card.clue_type,
-        card.notes
-      ]
+      const text =
+        [
+          card.title,
+          card.context,
+          card.clue_type,
+          card.notes
+        ]
         .join(" ")
         .toLowerCase();
 
@@ -1853,7 +1923,7 @@ function filterCards(){
         "dimmed",
         Boolean(
           q &&
-          !hay.includes(q)
+          !text.includes(q)
         )
       );
 
@@ -1865,6 +1935,7 @@ function filterCards(){
 function cardCenter(card){
 
   return {
+
     x:
       card.offsetLeft +
       card.offsetWidth / 2,
@@ -1872,57 +1943,84 @@ function cardCenter(card){
     y:
       card.offsetTop +
       card.offsetHeight / 2
+
   };
 }
 
 
-function escapeHtml(value){
+function escapeHtml(
+  value
+){
 
   return String(
     value ?? ""
   ).replace(
     /[&<>'"]/g,
-    m =>
+    char =>
       ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        "'": "&#39;",
-        '"': "&quot;"
-      }[m])
+        "&":
+          "&amp;",
+
+        "<":
+          "&lt;",
+
+        ">":
+          "&gt;",
+
+        "'":
+          "&#39;",
+
+        '"':
+          "&quot;"
+
+      }[char])
   );
 }
 
 
-/* ---------- board interaction ---------- */
+/* ============================================================
+   BOARD
+   ============================================================ */
 
-function wireCard(card){
+function wireCard(
+  card
+){
 
   card.addEventListener(
     "pointerdown",
     e =>
-      beginDrag(card, e)
+      beginDrag(
+        card,
+        e
+      )
   );
 
 
   card.addEventListener(
     "pointermove",
     e =>
-      moveDrag(card, e)
+      moveDrag(
+        card,
+        e
+      )
   );
 
 
   card.addEventListener(
     "pointerup",
     () =>
-      endDrag(card)
+      endDrag(
+        card
+      )
   );
 
 
   card.addEventListener(
     "pointercancel",
     () =>
-      endDrag(card)
+      endDrag(
+        card
+      )
   );
 
 
@@ -1956,10 +2054,13 @@ function wireCard(card){
 
         if(!selectedCard){
 
-          selectCard(card);
+          selectCard(
+            card
+          );
 
         }else if(
-          selectedCard !== card
+          selectedCard !==
+          card
         ){
 
           toggleConnection(
@@ -1967,11 +2068,16 @@ function wireCard(card){
             card.dataset.id
           );
 
-          selectCard(null);
+          selectCard(
+            null
+          );
 
         }else{
 
-          selectCard(null);
+          selectCard(
+            null
+          );
+
         }
 
 
@@ -1979,17 +2085,15 @@ function wireCard(card){
       }
 
 
-      playUISound(
-        "card"
+      selectCard(
+        card
       );
 
-
-      selectCard(card);
     }
   );
 
 
-  $(".mini-edit", card)
+  $(".mini-edit",card)
     ?.addEventListener(
       "click",
       e => {
@@ -1999,11 +2103,12 @@ function wireCard(card){
         openCardEditor(
           card.dataset.id
         );
+
       }
     );
 
 
-  $(".mini-delete", card)
+  $(".mini-delete",card)
     ?.addEventListener(
       "click",
       e => {
@@ -2013,12 +2118,16 @@ function wireCard(card){
         deleteCard(
           card.dataset.id
         );
+
       }
     );
 }
 
 
-function beginDrag(card, e){
+function beginDrag(
+  card,
+  e
+){
 
   if(
     e.target.closest(
@@ -2047,37 +2156,50 @@ function beginDrag(card, e){
   );
 
 
-  const r =
+  const rect =
     card.getBoundingClientRect();
 
 
-  const br =
+  const board =
     $("#evidenceBoard")
       .getBoundingClientRect();
 
 
   card.dataset.offsetX =
-    (e.clientX - r.left) /
+    (
+      e.clientX -
+      rect.left
+    ) /
     zoom;
 
 
   card.dataset.offsetY =
-    (e.clientY - r.top) /
+    (
+      e.clientY -
+      rect.top
+    ) /
     zoom;
 
 
   card.dataset.boardLeft =
-    br.left;
+    board.left;
 
 
   card.dataset.boardTop =
-    br.top;
+    board.top;
 }
 
 
-function moveDrag(card, e){
+function moveDrag(
+  card,
+  e
+){
 
-  if(dragging !== card){
+  if(
+    dragging !==
+    card
+  ){
+
     return;
   }
 
@@ -2086,7 +2208,7 @@ function moveDrag(card, e){
     true;
 
 
-  const br =
+  const board =
     $("#evidenceBoard")
       .getBoundingClientRect();
 
@@ -2098,21 +2220,27 @@ function moveDrag(card, e){
   const x =
     (
       e.clientX -
-      br.left +
-      $("#evidenceBoard").scrollLeft
+      board.left +
+      $("#evidenceBoard")
+        .scrollLeft
     ) /
     zoom -
-    Number(card.dataset.offsetX);
+    Number(
+      card.dataset.offsetX
+    );
 
 
   const y =
     (
       e.clientY -
-      br.top +
-      $("#evidenceBoard").scrollTop
+      board.top +
+      $("#evidenceBoard")
+        .scrollTop
     ) /
     zoom -
-    Number(card.dataset.offsetY);
+    Number(
+      card.dataset.offsetY
+    );
 
 
   const maxX =
@@ -2125,39 +2253,45 @@ function moveDrag(card, e){
     card.offsetHeight;
 
 
+  const finalX =
+    Math.max(
+      0,
+      Math.min(
+        x,
+        maxX
+      )
+    );
+
+
+  const finalY =
+    Math.max(
+      0,
+      Math.min(
+        y,
+        maxY
+      )
+    );
+
+
   card.style.left =
-    `${
-      Math.max(
-        0,
-        Math.min(
-          x,
-          maxX
-        )
-      ) /
+    `${finalX /
       canvas.clientWidth *
-      100
-    }%`;
+      100}%`;
 
 
   card.style.top =
-    `${
-      Math.max(
-        0,
-        Math.min(
-          y,
-          maxY
-        )
-      ) /
+    `${finalY /
       canvas.clientHeight *
-      100
-    }%`;
+      100}%`;
 
 
   const item =
     cards.find(
       c =>
         String(c.id) ===
-        String(card.dataset.id)
+        String(
+          card.dataset.id
+        )
     );
 
 
@@ -2172,6 +2306,7 @@ function moveDrag(card, e){
       parseFloat(
         card.style.top
       );
+
   }
 
 
@@ -2179,9 +2314,15 @@ function moveDrag(card, e){
 }
 
 
-async function endDrag(card){
+async function endDrag(
+  card
+){
 
-  if(dragging !== card){
+  if(
+    dragging !==
+    card
+  ){
+
     return;
   }
 
@@ -2195,33 +2336,41 @@ async function endDrag(card){
   );
 
 
-  if(dragMoved){
-
-    const item =
-      cards.find(
-        c =>
-          String(c.id) ===
-          String(card.dataset.id)
-      );
+  if(!dragMoved){
+    return;
+  }
 
 
-    if(item){
+  const item =
+    cards.find(
+      c =>
+        String(c.id) ===
+        String(
+          card.dataset.id
+        )
+    );
 
-      await saveCardPosition(
-        item
-      );
-    }
+
+  if(item){
+
+    await saveCardPosition(
+      item
+    );
+
   }
 }
 
 
-function selectCard(card){
+function selectCard(
+  card
+){
 
   if(selectedCard){
 
     selectedCard.classList.remove(
       "selected"
     );
+
   }
 
 
@@ -2234,6 +2383,7 @@ function selectCard(card){
     card.classList.add(
       "selected"
     );
+
   }
 
 
@@ -2246,7 +2396,10 @@ function toggleConnection(
   bId
 ){
 
-  if(appMode === "supabase"){
+  if(
+    appMode ===
+    "supabase"
+  ){
 
     saveConnectionRemote(
       aId,
@@ -2255,33 +2408,40 @@ function toggleConnection(
 
   }else{
 
-    const [a, b] =
-      [aId, bId].sort();
+    const [
+      a,
+      b
+    ] =
+      [aId,bId]
+        .sort();
 
 
-    const i =
+    const index =
       connections.findIndex(
-        c => {
+        connection => {
 
           const x =
-            c.clue_a || c[0];
+            connection.clue_a ||
+            connection[0];
 
           const y =
-            c.clue_b || c[1];
+            connection.clue_b ||
+            connection[1];
 
 
           return (
             x === a &&
             y === b
           );
+
         }
       );
 
 
-    if(i >= 0){
+    if(index >= 0){
 
       connections.splice(
-        i,
+        index,
         1
       );
 
@@ -2291,12 +2451,14 @@ function toggleConnection(
         a,
         b
       ]);
+
     }
 
 
     saveLocal();
 
     renderConnections();
+
   }
 
 
@@ -2311,33 +2473,50 @@ async function saveConnectionRemote(
   bId
 ){
 
-  const [a, b] =
-    [aId, bId].sort();
+  const [
+    a,
+    b
+  ] =
+    [aId,bId]
+      .sort();
 
 
   const existing =
     connections.find(
-      c =>
+      connection =>
         (
-          c.clue_a ||
-          c[0]
+          connection.clue_a ||
+          connection[0]
         ) === a &&
         (
-          c.clue_b ||
-          c[1]
+          connection.clue_b ||
+          connection[1]
         ) === b
     );
 
 
   if(existing){
 
-    await supabase
-      .from("connections")
-      .delete()
-      .eq(
-        "id",
-        existing.id
+    const {
+      error
+    } =
+      await supabase
+        .from("connections")
+        .delete()
+        .eq(
+          "id",
+          existing.id
+        );
+
+
+    if(error){
+
+      toast(
+        "Não foi possível remover a conexão."
       );
+
+      return;
+    }
 
   }else{
 
@@ -2347,6 +2526,7 @@ async function saveConnectionRemote(
       await supabase
         .from("connections")
         .insert({
+
           campaign_id:
             campaignId,
 
@@ -2358,6 +2538,7 @@ async function saveConnectionRemote(
 
           created_by:
             currentUser.id
+
         });
 
 
@@ -2366,34 +2547,61 @@ async function saveConnectionRemote(
       toast(
         "Não foi possível criar a conexão."
       );
+
+      return;
     }
+
   }
 }
 
 
-async function saveCardPosition(item){
+async function saveCardPosition(
+  item
+){
 
-  if(appMode === "supabase"){
+  if(
+    appMode ===
+    "supabase"
+  ){
 
-    await supabase
-      .from("clues")
-      .update({
-        x: item.x,
-        y: item.y
-      })
-      .eq(
-        "id",
-        item.id
+    const {
+      error
+    } =
+      await supabase
+        .from("clues")
+        .update({
+
+          x:
+            item.x,
+
+          y:
+            item.y
+
+        })
+        .eq(
+          "id",
+          item.id
+        );
+
+
+    if(error){
+
+      console.error(
+        error
       );
+
+    }
 
   }else{
 
     saveLocal();
+
   }
 }
 
 
-let noteTimer = null;
+let noteTimer =
+  null;
 
 
 function debouncedSaveCardNotes(
@@ -2403,8 +2611,8 @@ function debouncedSaveCardNotes(
 
   const item =
     cards.find(
-      c =>
-        String(c.id) ===
+      card =>
+        String(card.id) ===
         String(id)
     );
 
@@ -2413,6 +2621,7 @@ function debouncedSaveCardNotes(
 
     item.notes =
       text;
+
   }
 
 
@@ -2425,21 +2634,38 @@ function debouncedSaveCardNotes(
     setTimeout(
       async () => {
 
-        if(appMode === "supabase"){
+        if(
+          appMode ===
+          "supabase"
+        ){
 
-          await supabase
-            .from("clues")
-            .update({
-              notes: text
-            })
-            .eq(
-              "id",
-              id
+          const {
+            error
+          } =
+            await supabase
+              .from("clues")
+              .update({
+                notes:
+                  text
+              })
+              .eq(
+                "id",
+                id
+              );
+
+
+          if(error){
+
+            console.error(
+              error
             );
+
+          }
 
         }else{
 
           saveLocal();
+
         }
 
       },
@@ -2451,13 +2677,14 @@ function debouncedSaveCardNotes(
 }
 
 
-/* ---------- add/edit clues ---------- */
+/* ============================================================
+   NOVA PISTA
+   ============================================================ */
 
 $("#addCardBtn")
   .addEventListener(
     "click",
-    () =>
-      openNewCard()
+    openNewCard
   );
 
 
@@ -2478,13 +2705,17 @@ $("#connectionMode")
         );
 
 
-      $("#connectionHint").textContent =
+      $("#connectionHint")
+        .textContent =
         connectingMode
           ? "modo conectar ativo • clique em duas pistas"
           : "arraste • escreva • conecte • todos veem as mudanças";
 
 
-      selectCard(null);
+      selectCard(
+        null
+      );
+
     }
   );
 
@@ -2495,41 +2726,47 @@ $("#resetBoard")
     () => {
 
       cards.forEach(
-        c => {
+        card => {
 
-          const s =
+          const original =
             seedLocal.find(
-              x =>
-                x.title ===
-                c.title
+              seed =>
+                seed.title ===
+                card.title
             );
 
 
-          if(s){
-
-            c.x =
-              s.x;
-
-            c.y =
-              s.y;
+          if(!original){
+            return;
+          }
 
 
-            const el =
-              $(
-                "#boardCanvas [data-id=\"" +
-                CSS.escape(c.id) +
-                "\"]"
-              );
+          card.x =
+            original.x;
 
 
-            if(el){
+          card.y =
+            original.y;
 
-              el.style.left =
-                `${s.x}%`;
 
-              el.style.top =
-                `${s.y}%`;
-            }
+          const element =
+            $(
+              "#boardCanvas [data-id=\"" +
+              CSS.escape(
+                card.id
+              ) +
+              "\"]"
+            );
+
+
+          if(element){
+
+            element.style.left =
+              `${original.x}%`;
+
+            element.style.top =
+              `${original.y}%`;
+
           }
 
         }
@@ -2537,8 +2774,10 @@ $("#resetBoard")
 
 
       cards.forEach(
-        c =>
-          saveCardPosition(c)
+        card =>
+          saveCardPosition(
+            card
+          )
       );
 
 
@@ -2548,6 +2787,7 @@ $("#resetBoard")
       toast(
         "Posições reposicionadas."
       );
+
     }
   );
 
@@ -2585,11 +2825,15 @@ $("#zoomOut")
   );
 
 
-function setZoom(v){
+function setZoom(
+  value
+){
 
   zoom =
     Number(
-      v.toFixed(2)
+      value.toFixed(
+        2
+      )
     );
 
 
@@ -2614,7 +2858,9 @@ function openNewCard(){
 
   $("#newCardModal")
     .classList
-    .add("open");
+    .add(
+      "open"
+    );
 
 
   $("#newCardTitle")
@@ -2622,19 +2868,26 @@ function openNewCard(){
 }
 
 
-$("[data-close-new-card]")
-  ?.addEventListener(
-    "click",
-    closeNewCard
-  );
-
-
 function closeNewCard(){
 
   $("#newCardModal")
     .classList
-    .remove("open");
+    .remove(
+      "open"
+    );
 }
+
+
+$$(
+  "[data-close-new-card]"
+)
+.forEach(
+  button =>
+    button.addEventListener(
+      "click",
+      closeNewCard
+    )
+);
 
 
 $("#createCard")
@@ -2658,7 +2911,7 @@ $("#createCard")
       }
 
 
-      const obj = {
+      const newCard = {
 
         title,
 
@@ -2674,7 +2927,8 @@ $("#createCard")
             .trim() ||
           "",
 
-        notes: "",
+        notes:
+          "",
 
         x:
           25 +
@@ -2687,12 +2941,16 @@ $("#createCard")
           55,
 
         rotation:
-          Math.random() * 2 - 1
+          Math.random() * 2 -
+          1
 
       };
 
 
-      if(appMode === "supabase"){
+      if(
+        appMode ===
+        "supabase"
+      ){
 
         const {
           data,
@@ -2701,7 +2959,7 @@ $("#createCard")
           await supabase
             .from("clues")
             .insert({
-              ...obj,
+              ...newCard,
 
               campaign_id:
                 campaignId,
@@ -2723,41 +2981,49 @@ $("#createCard")
         }
 
 
-        cards.push(data);
+        cards.push(
+          data
+        );
 
       }else{
 
-        obj.id =
+        newCard.id =
           crypto.randomUUID();
 
         cards.push(
-          obj
+          newCard
         );
 
         saveLocal();
+
       }
 
 
       renderCards();
-
       renderConnections();
-
       closeNewCard();
 
 
       toast(
         "Nova pista adicionada."
       );
+
     }
   );
 
 
-function openCardEditor(id){
+/* ============================================================
+   EDIÇÃO
+   ============================================================ */
+
+function openCardEditor(
+  id
+){
 
   const card =
     cards.find(
-      c =>
-        String(c.id) ===
+      item =>
+        String(item.id) ===
         String(id)
     );
 
@@ -2768,9 +3034,13 @@ function openCardEditor(id){
 
 
   editingNote = {
-    kind: "clue",
-    key: id,
-    card
+
+    kind:
+      "clue",
+
+    key:
+      id
+
   };
 
 
@@ -2781,12 +3051,15 @@ function openCardEditor(id){
 
   $("#editorText")
     .value =
-      card.notes || "";
+      card.notes ||
+      "";
 
 
   $("#editorModal")
     .classList
-    .add("open");
+    .add(
+      "open"
+    );
 
 
   $("#editorText")
@@ -2794,7 +3067,9 @@ function openCardEditor(id){
 }
 
 
-async function deleteCard(id){
+async function deleteCard(
+  id
+){
 
   if(
     !confirm(
@@ -2806,36 +3081,64 @@ async function deleteCard(id){
   }
 
 
-  if(appMode === "supabase"){
+  if(
+    appMode ===
+    "supabase"
+  ){
 
-    await supabase
-      .from("clues")
-      .delete()
-      .eq(
-        "id",
-        id
+    const {
+      error
+    } =
+      await supabase
+        .from("clues")
+        .delete()
+        .eq(
+          "id",
+          id
+        );
+
+
+    if(error){
+
+      toast(
+        "Não foi possível excluir a pista."
       );
+
+      return;
+    }
+
   }
 
 
   cards =
     cards.filter(
-      c =>
-        String(c.id) !==
+      card =>
+        String(card.id) !==
         String(id)
     );
 
 
   connections =
     connections.filter(
-      c =>
-        (c.clue_a || c[0]) !== id &&
-        (c.clue_b || c[1]) !== id
+      connection =>
+        (
+          connection.clue_a ||
+          connection[0]
+        ) !== id &&
+        (
+          connection.clue_b ||
+          connection[1]
+        ) !== id
     );
 
 
-  if(appMode !== "supabase"){
+  if(
+    appMode !==
+    "supabase"
+  ){
+
     saveLocal();
+
   }
 
 
@@ -2848,56 +3151,62 @@ async function deleteCard(id){
 }
 
 
-/* ---------- entity note editor ---------- */
+$$(
+  ".entity-note-btn"
+)
+.forEach(
+  button =>
+    button.addEventListener(
+      "click",
+      () => {
 
-$$(".entity-note-btn")
-  .forEach(
-    btn =>
-      btn.addEventListener(
-        "click",
-        () => {
+        editingNote = {
 
-          editingNote = {
-            kind:
-              btn.dataset.noteKind,
+          kind:
+            button.dataset.noteKind,
 
-            key:
-              btn.dataset.noteKey
-          };
+          key:
+            button.dataset.noteKey
 
-
-          const existing =
-            (
-              window._entityNotes ||
-              []
-            )
-            .find(
-              n =>
-                n.entity_kind ===
-                  editingNote.kind &&
-                n.entity_key ===
-                  editingNote.key &&
-                n.user_id ===
-                  currentUser?.id
-            );
+        };
 
 
-          $("#editorTitle")
-            .textContent =
-              "ANOTAÇÃO";
+        const existing =
+          (
+            window._entityNotes ||
+            []
+          )
+          .find(
+            note =>
+              note.entity_kind ===
+                editingNote.kind &&
+              note.entity_key ===
+                editingNote.key &&
+              note.user_id ===
+                currentUser?.id
+          );
 
 
-          $("#editorText")
-            .value =
-              existing?.text || "";
+        $("#editorTitle")
+          .textContent =
+            "ANOTAÇÃO";
 
 
-          $("#editorModal")
-            .classList
-            .add("open");
-        }
-      )
-  );
+        $("#editorText")
+          .value =
+            existing?.text ||
+            "";
+
+
+        $("#editorModal")
+          .classList
+          .add(
+            "open"
+          );
+
+      }
+    )
+);
 
 
 $("#cancelEditor")
@@ -2906,21 +3215,27 @@ $("#cancelEditor")
     () =>
       $("#editorModal")
         .classList
-        .remove("open")
+        .remove(
+          "open"
+        )
   );
 
 
-$$("[data-close-editor]")
-  .forEach(
-    x =>
-      x.addEventListener(
-        "click",
-        () =>
-          $("#editorModal")
-            .classList
-            .remove("open")
-      )
-  );
+$$(
+  "[data-close-editor]"
+)
+.forEach(
+  button =>
+    button.addEventListener(
+      "click",
+      () =>
+        $("#editorModal")
+          .classList
+          .remove(
+            "open"
+          )
+    )
+);
 
 
 $("#saveEditor")
@@ -2944,19 +3259,21 @@ $("#saveEditor")
         "clue"
       ){
 
-        const item =
+        const card =
           cards.find(
-            c =>
-              String(c.id) ===
+            item =>
+              String(item.id) ===
               String(
                 editingNote.key
               )
           );
 
 
-        if(item){
-          item.notes =
+        if(card){
+
+          card.notes =
             text;
+
         }
 
 
@@ -2972,17 +3289,21 @@ $("#saveEditor")
           editingNote.key,
           text
         );
+
       }
 
 
       $("#editorModal")
         .classList
-        .remove("open");
+        .remove(
+          "open"
+        );
 
 
       playUISound(
         "save"
       );
+
     }
   );
 
@@ -2993,7 +3314,10 @@ async function saveEntityNote(
   text
 ){
 
-  if(appMode === "supabase"){
+  if(
+    appMode ===
+    "supabase"
+  ){
 
     const {
       data,
@@ -3002,7 +3326,9 @@ async function saveEntityNote(
       await supabase
         .from("entity_notes")
         .upsert(
+
           {
+
             campaign_id:
               campaignId,
 
@@ -3016,14 +3342,17 @@ async function saveEntityNote(
               currentUser.id,
 
             author_name:
-              playerName,
+              "Jogador",
 
             text
+
           },
+
           {
             onConflict:
               "campaign_id,entity_kind,entity_key,user_id"
           }
+
         )
         .select()
         .single();
@@ -3039,27 +3368,30 @@ async function saveEntityNote(
     }
 
 
-    const others =
+    const otherNotes =
       (
         window._entityNotes ||
         []
       )
       .filter(
-        n =>
+        note =>
           !(
-            n.entity_kind ===
+            note.entity_kind ===
               kind &&
-            n.entity_key ===
+            note.entity_key ===
               key &&
-            n.user_id ===
+            note.user_id ===
               currentUser.id
           )
       );
 
 
     window._entityNotes = [
-      ...others,
+
+      ...otherNotes,
+
       data
+
     ];
 
   }else{
@@ -3068,7 +3400,8 @@ async function saveEntityNote(
       JSON.parse(
         localStorage.getItem(
           localKeys.notes
-        ) || "{}"
+        ) ||
+        "{}"
       );
 
 
@@ -3080,68 +3413,88 @@ async function saveEntityNote(
 
     localStorage.setItem(
       localKeys.notes,
-      JSON.stringify(notes)
+      JSON.stringify(
+        notes
+      )
     );
 
 
     applyLocalEntityNotes();
+
   }
 
 
   renderEntityNotes();
+
 }
 
 
-/* ---------- objects ---------- */
+/* ============================================================
+   OBJETOS / DOCUMENTOS
+   ============================================================ */
 
-function openObject(obj){
+function openObject(
+  object
+){
 
   $("#modalType")
     .textContent =
-      obj.object_type ||
+      object.object_type ||
       "OBJETO";
 
 
   $("#modalTitle")
     .textContent =
-      obj.name;
+      object.name;
 
 
   $("#modalContent")
     .innerHTML = `
+
       <p>
+
         <strong>
           ${escapeHtml(
-            obj.description || ""
+            object.description ||
+            ""
           )}
         </strong>
+
       </p>
 
       <p>
         ${escapeHtml(
-          obj.content || ""
+          object.content ||
+          ""
         )}
       </p>
+
     `;
 
 
   $("#documentModal")
     .classList
-    .add("open");
+    .add(
+      "open"
+    );
 }
 
 
-$$("[data-close-modal]")
-  .forEach(
-    x =>
-      x.addEventListener(
-        "click",
-        () =>
-          $("#documentModal")
-            .classList
-            .remove("open")
-      )
-  );
+$$(
+  "[data-close-modal]"
+)
+.forEach(
+  button =>
+    button.addEventListener(
+      "click",
+      () =>
+        $("#documentModal")
+          .classList
+          .remove(
+            "open"
+          )
+    )
+);
 
 
 const documents = {
@@ -3155,6 +3508,7 @@ const documents = {
       "Relatório encontrado",
 
     html: `
+
       <div class="paper">
 
         <p>
@@ -3194,7 +3548,9 @@ const documents = {
         </p>
 
       </div>
+
     `
+
   },
 
 
@@ -3207,6 +3563,7 @@ const documents = {
       "A frase do quinto",
 
     html: `
+
       <div class="paper">
 
         <p class="hand">
@@ -3216,7 +3573,9 @@ const documents = {
         </p>
 
       </div>
+
     `
+
   },
 
 
@@ -3229,6 +3588,7 @@ const documents = {
       "Mapa + recibos",
 
     html: `
+
       <div class="paper">
 
         <p>
@@ -3259,61 +3619,82 @@ const documents = {
         </p>
 
       </div>
+
     `
+
   }
 
 };
 
 
-$$(".document-card")
-  .forEach(
-    btn =>
-      btn.addEventListener(
-        "click",
-        () => {
+$$(
+  ".document-card"
+)
+.forEach(
+  button =>
+    button.addEventListener(
+      "click",
+      () => {
 
-          const d =
-            documents[
-              btn.dataset.document
-            ];
-
-
-          $("#modalType")
-            .textContent =
-              d.type;
+        const document =
+          documents[
+            button.dataset.document
+          ];
 
 
-          $("#modalTitle")
-            .textContent =
-              d.title;
-
-
-          $("#modalContent")
-            .innerHTML =
-              d.html;
-
-
-          $("#documentModal")
-            .classList
-            .add("open");
+        if(!document){
+          return;
         }
-      )
-  );
 
 
-/* ---------- realtime ---------- */
+        $("#modalType")
+          .textContent =
+            document.type;
+
+
+        $("#modalTitle")
+          .textContent =
+            document.title;
+
+
+        $("#modalContent")
+          .innerHTML =
+            document.html;
+
+
+        $("#documentModal")
+          .classList
+          .add(
+            "open"
+          );
+
+      }
+    )
+);
+
+
+/* ============================================================
+   REALTIME
+   ============================================================ */
 
 function subscribeRealtime(){
 
-  if(appMode !== "supabase"){
+  if(
+    appMode !==
+    "supabase"
+  ){
+
     return;
   }
 
 
   realtimeChannels
     .forEach(
-      c =>
-        supabase.removeChannel(c)
+      channel =>
+        supabase
+          .removeChannel(
+            channel
+          )
     );
 
 
@@ -3321,7 +3702,7 @@ function subscribeRealtime(){
     [];
 
 
-  const ch =
+  const channel =
     supabase
       .channel(
         `campaign-${campaignId}`
@@ -3330,28 +3711,43 @@ function subscribeRealtime(){
 
       .on(
         "postgres_changes",
+
         {
-          event: "*",
-          schema: "public",
-          table: "clues",
+          event:
+            "*",
+
+          schema:
+            "public",
+
+          table:
+            "clues",
+
           filter:
             `campaign_id=eq.${campaignId}`
+
         },
-        async payload => {
+
+        payload => {
 
           if(
             payload.eventType ===
-            "INSERT" &&
-            !cards.some(
-              c =>
-                c.id ===
-                payload.new.id
-            )
+            "INSERT"
           ){
 
-            cards.push(
-              payload.new
-            );
+            if(
+              !cards.some(
+                card =>
+                  card.id ===
+                  payload.new.id
+              )
+            ){
+
+              cards.push(
+                payload.new
+              );
+
+            }
+
           }
 
 
@@ -3360,22 +3756,26 @@ function subscribeRealtime(){
             "UPDATE"
           ){
 
-            const i =
+            const index =
               cards.findIndex(
-                c =>
-                  c.id ===
+                card =>
+                  card.id ===
                   payload.new.id
               );
 
 
-            if(i >= 0){
+            if(index >= 0){
 
-              cards[i] =
-                {
-                  ...cards[i],
-                  ...payload.new
-                };
+              cards[index] = {
+
+                ...cards[index],
+
+                ...payload.new
+
+              };
+
             }
+
           }
 
 
@@ -3386,10 +3786,11 @@ function subscribeRealtime(){
 
             cards =
               cards.filter(
-                c =>
-                  c.id !==
+                card =>
+                  card.id !==
                   payload.old.id
               );
+
           }
 
 
@@ -3398,34 +3799,50 @@ function subscribeRealtime(){
           renderConnections();
 
           filterCards();
+
         }
       )
 
 
       .on(
         "postgres_changes",
+
         {
-          event: "*",
-          schema: "public",
-          table: "connections",
+          event:
+            "*",
+
+          schema:
+            "public",
+
+          table:
+            "connections",
+
           filter:
             `campaign_id=eq.${campaignId}`
+
         },
+
         payload => {
 
           if(
             payload.eventType ===
-            "INSERT" &&
-            !connections.some(
-              c =>
-                c.id ===
-                payload.new.id
-            )
+            "INSERT"
           ){
 
-            connections.push(
-              payload.new
-            );
+            if(
+              !connections.some(
+                connection =>
+                  connection.id ===
+                  payload.new.id
+              )
+            ){
+
+              connections.push(
+                payload.new
+              );
+
+            }
+
           }
 
 
@@ -3436,10 +3853,11 @@ function subscribeRealtime(){
 
             connections =
               connections.filter(
-                c =>
-                  c.id !==
+                connection =>
+                  connection.id !==
                   payload.old.id
               );
+
           }
 
 
@@ -3448,54 +3866,79 @@ function subscribeRealtime(){
             "UPDATE"
           ){
 
-            const i =
+            const index =
               connections.findIndex(
-                c =>
-                  c.id ===
+                connection =>
+                  connection.id ===
                   payload.new.id
               );
 
 
-            if(i >= 0){
+            if(index >= 0){
 
-              connections[i] =
+              connections[index] =
                 payload.new;
+
             }
+
           }
 
 
           renderConnections();
+
         }
       )
 
 
       .on(
         "postgres_changes",
+
         {
-          event: "*",
-          schema: "public",
-          table: "entity_notes",
+          event:
+            "*",
+
+          schema:
+            "public",
+
+          table:
+            "entity_notes",
+
           filter:
             `campaign_id=eq.${campaignId}`
+
         },
+
         payload => {
 
           if(
-            payload.eventType ===
-            "INSERT" &&
-            !(
-              window._entityNotes ||
-              []
-            ).some(
-              n =>
-                n.id ===
-                payload.new.id
-            )
+            !window._entityNotes
           ){
 
-            window._entityNotes.push(
-              payload.new
-            );
+            window._entityNotes =
+              [];
+
+          }
+
+
+          if(
+            payload.eventType ===
+            "INSERT"
+          ){
+
+            if(
+              !window._entityNotes.some(
+                note =>
+                  note.id ===
+                  payload.new.id
+              )
+            ){
+
+              window._entityNotes.push(
+                payload.new
+              );
+
+            }
+
           }
 
 
@@ -3504,20 +3947,22 @@ function subscribeRealtime(){
             "UPDATE"
           ){
 
-            const i =
+            const index =
               window._entityNotes
                 .findIndex(
-                  n =>
-                    n.id ===
+                  note =>
+                    note.id ===
                     payload.new.id
                 );
 
 
-            if(i >= 0){
+            if(index >= 0){
 
-              window._entityNotes[i] =
+              window._entityNotes[index] =
                 payload.new;
+
             }
+
           }
 
 
@@ -3528,14 +3973,16 @@ function subscribeRealtime(){
 
             window._entityNotes =
               window._entityNotes.filter(
-                n =>
-                  n.id !==
+                note =>
+                  note.id !==
                   payload.old.id
               );
+
           }
 
 
           renderEntityNotes();
+
         }
       )
 
@@ -3552,41 +3999,46 @@ function subscribeRealtime(){
               "tempo real",
               true
             );
+
           }
+
         }
       );
 
 
   realtimeChannels.push(
-    ch
+    channel
   );
 }
 
 
-/* ---------- ambient ---------- */
+/* ============================================================
+   SOM AMBIENTE
+   ============================================================ */
 
 $("#soundToggle")
   .addEventListener(
     "click",
     () => {
 
-      const p =
+      const panel =
         $("#soundPanel");
 
 
-      p.classList.toggle(
+      panel.classList.toggle(
         "open"
       );
 
 
-      p.setAttribute(
+      panel.setAttribute(
         "aria-hidden",
         String(
-          !p.classList.contains(
+          !panel.classList.contains(
             "open"
           )
         )
       );
+
     }
   );
 
@@ -3606,22 +4058,29 @@ $("#audioFile")
       }
 
 
-      const a =
+      const audio =
         $("#ambientAudio");
 
 
-      a.src =
+      audio.src =
         URL.createObjectURL(
           file
         );
 
 
-      a.play().catch(
-        () => {}
-      );
+      audio
+        .play()
+        .catch(
+          () => {}
+        );
+
     }
   );
 
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
 
 $("#enterBoard")
   .addEventListener(
@@ -3629,28 +4088,33 @@ $("#enterBoard")
     () =>
       $("#boardSection")
         .scrollIntoView({
-          behavior: "smooth"
+          behavior:
+            "smooth"
         })
   );
 
 
 const observer =
   new IntersectionObserver(
+
     entries =>
       entries.forEach(
         entry => {
 
-          if(!entry.isIntersecting){
+          if(
+            !entry.isIntersecting
+          ){
+
             return;
           }
 
 
           $$(".main-nav a")
             .forEach(
-              a =>
-                a.classList.toggle(
+              link =>
+                link.classList.toggle(
                   "active",
-                  a.getAttribute(
+                  link.getAttribute(
                     "href"
                   ) ===
                   `#${entry.target.id}`
@@ -3659,61 +4123,69 @@ const observer =
 
         }
       ),
+
     {
       rootMargin:
         "-35% 0px -55% 0px"
     }
+
   );
 
 
-$("main")
-  .querySelectorAll(
-    "section[id]"
-  )
-  .forEach(
-    s =>
-      observer.observe(s)
-  );
+$$(
+  "main section[id]"
+)
+.forEach(
+  section =>
+    observer.observe(
+      section
+    )
+);
 
+
+/* ============================================================
+   ESC
+   ============================================================ */
 
 document.addEventListener(
   "keydown",
   e => {
 
-    if(e.key !== "Escape"){
+    if(
+      e.key !==
+      "Escape"
+    ){
+
       return;
     }
 
 
     $("#documentModal")
       .classList
-      .remove("open");
+      .remove(
+        "open"
+      );
 
 
     $("#editorModal")
       .classList
-      .remove("open");
+      .remove(
+        "open"
+      );
 
 
     $("#newCardModal")
       .classList
-      .remove("open");
+      .remove(
+        "open"
+      );
 
 
     $("#soundPanel")
       .classList
-      .remove("open");
-
-
-    if(
-      setupModal.classList.contains(
+      .remove(
         "open"
-      ) &&
-      playerName
-    ){
-
-      closeSetup();
-    }
+      );
 
   }
 );
@@ -3726,7 +4198,9 @@ window.addEventListener(
 );
 
 
-/* ---------- init ---------- */
+/* ============================================================
+   INICIAR
+   ============================================================ */
 
 (async () => {
 
