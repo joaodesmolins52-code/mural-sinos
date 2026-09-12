@@ -96,3 +96,7 @@ Se uma imagem ainda não existir, o site continua funcionando com o fundo estili
 ## O que ainda não é a versão final
 
 O banco já está preparado para arquivos e objetos, mas as artes reais, fotos e áudios ainda são placeholders/infraestrutura. Essa parte pode ser adicionada depois sem mudar a arquitetura principal.
+
+
+### Correção recente
+A chamada das funções RPC usa os nomes de parâmetros exatamente como definidos no `supabase.sql` (`p_display_name`).
