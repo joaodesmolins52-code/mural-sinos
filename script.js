@@ -1680,53 +1680,90 @@
   }
 
 
-  function applyImageAssets() {
+function applyImageAssets() {
 
-    $$(".image-slot[data-asset]")
-      .forEach(
-        element => {
+  $$(".image-slot[data-asset]")
+    .forEach(element => {
 
-          const path =
-            element.dataset.asset;
+      const originalPath =
+        element.dataset.asset;
 
+      const extensions = [
+        "",
+        ".webp",
+        ".png",
+        ".jpg",
+        ".jpeg"
+      ];
 
-          const image =
-            new Image();
+      const basePath =
+        originalPath.replace(
+          /\.(webp|png|jpg|jpeg)$/i,
+          ""
+        );
 
+      let currentIndex = 0;
 
-          image.onload =
-            () => {
+      function tryNextImage() {
 
-              element.style.setProperty(
-                "--location-image",
-                `url("${path}")`
-              );
+        if (
+          currentIndex >=
+          extensions.length
+        ) {
+          console.error(
+            "Imagem não encontrada:",
+            originalPath
+          );
 
-
-              element.classList.add(
-                "has-image"
-              );
-
-
-              if (
-                element.classList.contains(
-                  "character-bg"
-                )
-              ) {
-
-                element.style.backgroundImage =
-                  `url("${path}")`;
-              }
-            };
-
-
-          image.src =
-            path;
-
+          return;
         }
-      );
-  }
 
+        const path =
+          basePath +
+          extensions[currentIndex];
+
+        currentIndex++;
+
+        const image =
+          new Image();
+
+        image.onload = () => {
+
+          element.style.setProperty(
+            "--location-image",
+            `url("${path}")`
+          );
+
+          element.classList.add(
+            "has-image"
+          );
+
+          if (
+            element.classList.contains(
+              "character-bg"
+            )
+          ) {
+
+            element.style.backgroundImage =
+              `url("${path}")`;
+
+          }
+
+        };
+
+        image.onerror = () => {
+
+          tryNextImage();
+
+        };
+
+        image.src =
+          path;
+      }
+
+      tryNextImage();
+    });
+}
 
   function filterCards() {
 
