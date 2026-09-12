@@ -1680,91 +1680,314 @@
   }
 
 
-function applyImageAssets() {
+async function applyImageAssets() {
 
-  $$(".image-slot[data-asset]")
-    .forEach(element => {
+  const slots =
+    $$(".image-slot[data-asset]");
 
-      const originalPath =
-        element.dataset.asset;
+  if (!slots.length) {
+    return;
+  }
 
-      const extensions = [
-        "",
-        ".webp",
-        ".png",
-        ".jpg",
-        ".jpeg"
-      ];
+  const repo =
+    "joaodesmolins52-code/mural-sinos";
 
-      const basePath =
-        originalPath.replace(
-          /\.(webp|png|jpg|jpeg)$/i,
-          ""
-        );
+  const branch =
+    "main";
 
-      let currentIndex = 0;
+  const directories = [
+    "characters",
+    "locations",
+    "objects",
+    "documents"
+  ];
 
-      function tryNextImage() {
+  const filesByDirectory = {};
 
-        if (
-          currentIndex >=
-          extensions.length
-        ) {
-          console.error(
-            "Imagem não encontrada:",
-            originalPath
-          );
 
-          return;
-        }
+  /*
+    Busca o conteúdo real das pastas do GitHub.
+    Assim não dependemos da extensão do arquivo.
+  */
 
-        const path =
-          basePath +
-          extensions[currentIndex];
+  await Promise.all(
+    directories.map(
+      async directory => {
 
-        currentIndex++;
+        try {
 
-        const image =
-          new Image();
+          const response =
+            await fetch(
+              `https://api.github.com/repos/${repo}/contents/assets/${directory}?ref=${branch}`,
+              {
+                cache: "no-store"
+              }
+            );
 
-        image.onload = () => {
 
-          element.style.setProperty(
-            "--location-image",
-            `url("${path}")`
-          );
-
-          element.classList.add(
-            "has-image"
-          );
-
-          if (
-            element.classList.contains(
-              "character-bg"
-            )
-          ) {
-
-            element.style.backgroundImage =
-              `url("${path}")`;
-
+          if (!response.ok) {
+            throw new Error(
+              `GitHub ${response.status}`
+            );
           }
 
-        };
 
-        image.onerror = () => {
+          const files =
+            await response.json();
 
-          tryNextImage();
 
-        };
+          filesByDirectory[directory] =
+            Array.isArray(files)
+              ? files.filter(
+                  file =>
+                    file.type === "file"
+                )
+              : [];
 
-        image.src =
-          path;
+
+        } catch(error) {
+
+          console.error(
+            `Não foi possível listar assets/${directory}:`,
+            error
+          );
+
+
+          filesByDirectory[directory] =
+            [];
+        }
+
+      }
+    )
+  );
+
+
+  slots.forEach(
+    element => {
+
+      const requestedPath =
+        element.dataset.asset ||
+        "";
+
+
+      /*
+        Exemplo:
+        assets/characters/marcados.webp
+
+        vira:
+        directory = characters
+        base = marcados
+      */
+
+      const normalized =
+        requestedPath
+          .replace(/\\/g, "/");
+
+
+      const parts =
+        normalized.split("/");
+
+
+      const fileName =
+        parts.pop() || "";
+
+
+      const directory =
+        parts.pop() || "";
+
+
+      const requestedBase =
+        fileName
+          .replace(
+            /\.(webp|png|jpg|jpeg|gif)$/i,
+            ""
+          )
+          .toLowerCase()
+          .trim();
+
+
+      const available =
+        filesByDirectory[
+          directory
+        ] || [];
+
+
+      /*
+        Primeiro tenta correspondência exata.
+      */
+
+      let match =
+        available.find(
+          file => {
+
+            const base =
+              file.name
+                .replace(
+                  /\.(webp|png|jpg|jpeg|gif)$/i,
+                  ""
+                )
+                .toLowerCase()
+                .trim();
+
+            return (
+              base ===
+              requestedBase
+            );
+          }
+        );
+
+
+      /*
+        Se não encontrar, tenta arquivo cujo
+        nome contenha o nome desejado.
+
+        Exemplo:
+        marcados-final.png
+        marcados_01.png
+        marcados (1).png
+      */
+
+      if (!match) {
+
+        match =
+          available.find(
+            file => {
+
+              const base =
+                file.name
+                  .replace(
+                    /\.(webp|png|jpg|jpeg|gif)$/i,
+                    ""
+                  )
+                  .toLowerCase()
+                  .trim();
+
+              return (
+                base.includes(
+                  requestedBase
+                ) ||
+                requestedBase.includes(
+                  base
+                )
+              );
+
+            }
+          );
+
       }
 
-      tryNextImage();
-    });
-}
 
+      if (!match) {
+
+        console.warn(
+          `Nenhuma imagem encontrada para "${requestedBase}" em assets/${directory}`
+        );
+
+        return;
+      }
+
+
+      const imageUrl =
+        match.download_url ||
+        `https://raw.githubusercontent.com/${repo}/${branch}/assets/${directory}/${encodeURIComponent(match.name)}`;
+
+
+      /*
+        PERSONAGENS:
+        usamos <img> real para preservar
+        corretamente transparência PNG/WebP.
+      */
+
+      if (
+        element.classList.contains(
+          "character-bg"
+        )
+      ) {
+
+        element.innerHTML = "";
+
+
+        const image =
+          document.createElement(
+            "img"
+          );
+
+
+        image.src =
+          imageUrl;
+
+
+        image.alt =
+          requestedBase;
+
+
+        image.loading =
+          "lazy";
+
+
+        image.decoding =
+          "async";
+
+
+        image.draggable =
+          false;
+
+
+        image.onload =
+          () => {
+
+            element.classList.add(
+              "asset-loaded"
+            );
+
+            console.log(
+              `Imagem carregada: ${match.name}`
+            );
+
+          };
+
+
+        image.onerror =
+          () => {
+
+            console.error(
+              `Falha ao carregar: ${imageUrl}`
+            );
+
+          };
+
+
+        element.appendChild(
+          image
+        );
+
+
+        return;
+      }
+
+
+      /*
+        LOCAIS:
+        continuam funcionando como background.
+      */
+
+      element.style.setProperty(
+        "--location-image",
+        `url("${imageUrl}")`
+      );
+
+
+      element.style.backgroundImage =
+        `url("${imageUrl}")`;
+
+
+      element.classList.add(
+        "has-image"
+      );
+
+    }
+  );
+}
   function filterCards() {
 
     const input =
