@@ -4490,67 +4490,599 @@
 
 
   /* ============================================================
-     SOM
-     ============================================================ */
+   SOM / YOUTUBE
+   ============================================================ */
 
-  function toggleSoundPanel() {
+let youtubePlayer = null;
 
-    const panel =
-      $("#soundPanel");
+let youtubeReady = false;
+
+let musicVolume = 10;
+
+let duckingEnabled = false;
+
+let microphoneStream = null;
+
+let microphoneContext = null;
+
+let microphoneAnalyser = null;
+
+let microphoneData = null;
+
+let duckingTimer = null;
+
+let speakingNow = false;
 
 
-    if (
-      !panel
-    ) {
-
-      return;
-
-    }
+const HEXATOMBE_VIDEO_ID =
+  "eVV1S_zal4o";
 
 
-    const willOpen =
-      !panel.classList.contains(
-        "open"
-      );
+/* ============================================================
+   PLAYER DO YOUTUBE
+   ============================================================ */
+
+function createYoutubePlayer() {
+
+  if (
+    youtubeReady ||
+    !window.YT ||
+    !window.YT.Player
+  ) {
+    return;
+  }
 
 
-    panel.classList.toggle(
-      "open",
-      willOpen
+  const container =
+    $("#youtubePlayer");
+
+
+  if (!container) {
+    return;
+  }
+
+
+  youtubePlayer =
+    new YT.Player(
+      "youtubePlayer",
+      {
+
+        videoId:
+          HEXATOMBE_VIDEO_ID,
+
+        playerVars: {
+
+          autoplay:
+            0,
+
+          controls:
+            1,
+
+          rel:
+            0,
+
+          playsinline:
+            1
+
+        },
+
+        events: {
+
+          onReady:
+            event => {
+
+              youtubeReady =
+                true;
+
+
+              event.target.setVolume(
+                musicVolume
+              );
+
+
+              updateMusicTrack(
+                "PRONTO"
+              );
+
+            },
+
+
+          onStateChange:
+            event => {
+
+              if (
+                event.data ===
+                YT.PlayerState.PLAYING
+              ) {
+
+                const button =
+                  $("#musicPlayPause");
+
+
+                if (button) {
+
+                  button.textContent =
+                    "Ⅱ PAUSAR";
+
+                }
+
+              }
+
+
+              if (
+                event.data ===
+                YT.PlayerState.PAUSED
+              ) {
+
+                const button =
+                  $("#musicPlayPause");
+
+
+                if (button) {
+
+                  button.textContent =
+                    "▶ TOCAR";
+
+                }
+
+              }
+
+
+              if (
+                event.data ===
+                YT.PlayerState.ENDED
+              ) {
+
+                const button =
+                  $("#musicPlayPause");
+
+
+                if (button) {
+
+                  button.textContent =
+                    "▶ TOCAR";
+
+                }
+
+              }
+
+            },
+
+
+          onError:
+            event => {
+
+              console.error(
+                "YouTube Player Error:",
+                event.data
+              );
+
+
+              updateMusicTrack(
+                "ERRO NO PLAYER"
+              );
+
+
+              toast(
+                "O player da trilha não conseguiu reproduzir este vídeo."
+              );
+
+            }
+
+        }
+
+      }
     );
 
+}
 
-    panel.setAttribute(
-      "aria-hidden",
-      String(
-        !willOpen
+
+/*
+  A API do YouTube chama esta função
+  quando termina de carregar.
+*/
+
+window.onYouTubeIframeAPIReady =
+  () => {
+
+    createYoutubePlayer();
+
+  };
+
+
+/* ============================================================
+   TEXTO DA FAIXA
+   ============================================================ */
+
+function updateMusicTrack(
+  name
+) {
+
+  const element =
+    $("#musicTrack");
+
+
+  if (
+    element
+  ) {
+
+    element.textContent =
+      name;
+
+  }
+
+}
+
+
+/* ============================================================
+   VOLUME
+   ============================================================ */
+
+function setMusicVolume(
+  value
+) {
+
+  musicVolume =
+    Math.max(
+      0,
+      Math.min(
+        30,
+        Number(
+          value
+        ) || 0
       )
     );
 
 
-    playSound(
-      "panel"
-    );
+  const slider =
+    $("#musicVolume");
+
+
+  const label =
+    $("#musicVolumeLabel");
+
+
+  if (
+    slider
+  ) {
+
+    slider.value =
+      musicVolume;
 
   }
 
 
-  function toggleInterfaceSounds() {
+  if (
+    label
+  ) {
 
-    uiSoundsEnabled =
-      !uiSoundsEnabled;
+    label.textContent =
+      `${musicVolume}%`;
+
+  }
 
 
-    localStorage.setItem(
-      storageKeys.sounds,
-      String(
-        uiSoundsEnabled
-      )
+  if (
+    youtubeReady &&
+    youtubePlayer
+  ) {
+
+    youtubePlayer.setVolume(
+      musicVolume
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   TOCAR EM DETERMINADO PONTO
+   ============================================================ */
+
+function playMusicAt(
+  seconds,
+  trackName
+) {
+
+  if (
+    !youtubeReady ||
+    !youtubePlayer
+  ) {
+
+    toast(
+      "O player da trilha ainda está carregando."
     );
 
 
+    return;
+
+  }
+
+
+  const position =
+    Number(
+      seconds
+    );
+
+
+  if (
+    !Number.isFinite(
+      position
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  youtubePlayer.seekTo(
+    position,
+    true
+  );
+
+
+  youtubePlayer.setVolume(
+    musicVolume
+  );
+
+
+  youtubePlayer.playVideo();
+
+
+  updateMusicTrack(
+    trackName ||
+    "TRILHA"
+  );
+
+
+  const button =
+    $("#musicPlayPause");
+
+
+  if (
+    button
+  ) {
+
+    button.textContent =
+      "Ⅱ PAUSAR";
+
+  }
+
+}
+
+
+/* ============================================================
+   PLAY / PAUSE
+   ============================================================ */
+
+function toggleMusic() {
+
+  if (
+    !youtubeReady ||
+    !youtubePlayer
+  ) {
+
+    toast(
+      "O player da trilha ainda está carregando."
+    );
+
+
+    return;
+
+  }
+
+
+  const state =
+    youtubePlayer.getPlayerState();
+
+
+  if (
+    state ===
+    YT.PlayerState.PLAYING
+  ) {
+
+    youtubePlayer.pauseVideo();
+
+
+    return;
+
+  }
+
+
+  youtubePlayer.setVolume(
+    musicVolume
+  );
+
+
+  youtubePlayer.playVideo();
+
+}
+
+
+/* ============================================================
+   ABRIR / FECHAR PAINEL
+   ============================================================ */
+
+function toggleSoundPanel() {
+
+  const panel =
+    $("#soundPanel");
+
+
+  if (
+    !panel
+  ) {
+
+    return;
+
+  }
+
+
+  const willOpen =
+    !panel.classList.contains(
+      "open"
+    );
+
+
+  panel.classList.toggle(
+    "open",
+    willOpen
+  );
+
+
+  panel.setAttribute(
+    "aria-hidden",
+    String(
+      !willOpen
+    )
+  );
+
+
+  playSound(
+    "panel"
+  );
+
+
+  if (
+    willOpen &&
+    !youtubeReady
+  ) {
+
+    if (
+      window.YT &&
+      window.YT.Player
+    ) {
+
+      createYoutubePlayer();
+
+    }
+
+  }
+
+}
+
+
+/* ============================================================
+   DUCKING DA VOZ
+   ============================================================ */
+
+async function enableVoiceDucking() {
+
+  if (
+    duckingEnabled
+  ) {
+
+    disableVoiceDucking();
+
+
+    return;
+
+  }
+
+
+  if (
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia
+  ) {
+
+    toast(
+      "Seu navegador não permite detectar o microfone."
+    );
+
+
+    return;
+
+  }
+
+
+  try {
+
+    microphoneStream =
+      await navigator.mediaDevices.getUserMedia(
+        {
+          audio: {
+
+            echoCancellation:
+              true,
+
+            noiseSuppression:
+              true,
+
+            autoGainControl:
+              true
+
+          }
+        }
+      );
+
+
+    const AudioContextClass =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+
+    if (
+      !AudioContextClass
+    ) {
+
+      throw new Error(
+        "AudioContext não suportado."
+      );
+
+    }
+
+
+    microphoneContext =
+      new AudioContextClass();
+
+
+    if (
+      microphoneContext.state ===
+      "suspended"
+    ) {
+
+      await microphoneContext.resume();
+
+    }
+
+
+    const source =
+      microphoneContext.createMediaStreamSource(
+        microphoneStream
+      );
+
+
+    microphoneAnalyser =
+      microphoneContext.createAnalyser();
+
+
+    microphoneAnalyser.fftSize =
+      512;
+
+
+    microphoneAnalyser.smoothingTimeConstant =
+      0.65;
+
+
+    microphoneData =
+      new Uint8Array(
+        microphoneAnalyser.fftSize
+      );
+
+
+    source.connect(
+      microphoneAnalyser
+    );
+
+
+    duckingEnabled =
+      true;
+
+
     const button =
-      $("#interfaceSoundToggle");
+      $("#voiceDuckToggle");
 
 
     if (
@@ -4558,81 +5090,353 @@
     ) {
 
       button.textContent =
-        `SONS DE INTERFACE: ${
-          uiSoundsEnabled
-            ? "ON"
-            : "OFF"
-        }`;
+        "🎙 ABAIXAR QUANDO EU FALO: ON";
+
+
+      button.classList.add(
+        "active"
+      );
+
+    }
+
+
+    startVoiceDucking();
+
+
+    toast(
+      "Ducking ativado."
+    );
+
+
+  } catch (
+    error
+  ) {
+
+    console.error(
+      "Microfone:",
+      error
+    );
+
+
+    if (
+      microphoneStream
+    ) {
+
+      microphoneStream
+        .getTracks()
+        .forEach(
+          track =>
+            track.stop()
+        );
+
+      microphoneStream =
+        null;
 
     }
 
 
     if (
-      uiSoundsEnabled
+      microphoneContext
     ) {
 
-      playSound(
-        "save"
-      );
+      microphoneContext
+        .close()
+        .catch(
+          () => {}
+        );
+
+      microphoneContext =
+        null;
 
     }
+
+
+    toast(
+      "Permissão do microfone não foi concedida."
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   MONITORAMENTO DA VOZ
+   ============================================================ */
+
+function startVoiceDucking() {
+
+  if (
+    duckingTimer
+  ) {
+
+    clearInterval(
+      duckingTimer
+    );
 
   }
 
 
-  function handleAudioFile(
-    event
+  duckingTimer =
+    setInterval(
+      () => {
+
+        if (
+          !duckingEnabled ||
+          !microphoneAnalyser ||
+          !microphoneData ||
+          !youtubeReady ||
+          !youtubePlayer
+        ) {
+
+          return;
+
+        }
+
+
+        microphoneAnalyser.getByteTimeDomainData(
+          microphoneData
+        );
+
+
+        let sum =
+          0;
+
+
+        for (
+          let i = 0;
+          i <
+          microphoneData.length;
+          i++
+        ) {
+
+          const normalized =
+            (
+              microphoneData[i] -
+              128
+            ) /
+            128;
+
+
+          sum +=
+            normalized *
+            normalized;
+
+        }
+
+
+        const rms =
+          Math.sqrt(
+            sum /
+            microphoneData.length
+          );
+
+
+        /*
+          O valor 0.045 é o limiar
+          de fala.
+
+          Ele evita que pequenos
+          ruídos ativem o ducking.
+        */
+
+        const speaking =
+          rms >
+          0.045;
+
+
+        if (
+          speaking ===
+          speakingNow
+        ) {
+
+          return;
+
+        }
+
+
+        speakingNow =
+          speaking;
+
+
+        if (
+          speakingNow
+        ) {
+
+          youtubePlayer.setVolume(
+            Math.min(
+              musicVolume,
+              3
+            )
+          );
+
+        } else {
+
+          youtubePlayer.setVolume(
+            musicVolume
+          );
+
+        }
+
+      },
+      100
+    );
+
+}
+
+
+/* ============================================================
+   DESATIVAR DUCKING
+   ============================================================ */
+
+function disableVoiceDucking() {
+
+  duckingEnabled =
+    false;
+
+
+  speakingNow =
+    false;
+
+
+  if (
+    duckingTimer
   ) {
 
-    const file =
-      event.target.files?.[0];
+    clearInterval(
+      duckingTimer
+    );
 
 
-    const audio =
-      $("#ambientAudio");
+    duckingTimer =
+      null;
+
+  }
 
 
-    if (
-      !file ||
-      !audio
-    ) {
+  if (
+    microphoneStream
+  ) {
 
-      return;
-
-    }
-
-
-    if (
-      audioObjectUrl
-    ) {
-
-      URL.revokeObjectURL(
-        audioObjectUrl
-      );
-
-    }
-
-
-    audioObjectUrl =
-      URL.createObjectURL(
-        file
+    microphoneStream
+      .getTracks()
+      .forEach(
+        track =>
+          track.stop()
       );
 
 
-    audio.src =
-      audioObjectUrl;
+    microphoneStream =
+      null;
+
+  }
 
 
-    audio.load();
+  if (
+    microphoneContext
+  ) {
 
-
-    audio
-      .play()
+    microphoneContext
+      .close()
       .catch(
         () => {}
       );
 
+
+    microphoneContext =
+      null;
+
   }
+
+
+  microphoneAnalyser =
+    null;
+
+
+  microphoneData =
+    null;
+
+
+  if (
+    youtubeReady &&
+    youtubePlayer
+  ) {
+
+    youtubePlayer.setVolume(
+      musicVolume
+    );
+
+  }
+
+
+  const button =
+    $("#voiceDuckToggle");
+
+
+  if (
+    button
+  ) {
+
+    button.textContent =
+      "🎙 ABAIXAR QUANDO EU FALO: OFF";
+
+
+    button.classList.remove(
+      "active"
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   SOM DE INTERFACE
+   ============================================================ */
+
+function toggleInterfaceSounds() {
+
+  uiSoundsEnabled =
+    !uiSoundsEnabled;
+
+
+  localStorage.setItem(
+    storageKeys.sounds,
+    String(
+      uiSoundsEnabled
+    )
+  );
+
+
+  const button =
+    $("#interfaceSoundToggle");
+
+
+  if (
+    button
+  ) {
+
+    button.textContent =
+      `SONS DE INTERFACE: ${
+        uiSoundsEnabled
+          ? "ON"
+          : "OFF"
+      }`;
+
+  }
+
+
+  if (
+    uiSoundsEnabled
+  ) {
+
+    playSound(
+      "save"
+    );
+
+  }
+
+}
 
 
   /* ============================================================
