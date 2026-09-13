@@ -2238,150 +2238,156 @@
     );
   }
 
-  async function createCard() {
+async function createCard() {
 
-   const newCardTitleInput = $("#newCardTitle");
-const newCardTypeInput = $("#newCardType");
-const newCardContextInput = $("#newCardContext");
+  const titleInput =
+    $("#newCardTitle");
 
-if (newCardTitleInput) {
-  newCardTitleInput.value = "";
-}
+  const typeInput =
+    $("#newCardType");
 
-if (newCardTypeInput) {
-  newCardTypeInput.value = "";
-}
+  const contextInput =
+    $("#newCardContext");
 
-if (newCardContextInput) {
-  newCardContextInput.value = "";
-}
-    if (
-      !title
+  const title =
+    titleInput?.value.trim() || "";
+
+  const type =
+    typeInput?.value.trim() ||
+    "PISTA";
+
+  const context =
+    contextInput?.value.trim() ||
+    "";
+
+  if (!title) {
+
+    toast(
+      "Dê um título à pista."
+    );
+
+    titleInput?.focus();
+
+    return;
+  }
+
+  const newCard = {
+
+    title,
+
+    clue_type:
+      type,
+
+    context,
+
+    notes:
+      "",
+
+    x:
+      25 +
+      Math.random() * 50,
+
+    y:
+      20 +
+      Math.random() * 55,
+
+    rotation:
+      Math.random() * 4 - 2
+
+  };
+
+  if (
+    appMode ===
+    "supabase"
+  ) {
+
+    try {
+
+      const result =
+        await supabase
+          .from("clues")
+          .insert({
+
+            ...newCard,
+
+            campaign_id:
+              campaignId,
+
+            created_by:
+              currentUser?.id ||
+              null
+
+          })
+          .select()
+          .single();
+
+      if (
+        result.error
+      ) {
+
+        throw result.error;
+      }
+
+      cards.push(
+        result.data
+      );
+
+    } catch (
+      error
     ) {
 
+      console.error(
+        "Criar pista:",
+        error
+      );
+
       toast(
-        "Dê um título à pista."
+        "Não foi possível criar a pista."
       );
 
       return;
     }
 
-    const newCard = {
+  } else {
 
-      title,
+    newCard.id =
+      crypto.randomUUID();
 
-      clue_type:
-        type,
-
-      context,
-
-      notes:
-        "",
-
-      x:
-        25 +
-        Math.random() *
-        50,
-
-      y:
-        20 +
-        Math.random() *
-        55,
-
-      rotation:
-        Math.random() *
-        4 -
-        2
-
-    };
-
-    if (
-      appMode ===
-      "supabase"
-    ) {
-
-      try {
-
-        const result =
-          await supabase
-            .from("clues")
-            .insert({
-
-              ...newCard,
-
-              campaign_id:
-                campaignId,
-
-              created_by:
-                currentUser?.id ||
-                null
-
-            })
-            .select()
-            .single();
-
-        if (
-          result.error
-        ) {
-
-          throw result.error;
-        }
-
-        cards.push(
-          result.data
-        );
-
-      } catch (
-        error
-      ) {
-
-        console.error(
-          "Criar pista:",
-          error
-        );
-
-        toast(
-          "Não foi possível criar a pista."
-        );
-
-        return;
-      }
-
-    } else {
-
-      newCard.id =
-        crypto.randomUUID();
-
-      cards.push(
-        newCard
-      );
-
-      saveLocal();
-    }
-
-    renderCards();
-
-    renderConnections();
-
-    closeNewCard();
-
-    $(
-      "#newCardTitle"
-    )?.value = "";
-
-    $(
-      "#newCardType"
-    )?.value = "";
-
-    $(
-      "#newCardContext"
-    )?.value = "";
-
-    toast(
-      "Nova pista adicionada."
+    cards.push(
+      newCard
     );
+
+    saveLocal();
   }
 
+  renderCards();
+
+  renderConnections();
+
+  filterCards();
+
+  closeNewCard();
+
+  if (titleInput) {
+    titleInput.value = "";
+  }
+
+  if (typeInput) {
+    typeInput.value = "";
+  }
+
+  if (contextInput) {
+    contextInput.value = "";
+  }
+
+  toast(
+    "Nova pista adicionada."
+  );
+
+  playSound(
+    "save"
+  );
+}
 
   /* ============================================================
      EDITOR
@@ -3738,24 +3744,17 @@ function openLocation(
           videoId:
             HEXATOMBE_VIDEO_ID,
 
-          playerVars: {
+      playerVars: {
 
-            autoplay:
-              0,
+  autoplay: 0,
+  controls: 1,
+  rel: 0,
+  playsinline: 1,
+  modestbranding: 1,
+  enablejsapi: 1,
+  origin: window.location.origin
 
-            controls:
-              1,
-
-            rel:
-              0,
-
-            playsinline:
-              1,
-
-            modestbranding:
-              1
-
-          },
+},
 
           events: {
 
@@ -4748,28 +4747,42 @@ function openLocation(
       }
     );
 
+$$(
+  ".location-item"
+)
+.forEach(
+  location => {
 
-    $(
-      ".music-scene, .music-jump"
-    )
-    .forEach(
-      button => {
+    location.addEventListener(
+      "click",
+      event => {
 
-        button.addEventListener(
-          "click",
-          () => {
+        if (
+          event.target.closest(
+            ".shared-notes"
+          )
+        ) {
 
-            playMusicAt(
-              button.dataset.time,
-              button.dataset.track
-            );
+          return;
+        }
 
-          }
+        const key =
+          location.dataset.noteKey;
+
+        if (!key) {
+          return;
+        }
+
+        openLocation(
+          key
         );
       }
     );
 
-
+    location.style.cursor =
+      "pointer";
+  }
+);
     on(
       "#enterBoard",
       "click",
@@ -5196,7 +5209,269 @@ function openLocation(
   /* ============================================================
      INICIALIZAÇÃO
      ============================================================ */
+ const locations = {
 
+  praca: {
+
+    type:
+      "LOCAL 01 — SANTA CECÍLIA",
+
+    title:
+      "Praça Santa Cecília",
+
+    html: `
+
+      <div class="paper">
+
+        <p>
+          <strong>HORÁRIO:</strong>
+          02:12
+        </p>
+
+        <p>
+          <strong>ESTADO:</strong>
+          Concluído
+        </p>
+
+        <hr>
+
+        <p>
+          Primeiro ponto registrado da investigação.
+          O sangue foi encontrado antes de qualquer
+          explicação para a origem do som.
+        </p>
+
+        <p>
+          Cinco marcas circulares foram encontradas
+          próximas ao local.
+        </p>
+
+        <p class="hand">
+          O sino tocou antes de encontrarmos a origem.
+        </p>
+
+      </div>
+    `
+  },
+
+
+  apartamento: {
+
+    type:
+      "LOCAL 02 — APARTAMENTO 18",
+
+    title:
+      "Apartamento 18",
+
+    html: `
+
+      <div class="paper">
+
+        <p>
+          <strong>HORÁRIO:</strong>
+          02:40
+        </p>
+
+        <p>
+          <strong>ELEMENTO:</strong>
+          MEDO
+        </p>
+
+        <hr>
+
+        <p>
+          O segundo ponto apresenta relatos de
+          presença e alterações na percepção.
+        </p>
+
+        <p>
+          O sino voltou a ser ouvido antes que
+          qualquer manifestação fosse identificada.
+        </p>
+
+        <p class="hand">
+          Tocou antes de acontecer.
+        </p>
+
+      </div>
+    `
+  },
+
+
+  tunel: {
+
+    type:
+      "LOCAL 03 — TÚNEL FERROVIÁRIO",
+
+    title:
+      "Túnel ferroviário",
+
+    html: `
+
+      <div class="paper">
+
+        <p>
+          <strong>HORÁRIO:</strong>
+          03:05
+        </p>
+
+        <p>
+          <strong>ELEMENTO:</strong>
+          VIOLÊNCIA
+        </p>
+
+        <hr>
+
+        <p>
+          O terceiro ponto apresenta sinais de
+          violência e preparação interrompida.
+        </p>
+
+        <p>
+          A sequência parece estar avançando
+          independentemente da investigação.
+        </p>
+
+        <p class="hand">
+          Ainda não era para tocar.
+        </p>
+
+      </div>
+    `
+  },
+
+
+  escola: {
+
+    type:
+      "LOCAL 04 — ESCOLA MUNICIPAL",
+
+    title:
+      "Escola municipal",
+
+    html: `
+
+      <div class="paper">
+
+        <p>
+          <strong>HORÁRIO:</strong>
+          03:30
+        </p>
+
+        <p>
+          <strong>ELEMENTO:</strong>
+          SILÊNCIO
+        </p>
+
+        <hr>
+
+        <p>
+          A escola concentra uma das conexões
+          mais importantes da investigação.
+        </p>
+
+        <p>
+          Desenhos encontrados no local repetem
+          formas circulares associadas à ocorrência.
+        </p>
+
+        <p class="hand">
+          Eles descobriram o padrão.
+        </p>
+
+      </div>
+    `
+  },
+
+
+  torre: {
+
+    type:
+      "LOCAL 05 — TORRE SEM NOME",
+
+    title:
+      "Torre sem nome",
+
+    html: `
+
+      <div class="paper">
+
+        <p>
+          <strong>HORÁRIO:</strong>
+          03:55
+        </p>
+
+        <p>
+          <strong>ELEMENTO:</strong>
+          SINO
+        </p>
+
+        <hr>
+
+        <p>
+          Torre sem identificação conhecida.
+          Nenhum sino é visível no local.
+        </p>
+
+        <p>
+          Mesmo assim, quanto mais próximos os
+          investigadores chegam, mais definido
+          fica o som.
+        </p>
+
+        <p class="hand">
+          O quinto não é convocado.<br>
+          O quinto convoca.
+        </p>
+
+      </div>
+    `
+  }
+
+};
+
+
+function openLocation(
+  key
+) {
+
+  const location =
+    locations[key];
+
+  const modal =
+    $("#documentModal");
+
+  if (
+    !location ||
+    !modal
+  ) {
+
+    return;
+  }
+
+  $("#modalType").textContent =
+    location.type;
+
+  $("#modalTitle").textContent =
+    location.title;
+
+  $("#modalContent").innerHTML =
+    location.html;
+
+  modal.classList.add(
+    "open"
+  );
+
+  modal.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+  playSound(
+    "document"
+  );
+}
+  
   async function start() {
 
     bindEvents();
@@ -5209,6 +5484,16 @@ function openLocation(
 
     loadLocalData();
 
+    setMusicVolume(
+  musicVolume
+);
+
+if (
+  window.YT?.Player
+) {
+  createYoutubePlayer();
+}
+    
     const connected =
       await initSupabase();
 
@@ -5284,3 +5569,79 @@ function openLocation(
   }
 
 })();
+function filterCards() {
+
+  const input =
+    $("#boardSearch");
+
+  const query =
+    input?.value
+      .trim()
+      .toLowerCase() ||
+    "";
+
+  const canvas =
+    $("#boardCanvas");
+
+  if (!canvas) {
+    return;
+  }
+
+  const cardsElements =
+    $$(".evidence-card", canvas);
+
+  cardsElements.forEach(
+    element => {
+
+      if (!query) {
+
+        element.classList.remove(
+          "dimmed"
+        );
+
+        return;
+      }
+
+      const id =
+        String(
+          element.dataset.id
+        );
+
+      const card =
+        cards.find(
+          item =>
+            String(
+              item.id
+            ) ===
+            id
+        );
+
+      if (!card) {
+        return;
+      }
+
+      const content =
+        [
+
+          card.title,
+          card.clue_type,
+          card.context,
+          card.notes
+
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+
+      const match =
+        content.includes(
+          query
+        );
+
+      element.classList.toggle(
+        "dimmed",
+        !match
+      );
+    }
+  );
+}
