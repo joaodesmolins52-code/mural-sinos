@@ -891,13 +891,6 @@ h3 em {
   border-right: 0;
 }
 
-/*
-   IMPORTANTE:
-   a arte fica em 0,
-   o overlay em 1,
-   o texto em 2.
-*/
-
 .character-bg {
   position: absolute;
   inset: 0;
@@ -921,11 +914,11 @@ h3 em {
     );
 }
 
-.character-bg.asset-loaded {
-  z-index: 0 !important;
-}
+/* ============================================================
+   IMAGENS DOS PERSONAGENS
+   ============================================================ */
 
-.character-bg.asset-loaded img {
+.character-bg img {
   display: block;
   width: 100%;
   height: 100%;
@@ -1799,6 +1792,11 @@ footer span:last-child {
 
   .character-info h3 {
     font-size: 52px;
+  }
+
+  .character-bg img {
+    object-fit: contain;
+    object-position: center bottom;
   }
 
   .location-item {
