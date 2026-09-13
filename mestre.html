@@ -1435,17 +1435,73 @@
       );
 
 
-      analyzeBtn.addEventListener(
-        "click",
-        () => {
+     analyzeBtn.addEventListener(
+  "click",
+  async () => {
 
-          analysisBox.textContent =
-            "A integração com a IA ainda será adicionada.\n\n" +
-            "Nesta etapa, o acesso da Central do Mestre " +
-            "já está protegido pelo Supabase.";
+    analysisBox.textContent =
+      "ANALISANDO A INVESTIGAÇÃO...\n\n" +
+      "Lendo pistas, anotações e conexões.";
 
-        }
+    analyzeBtn.disabled = true;
+
+    try {
+
+      const campaignId =
+        "f1a71d86-6c31-47bb-bd06-655da985b0fa";
+
+      const {
+        data,
+        error
+      } =
+        await supabase.functions.invoke(
+          "analisar-investigacao",
+          {
+            body: {
+              campaign_id: campaignId
+            }
+          }
+        );
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data?.success) {
+
+        throw new Error(
+          data?.error ||
+          "A IA não retornou uma análise."
+        );
+
+      }
+
+      analysisBox.textContent =
+        data.analysis ||
+        "A IA não retornou conteúdo.";
+
+    } catch (error) {
+
+      console.error(
+        "Análise da IA:",
+        error
       );
+
+      analysisBox.textContent =
+        "ERRO AO ANALISAR.\n\n" +
+        (
+          error?.message ||
+          "Não foi possível executar a análise."
+        );
+
+    } finally {
+
+      analyzeBtn.disabled = false;
+
+    }
+
+  }
+);
 
 
       supabase.auth.onAuthStateChange(
