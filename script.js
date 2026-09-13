@@ -208,18 +208,6 @@
     },
 
     {
-      id: "foto",
-      name: "FOTOGRAFIA",
-      object_type: "DOCUMENTO",
-      description:
-        "Fotografia de uma praça vazia.",
-      content:
-        "Três fotografias mostram círculos de sangue em locais diferentes.",
-      x: 7,
-      y: 82
-    },
-
-    {
       id: "mapa",
       name: "MAPA",
       object_type: "DOCUMENTO",
