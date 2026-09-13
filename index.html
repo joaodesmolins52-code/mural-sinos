@@ -1,13 +1,14 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta
     name="description"
-    content="Mesa virtual de investigação — O Som que Não Deveria Existir"
+    content="Mesa virtual de investigação — A Voz do Quinto"
   >
-  <title>O Som que Não Deveria Existir</title>
+  <title>A Voz do Quinto</title>
 
   <link
     rel="preconnect"
@@ -37,110 +38,109 @@
   <div class="scanlines"></div>
   <div class="ambient-red"></div>
 
-
   <!-- =========================================================
        TOPO
        ========================================================= -->
 
   <header class="topbar">
 
-    <a
-      class="brand"
-      href="#quadro"
-      data-sound="nav"
-    >
+```
+<a
+  class="brand"
+  href="#quadro"
+  data-sound="nav"
+>
 
-      <span class="brand-mark">
-        03
-      </span>
+  <span class="brand-mark">
+    03
+  </span>
 
-      <span>
+  <span>
 
-        <strong>
-          DOSSIÊ
-        </strong>
+    <strong>
+      DOSSIÊ
+    </strong>
 
-        <small>
-          A VOZ DO QUINTO
-        </small>
+    <small>
+      A VOZ DO QUINTO
+    </small>
 
-      </span>
+  </span>
 
-    </a>
-
-
-    <nav
-      class="main-nav"
-      aria-label="Navegação principal"
-    >
-
-      <a
-        class="active"
-        href="#quadro"
-        data-sound="nav"
-      >
-        QUADRO
-      </a>
-
-      <a
-        href="#personagens"
-        data-sound="nav"
-      >
-        PERSONAGENS
-      </a>
-
-      <a
-        href="#locais"
-        data-sound="nav"
-      >
-        LOCAIS
-      </a>
-
-      <a
-        href="#objetos"
-        data-sound="nav"
-      >
-        OBJETOS
-      </a>
-
-      <a
-        href="#documentos"
-        data-sound="nav"
-      >
-        DOCUMENTOS
-      </a>
-
-    </nav>
+</a>
 
 
-    <div class="topbar-actions">
+<nav
+  class="main-nav"
+  aria-label="Navegação principal"
+>
 
-      <button
-        class="sound-toggle"
-        id="soundToggle"
-        type="button"
-        data-sound="panel"
-      >
+  <a
+    class="active"
+    href="#quadro"
+    data-sound="nav"
+  >
+    QUADRO
+  </a>
 
-        <span class="sound-bars">
+  <a
+    href="#personagens"
+    data-sound="nav"
+  >
+    PERSONAGENS
+  </a>
 
-          <i></i>
-          <i></i>
-          <i></i>
+  <a
+    href="#locais"
+    data-sound="nav"
+  >
+    LOCAIS
+  </a>
 
-        </span>
+  <a
+    href="#objetos"
+    data-sound="nav"
+  >
+    OBJETOS
+  </a>
 
-        <span>
-          AMBIENTE
-        </span>
+  <a
+    href="#documentos"
+    data-sound="nav"
+  >
+    DOCUMENTOS
+  </a>
 
-      </button>
+</nav>
 
-    </div>
+
+<div class="topbar-actions">
+
+  <button
+    class="sound-toggle"
+    id="soundToggle"
+    type="button"
+    data-sound="panel"
+  >
+
+    <span class="sound-bars">
+
+      <i></i>
+      <i></i>
+      <i></i>
+
+    </span>
+
+    <span>
+      AMBIENTE
+    </span>
+
+  </button>
+
+</div>
+```
 
   </header>
-
-
 
   <!-- =========================================================
        CONTEÚDO
@@ -148,1088 +148,1091 @@
 
   <main>
 
+```
+<!-- =======================================================
+     HERO
+     ======================================================= -->
 
-    <!-- =======================================================
-         HERO
-         ======================================================= -->
+<section
+  class="hero"
+  id="quadro"
+>
 
-    <section
-      class="hero"
-      id="quadro"
-    >
+  <div class="hero-copy">
 
-      <div class="hero-copy">
-
-        <p class="eyebrow">
-          <span></span>
-          ARQUIVO DE OPERAÇÃO // SESSÃO 03
-        </p>
-
-
-        <h1>
-          O SOM QUE<br>
-          <em>NÃO DEVERIA</em><br>
-          EXISTIR
-        </h1>
+    <p class="eyebrow">
+      <span></span>
+      ARQUIVO DE OPERAÇÃO // SESSÃO 03
+    </p>
 
 
-        <p class="hero-text">
-          Uma investigação sobre manifestações ligadas a um sino
-          que ninguém consegue localizar. O mural começa aqui;
-          o restante do caso é construído por vocês.
-        </p>
+    <h1>
+      A VOZ<br>
+      <em>DO QUINTO</em>
+    </h1>
 
 
-        <div class="hero-meta">
-
-          <span>
-            INVESTIGAÇÃO
-          </span>
-
-          <span>
-            AÇÃO
-          </span>
-
-          <span>
-            HORROR
-          </span>
-
-        </div>
-
-      </div>
+    <p class="hero-text">
+      Uma investigação sobre ocorrências ligadas a uma presença
+      que parece se manifestar através de um sino que ninguém
+      consegue localizar. O quadro começa aqui; o restante da
+      investigação será construído durante a sessão.
+    </p>
 
 
-      <div
-        class="hero-signal"
-        aria-hidden="true"
+    <div class="hero-meta">
+
+      <span>
+        INVESTIGAÇÃO
+      </span>
+
+      <span>
+        AÇÃO
+      </span>
+
+      <span>
+        HORROR
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <div
+    class="hero-signal"
+    aria-hidden="true"
+  >
+
+    <div class="ring ring-a"></div>
+    <div class="ring ring-b"></div>
+    <div class="ring ring-c"></div>
+
+    <div class="signal-core">
+      DING
+    </div>
+
+  </div>
+
+
+  <button
+    class="enter-board"
+    id="enterBoard"
+    type="button"
+    data-sound="enter"
+  >
+
+    <span>
+      ABRIR QUADRO
+    </span>
+
+    <b>
+      ↓
+    </b>
+
+  </button>
+
+</section>
+
+
+
+<!-- =======================================================
+     QUADRO
+     ======================================================= -->
+
+<section
+  class="section board-section"
+  id="boardSection"
+>
+
+  <div class="section-heading">
+
+    <div>
+
+      <p class="eyebrow">
+        <span></span>
+        INVESTIGAÇÃO COMPARTILHADA
+      </p>
+
+      <h2>
+        QUADRO DE
+        <em>EVIDÊNCIAS</em>
+      </h2>
+
+    </div>
+
+
+    <div class="board-actions">
+
+      <button
+        class="control-btn"
+        id="addCardBtn"
+        type="button"
+        data-sound="tool"
       >
-
-        <div class="ring ring-a"></div>
-        <div class="ring ring-b"></div>
-        <div class="ring ring-c"></div>
-
-        <div class="signal-core">
-          DING
-        </div>
-
-      </div>
+        + NOVA PISTA
+      </button>
 
 
       <button
-        class="enter-board"
-        id="enterBoard"
+        class="control-btn"
+        id="connectionMode"
         type="button"
-        data-sound="enter"
+        data-sound="tool"
       >
-
-        <span>
-          ABRIR QUADRO
-        </span>
-
-        <b>
-          ↓
-        </b>
-
+        ↗ CONECTAR
       </button>
 
-    </section>
+
+      <button
+        class="control-btn"
+        id="resetBoard"
+        type="button"
+        data-sound="tool"
+      >
+        REPOSICIONAR
+      </button>
+
+    </div>
+
+  </div>
 
 
+  <div class="board-tools-row">
 
-    <!-- =======================================================
-         QUADRO
-         ======================================================= -->
+    <label class="board-search">
 
-    <section
-      class="section board-section"
-      id="boardSection"
+      <span>
+        ⌕
+      </span>
+
+      <input
+        id="boardSearch"
+        type="search"
+        placeholder="Procurar pista, anotação ou tipo..."
+        autocomplete="off"
+      >
+
+    </label>
+
+
+    <div class="zoom-tools">
+
+      <button
+        class="zoom-btn"
+        id="zoomOut"
+        type="button"
+        data-sound="tool"
+      >
+        −
+      </button>
+
+
+      <strong id="zoomLabel">
+        100%
+      </strong>
+
+
+      <button
+        class="zoom-btn"
+        id="zoomIn"
+        type="button"
+        data-sound="tool"
+      >
+        +
+      </button>
+
+    </div>
+
+
+    <div class="board-status">
+
+      <b id="cardCount">
+        0
+      </b>
+
+      pistas
+
+      <i></i>
+
+      <b id="connectionCount">
+        0
+      </b>
+
+      conexões
+
+      <i></i>
+
+      <b id="onlineCount">
+        —
+      </b>
+
+      online
+
+    </div>
+
+  </div>
+
+
+  <div class="board-shell">
+
+    <div class="board-toolbar">
+
+      <span id="connectionHint">
+        arraste • escreva • conecte • todos veem as mudanças
+      </span>
+
+      <span id="syncStatus">
+        conectando...
+      </span>
+
+    </div>
+
+
+    <div
+      class="evidence-board"
+      id="evidenceBoard"
     >
 
-      <div class="section-heading">
-
-        <div>
-
-          <p class="eyebrow">
-            <span></span>
-            INVESTIGAÇÃO COMPARTILHADA
-          </p>
-
-          <h2>
-            QUADRO DE
-            <em>EVIDÊNCIAS</em>
-          </h2>
-
-        </div>
-
-
-        <div class="board-actions">
-
-          <button
-            class="control-btn"
-            id="addCardBtn"
-            type="button"
-            data-sound="tool"
-          >
-            + NOVA PISTA
-          </button>
-
-
-          <button
-            class="control-btn"
-            id="connectionMode"
-            type="button"
-            data-sound="tool"
-          >
-            ↗ CONECTAR
-          </button>
-
-
-          <button
-            class="control-btn"
-            id="resetBoard"
-            type="button"
-            data-sound="tool"
-          >
-            REPOSICIONAR
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <div class="board-tools-row">
-
-        <label class="board-search">
-
-          <span>
-            ⌕
-          </span>
-
-          <input
-            id="boardSearch"
-            type="search"
-            placeholder="Procurar pista, anotação ou tipo..."
-            autocomplete="off"
-          >
-
-        </label>
-
-
-        <div class="zoom-tools">
-
-          <button
-            class="zoom-btn"
-            id="zoomOut"
-            type="button"
-            data-sound="tool"
-          >
-            −
-          </button>
-
-
-          <strong id="zoomLabel">
-            100%
-          </strong>
-
-
-          <button
-            class="zoom-btn"
-            id="zoomIn"
-            type="button"
-            data-sound="tool"
-          >
-            +
-          </button>
-
-        </div>
-
-
-        <div class="board-status">
-
-          <b id="cardCount">
-            0
-          </b>
-
-          pistas
-
-          <i></i>
-
-          <b id="connectionCount">
-            0
-          </b>
-
-          conexões
-
-          <i></i>
-
-          <b id="onlineCount">
-            —
-          </b>
-
-          online
-
-        </div>
-
-      </div>
-
-
-      <div class="board-shell">
-
-        <div class="board-toolbar">
-
-          <span id="connectionHint">
-            arraste • escreva • conecte • todos veem as mudanças
-          </span>
-
-          <span id="syncStatus">
-            conectando...
-          </span>
-
-        </div>
-
-
-        <div
-          class="evidence-board"
-          id="evidenceBoard"
-        >
-
-          <div
-            class="board-canvas"
-            id="boardCanvas"
-          >
-
-            <svg
-              class="connections"
-              id="connections"
-              aria-hidden="true"
-            ></svg>
-
-          </div>
-
-
-          <div
-            class="board-object-layer"
-            id="boardObjectLayer"
-          ></div>
-
-        </div>
-
-      </div>
-
-
-      <div class="board-note">
-
-        <strong>
-          ATENÇÃO:
-        </strong>
-
-        as informações do quadro pertencem à investigação.
-        Anotações são compartilhadas com a mesa quando o
-        Supabase estiver conectado.
-
-      </div>
-
-    </section>
-
-
-
-    <!-- =======================================================
-         PERSONAGENS
-         ======================================================= -->
-
-    <section
-      class="section characters-section"
-      id="personagens"
-    >
-
-      <div class="section-heading">
-
-        <div>
-
-          <p class="eyebrow">
-            <span></span>
-            ARQUIVO HUMANO
-          </p>
-
-          <h2>
-            PERSONAGENS
-          </h2>
-
-        </div>
-
-      </div>
-
-
-      <div class="character-grid">
-
-
-        <!-- HELENA -->
-
-        <article
-          class="character-card helena note-entity"
-          data-entity="helena"
-        >
-
-          <div
-            class="character-bg"
-          >
-
-            <img
-              src="assets/characters/helena.png"
-              alt="Helena Duarte"
-            >
-
-          </div>
-
-
-          <div class="character-overlay"></div>
-
-
-          <div class="character-info">
-
-            <span class="card-type">
-              TESTEMUNHA
-            </span>
-
-
-            <h3>
-              HELENA<br>
-              <em>DUARTE</em>
-            </h3>
-
-
-            <p>
-              Professora da escola municipal • 34 anos
-            </p>
-
-
-            <div
-              class="shared-notes"
-              data-note-kind="character"
-              data-note-key="helena"
-            ></div>
-
-
-            <button
-              class="control-btn entity-note-btn"
-              type="button"
-              data-note-kind="character"
-              data-note-key="helena"
-              data-sound="edit"
-            >
-              + ANOTAÇÃO
-            </button>
-
-          </div>
-
-        </article>
-
-
-
-        <!-- ELIAS -->
-
-        <article
-          class="character-card elias note-entity"
-          data-entity="elias"
-        >
-
-          <div
-            class="character-bg"
-          >
-
-            <img
-              src="assets/characters/elias.png"
-              alt="Elias Moura"
-            >
-
-          </div>
-
-
-          <div class="character-overlay"></div>
-
-
-          <div class="character-info">
-
-            <span class="card-type">
-              O CURADOR
-            </span>
-
-
-            <h3>
-              ELIAS<br>
-              <em>MOURA</em>
-            </h3>
-
-
-            <p>
-              Pesquisador ligado às ocorrências
-            </p>
-
-
-            <div
-              class="shared-notes"
-              data-note-kind="character"
-              data-note-key="elias"
-            ></div>
-
-
-            <button
-              class="control-btn entity-note-btn"
-              type="button"
-              data-note-kind="character"
-              data-note-key="elias"
-              data-sound="edit"
-            >
-              + ANOTAÇÃO
-            </button>
-
-          </div>
-
-        </article>
-
-
-
-        <!-- MARCADOS -->
-
-        <article
-          class="character-card marked note-entity"
-          data-entity="marcados"
-        >
-
-          <div
-            class="character-bg"
-          >
-
-            <img
-              src="assets/characters/marcados.png"
-              alt="Os Marcados"
-            >
-
-          </div>
-
-
-          <div class="character-overlay"></div>
-
-
-          <div class="character-info">
-
-            <span class="card-type">
-              AMEAÇA
-            </span>
-
-
-            <h3>
-              OS<br>
-              <em>MARCADOS</em>
-            </h3>
-
-
-            <p>
-              Condutor • Observador • Silenciador
-            </p>
-
-
-            <div
-              class="shared-notes"
-              data-note-kind="character"
-              data-note-key="marcados"
-            ></div>
-
-
-            <button
-              class="control-btn entity-note-btn"
-              type="button"
-              data-note-kind="character"
-              data-note-key="marcados"
-              data-sound="edit"
-            >
-              + ANOTAÇÃO
-            </button>
-
-          </div>
-
-        </article>
-
-      </div>
-
-    </section>
-
-
-
-    <!-- =======================================================
-         LOCAIS
-         ======================================================= -->
-
-    <section
-      class="section locations-section"
-      id="locais"
-    >
-
-      <div class="section-heading">
-
-        <div>
-
-          <p class="eyebrow">
-            <span></span>
-            MAPA DA OCORRÊNCIA
-          </p>
-
-          <h2>
-            OS CINCO
-            <em>LOCAIS</em>
-          </h2>
-
-        </div>
-
-      </div>
-
-
-      <div class="locations-list">
-
-
-        <article
-          class="location-item image-slot note-entity"
-          data-asset="assets/locations/praca-santa-cecilia.webp"
-        >
-
-          <span>
-            01
-          </span>
-
-          <div>
-
-            <h3>
-              Praça Santa Cecília
-            </h3>
-
-            <p>
-              Sangue • 02:12 • Concluído
-            </p>
-
-            <div
-              class="shared-notes"
-              data-note-kind="location"
-              data-note-key="praca"
-            ></div>
-
-          </div>
-
-          <b>
-            →
-          </b>
-
-        </article>
-
-
-
-        <article
-          class="location-item image-slot note-entity"
-          data-asset="assets/locations/apartamento-18.webp"
-        >
-
-          <span>
-            02
-          </span>
-
-          <div>
-
-            <h3>
-              Apartamento 18
-            </h3>
-
-            <p>
-              Medo • 02:40 • Concluído
-            </p>
-
-            <div
-              class="shared-notes"
-              data-note-kind="location"
-              data-note-key="apartamento"
-            ></div>
-
-          </div>
-
-          <b>
-            →
-          </b>
-
-        </article>
-
-
-
-        <article
-          class="location-item image-slot note-entity"
-          data-asset="assets/locations/tunel-ferroviario.webp"
-        >
-
-          <span>
-            03
-          </span>
-
-          <div>
-
-            <h3>
-              Túnel ferroviário
-            </h3>
-
-            <p>
-              Violência • 03:05 • Interrompido
-            </p>
-
-            <div
-              class="shared-notes"
-              data-note-kind="location"
-              data-note-key="tunel"
-            ></div>
-
-          </div>
-
-          <b>
-            →
-          </b>
-
-        </article>
-
-
-
-        <article
-          class="location-item image-slot note-entity"
-          data-asset="assets/locations/escola-municipal.webp"
-        >
-
-          <span>
-            04
-          </span>
-
-          <div>
-
-            <h3>
-              Escola municipal
-            </h3>
-
-            <p>
-              Silêncio • 03:30 • Preparação
-            </p>
-
-            <div
-              class="shared-notes"
-              data-note-kind="location"
-              data-note-key="escola"
-            ></div>
-
-          </div>
-
-          <b>
-            →
-          </b>
-
-        </article>
-
-
-
-        <article
-          class="location-item unknown image-slot note-entity"
-          data-asset="assets/locations/torre-sem-nome.webp"
-        >
-
-          <span>
-            05
-          </span>
-
-          <div>
-
-            <h3>
-              Torre sem nome
-            </h3>
-
-            <p>
-              Sino • 03:55 • Desconhecido
-            </p>
-
-            <div
-              class="shared-notes"
-              data-note-kind="location"
-              data-note-key="torre"
-            ></div>
-
-          </div>
-
-          <b>
-            ?
-          </b>
-
-        </article>
-
-      </div>
-
-    </section>
-
-
-
-    <!-- =======================================================
-         OBJETOS
-         ======================================================= -->
-
-    <section
-      class="section objects-section"
-      id="objetos"
-    >
-
-      <div class="section-heading">
-
-        <div>
-
-          <p class="eyebrow">
-            <span></span>
-            VESTÍGIOS RECUPERADOS
-          </p>
-
-          <h2>
-            EVIDÊNCIAS
-            <em>DO CASO</em>
-          </h2>
-
-        </div>
+      <div
+        class="board-canvas"
+        id="boardCanvas"
+      >
+
+        <svg
+          class="connections"
+          id="connections"
+          aria-hidden="true"
+        ></svg>
 
       </div>
 
 
       <div
-        class="object-grid"
-        id="objectGrid"
+        class="board-object-layer"
+        id="boardObjectLayer"
       ></div>
 
-    </section>
+    </div>
+
+  </div>
+
+
+  <div class="board-note">
+
+    <strong>
+      ATENÇÃO:
+    </strong>
+
+    o quadro é construído pela equipe durante a investigação.
+    Novas pistas e conexões podem ser adicionadas conforme
+    as descobertas da sessão.
+
+  </div>
+
+</section>
 
 
 
-    <!-- =======================================================
-         DOCUMENTOS
-         ======================================================= -->
+<!-- =======================================================
+     PERSONAGENS
+     ======================================================= -->
 
-    <section
-      class="section documents-section"
-      id="documentos"
+<section
+  class="section characters-section"
+  id="personagens"
+>
+
+  <div class="section-heading">
+
+    <div>
+
+      <p class="eyebrow">
+        <span></span>
+        ARQUIVO HUMANO
+      </p>
+
+      <h2>
+        PERSONAGENS
+      </h2>
+
+    </div>
+
+  </div>
+
+
+  <div class="character-grid">
+
+
+    <!-- HELENA -->
+
+    <article
+      class="character-card helena note-entity"
+      data-entity="helena"
     >
 
-      <div class="section-heading">
+      <div class="character-bg">
 
-        <div>
-
-          <p class="eyebrow">
-            <span></span>
-            MATERIAL RECUPERADO
-          </p>
-
-          <h2>
-            DOCUMENTOS
-          </h2>
-
-        </div>
+        <img
+          src="assets/characters/helena.png"
+          alt="Helena Duarte"
+        >
 
       </div>
 
 
-      <div class="documents-grid">
+      <div class="character-overlay"></div>
+
+
+      <div class="character-info">
+
+        <span class="card-type">
+          TESTEMUNHA
+        </span>
+
+
+        <h3>
+          HELENA<br>
+          <em>DUARTE</em>
+        </h3>
+
+
+        <p>
+          Professora da escola municipal • 34 anos
+        </p>
+
+
+        <div
+          class="shared-notes"
+          data-note-kind="character"
+          data-note-key="helena"
+        ></div>
 
 
         <button
-          class="document-card"
-          data-document="report"
+          class="control-btn entity-note-btn"
           type="button"
-          data-sound="document"
+          data-note-kind="character"
+          data-note-key="helena"
+          data-sound="edit"
         >
-
-          <span>
-            DOCUMENTO 17
-          </span>
-
-          <strong>
-            RELATÓRIO ENCONTRADO
-          </strong>
-
-          <small>
-            O som veio primeiro. + preparação + manifestação
-          </small>
-
-          <b>
-            ABRIR ↗
-          </b>
-
-        </button>
-
-
-
-        <button
-          class="document-card"
-          data-document="fifth"
-          type="button"
-          data-sound="document"
-        >
-
-          <span>
-            ANOTAÇÃO
-          </span>
-
-          <strong>
-            A FRASE DO QUINTO
-          </strong>
-
-          <small>
-            Uma instrução curta que contradiz o protocolo
-          </small>
-
-          <b>
-            ABRIR ↗
-          </b>
-
-        </button>
-
-
-
-        <button
-          class="document-card"
-          data-document="box"
-          type="button"
-          data-sound="document"
-        >
-
-          <span>
-            CAIXA DE PROVAS
-          </span>
-
-          <strong>
-            MAPA + RECIBOS
-          </strong>
-
-          <small>
-            Locais, horários e objetos recuperados
-          </small>
-
-          <b>
-            ABRIR ↗
-          </b>
-
+          + ANOTAÇÃO
         </button>
 
       </div>
 
-    </section>
+    </article>
 
 
 
-    <!-- =======================================================
-         EVENTOS
-         ======================================================= -->
+    <!-- ELIAS -->
 
-    <section
-      class="section events-section"
-      id="eventos"
+    <article
+      class="character-card elias note-entity"
+      data-entity="elias"
     >
 
-      <div class="section-heading">
+      <div class="character-bg">
 
-        <div>
-
-          <p class="eyebrow">
-            <span></span>
-            LINHA TEMPORAL
-          </p>
-
-          <h2>
-            EVENTOS
-          </h2>
-
-        </div>
+        <img
+          src="assets/characters/elias.png"
+          alt="Elias Moura"
+        >
 
       </div>
 
 
-      <div class="timeline">
+      <div class="character-overlay"></div>
 
 
-        <article>
+      <div class="character-info">
 
-          <time>
-            02:12
-          </time>
-
-          <div>
-
-            <span>
-              01
-            </span>
-
-            <h3>
-              SINO REGISTRADO
-            </h3>
-
-            <p>
-              Horário em que o som apareceu.
-            </p>
+        <span class="card-type">
+          O CURADOR
+        </span>
 
 
-            <div
-              class="shared-notes"
-              data-note-kind="event"
-              data-note-key="0212"
-            ></div>
+        <h3>
+          ELIAS<br>
+          <em>MOURA</em>
+        </h3>
 
 
-            <button
-              class="control-btn entity-note-btn"
-              type="button"
-              data-note-kind="event"
-              data-note-key="0212"
-              data-sound="edit"
-            >
-              + ANOTAÇÃO
-            </button>
-
-          </div>
-
-        </article>
+        <p>
+          Pesquisador ligado às ocorrências
+        </p>
 
 
-
-        <article>
-
-          <time>
-            02:16
-          </time>
-
-          <div>
-
-            <span>
-              02
-            </span>
-
-            <h3>
-              RITUAL PREPARADO
-            </h3>
-
-            <p>
-              A preparação conhecida começa.
-            </p>
+        <div
+          class="shared-notes"
+          data-note-kind="character"
+          data-note-key="elias"
+        ></div>
 
 
-            <div
-              class="shared-notes"
-              data-note-kind="event"
-              data-note-key="0216"
-            ></div>
-
-
-            <button
-              class="control-btn entity-note-btn"
-              type="button"
-              data-note-kind="event"
-              data-note-key="0216"
-              data-sound="edit"
-            >
-              + ANOTAÇÃO
-            </button>
-
-          </div>
-
-        </article>
-
-
-
-        <article>
-
-          <time>
-            02:17
-          </time>
-
-          <div>
-
-            <span>
-              03
-            </span>
-
-            <h3>
-              SANGUE ENCONTRADO
-            </h3>
-
-            <p>
-              O sangue aparece no local.
-            </p>
-
-
-            <div
-              class="shared-notes"
-              data-note-kind="event"
-              data-note-key="0217"
-            ></div>
-
-
-            <button
-              class="control-btn entity-note-btn"
-              type="button"
-              data-note-kind="event"
-              data-note-key="0217"
-              data-sound="edit"
-            >
-              + ANOTAÇÃO
-            </button>
-
-          </div>
-
-        </article>
-
-
-
-        <article>
-
-          <time>
-            02:20
-          </time>
-
-          <div>
-
-            <span>
-              04
-            </span>
-
-            <h3>
-              MANIFESTAÇÃO
-            </h3>
-
-            <p>
-              O fenômeno se torna observável.
-            </p>
-
-
-            <div
-              class="shared-notes"
-              data-note-kind="event"
-              data-note-key="0220"
-            ></div>
-
-
-            <button
-              class="control-btn entity-note-btn"
-              type="button"
-              data-note-kind="event"
-              data-note-key="0220"
-              data-sound="edit"
-            >
-              + ANOTAÇÃO
-            </button>
-
-          </div>
-
-        </article>
+        <button
+          class="control-btn entity-note-btn"
+          type="button"
+          data-note-kind="character"
+          data-note-key="elias"
+          data-sound="edit"
+        >
+          + ANOTAÇÃO
+        </button>
 
       </div>
 
-    </section>
+    </article>
+
+
+
+    <!-- MARCADOS -->
+
+    <article
+      class="character-card marked note-entity"
+      data-entity="marcados"
+    >
+
+      <div class="character-bg">
+
+        <img
+          src="assets/characters/marcados.png"
+          alt="Os Marcados"
+        >
+
+      </div>
+
+
+      <div class="character-overlay"></div>
+
+
+      <div class="character-info">
+
+        <span class="card-type">
+          AMEAÇA
+        </span>
+
+
+        <h3>
+          OS<br>
+          <em>MARCADOS</em>
+        </h3>
+
+
+        <p>
+          Condutor • Observador • Silenciador
+        </p>
+
+
+        <div
+          class="shared-notes"
+          data-note-kind="character"
+          data-note-key="marcados"
+        ></div>
+
+
+        <button
+          class="control-btn entity-note-btn"
+          type="button"
+          data-note-kind="character"
+          data-note-key="marcados"
+          data-sound="edit"
+        >
+          + ANOTAÇÃO
+        </button>
+
+      </div>
+
+    </article>
+
+  </div>
+
+</section>
+
+
+
+<!-- =======================================================
+     LOCAIS
+     ======================================================= -->
+
+<section
+  class="section locations-section"
+  id="locais"
+>
+
+  <div class="section-heading">
+
+    <div>
+
+      <p class="eyebrow">
+        <span></span>
+        PONTOS DE INVESTIGAÇÃO
+      </p>
+
+      <h2>
+        OS CINCO
+        <em>LOCAIS</em>
+      </h2>
+
+    </div>
+
+  </div>
+
+
+  <div class="locations-list">
+
+
+    <article
+      class="location-item image-slot note-entity"
+      data-asset="assets/locations/praca-santa-cecilia.webp"
+      data-note-key="praca"
+    >
+
+      <span>
+        01
+      </span>
+
+      <div>
+
+        <h3>
+          Praça Santa Cecília
+        </h3>
+
+        <p>
+          PONTO DE INTERESSE • INVESTIGAÇÃO PENDENTE
+        </p>
+
+        <div
+          class="shared-notes"
+          data-note-kind="location"
+          data-note-key="praca"
+        ></div>
+
+      </div>
+
+      <b>
+        →
+      </b>
+
+    </article>
+
+
+
+    <article
+      class="location-item image-slot note-entity"
+      data-asset="assets/locations/apartamento-18.webp"
+      data-note-key="apartamento"
+    >
+
+      <span>
+        02
+      </span>
+
+      <div>
+
+        <h3>
+          Apartamento 18
+        </h3>
+
+        <p>
+          PONTO DE INTERESSE • INVESTIGAÇÃO PENDENTE
+        </p>
+
+        <div
+          class="shared-notes"
+          data-note-kind="location"
+          data-note-key="apartamento"
+        ></div>
+
+      </div>
+
+      <b>
+        →
+      </b>
+
+    </article>
+
+
+
+    <article
+      class="location-item image-slot note-entity"
+      data-asset="assets/locations/tunel-ferroviario.webp"
+      data-note-key="tunel"
+    >
+
+      <span>
+        03
+      </span>
+
+      <div>
+
+        <h3>
+          Túnel ferroviário
+        </h3>
+
+        <p>
+          PONTO DE INTERESSE • INVESTIGAÇÃO PENDENTE
+        </p>
+
+        <div
+          class="shared-notes"
+          data-note-kind="location"
+          data-note-key="tunel"
+        ></div>
+
+      </div>
+
+      <b>
+        →
+      </b>
+
+    </article>
+
+
+
+    <article
+      class="location-item image-slot note-entity"
+      data-asset="assets/locations/escola-municipal.webp"
+      data-note-key="escola"
+    >
+
+      <span>
+        04
+      </span>
+
+      <div>
+
+        <h3>
+          Escola municipal
+        </h3>
+
+        <p>
+          PONTO DE INTERESSE • INVESTIGAÇÃO PENDENTE
+        </p>
+
+        <div
+          class="shared-notes"
+          data-note-kind="location"
+          data-note-key="escola"
+        ></div>
+
+      </div>
+
+      <b>
+        →
+      </b>
+
+    </article>
+
+
+
+    <article
+      class="location-item unknown image-slot note-entity"
+      data-asset="assets/locations/torre-sem-nome.webp"
+      data-note-key="torre"
+    >
+
+      <span>
+        05
+      </span>
+
+      <div>
+
+        <h3>
+          Torre sem nome
+        </h3>
+
+        <p>
+          PONTO DE INTERESSE • ACESSO DESCONHECIDO
+        </p>
+
+        <div
+          class="shared-notes"
+          data-note-kind="location"
+          data-note-key="torre"
+        ></div>
+
+      </div>
+
+      <b>
+        ?
+      </b>
+
+    </article>
+
+  </div>
+
+</section>
+
+
+
+<!-- =======================================================
+     OBJETOS
+     ======================================================= -->
+
+<section
+  class="section objects-section"
+  id="objetos"
+>
+
+  <div class="section-heading">
+
+    <div>
+
+      <p class="eyebrow">
+        <span></span>
+        MATERIAL DE INVESTIGAÇÃO
+      </p>
+
+      <h2>
+        POSSÍVEIS
+        <em>EVIDÊNCIAS</em>
+      </h2>
+
+    </div>
+
+  </div>
+
+
+  <div
+    class="object-grid"
+    id="objectGrid"
+  ></div>
+
+</section>
+
+
+
+<!-- =======================================================
+     DOCUMENTOS
+     ======================================================= -->
+
+<section
+  class="section documents-section"
+  id="documentos"
+>
+
+  <div class="section-heading">
+
+    <div>
+
+      <p class="eyebrow">
+        <span></span>
+        MATERIAL PREPARADO
+      </p>
+
+      <h2>
+        DOCUMENTOS
+      </h2>
+
+    </div>
+
+  </div>
+
+
+  <div class="documents-grid">
+
+
+    <button
+      class="document-card"
+      data-document="report"
+      type="button"
+      data-sound="document"
+    >
+
+      <span>
+        DOCUMENTO 17
+      </span>
+
+      <strong>
+        RELATÓRIO
+        PRELIMINAR
+      </strong>
+
+      <small>
+        Registro inicial relacionado às ocorrências.
+      </small>
+
+      <b>
+        ABRIR ↗
+      </b>
+
+    </button>
+
+
+
+    <button
+      class="document-card"
+      data-document="fifth"
+      type="button"
+      data-sound="document"
+    >
+
+      <span>
+        ANOTAÇÃO
+      </span>
+
+      <strong>
+        A FRASE
+        DO QUINTO
+      </strong>
+
+      <small>
+        Uma instrução encontrada antes do início da investigação.
+      </small>
+
+      <b>
+        ABRIR ↗
+      </b>
+
+    </button>
+
+
+
+    <button
+      class="document-card"
+      data-document="box"
+      type="button"
+      data-sound="document"
+    >
+
+      <span>
+        CAIXA DE PROVAS
+      </span>
+
+      <strong>
+        MAPA +
+        REGISTROS
+      </strong>
+
+      <small>
+        Locais e materiais relacionados ao caso.
+      </small>
+
+      <b>
+        ABRIR ↗
+      </b>
+
+    </button>
+
+  </div>
+
+</section>
+
+
+
+<!-- =======================================================
+     LINHA DE INVESTIGAÇÃO
+     ======================================================= -->
+
+<section
+  class="section events-section"
+  id="eventos"
+>
+
+  <div class="section-heading">
+
+    <div>
+
+      <p class="eyebrow">
+        <span></span>
+        LINHA DE INVESTIGAÇÃO
+      </p>
+
+      <h2>
+        PONTOS
+        <em>OBSERVADOS</em>
+      </h2>
+
+    </div>
+
+  </div>
+
+
+  <div class="timeline">
+
+
+    <article>
+
+      <time>
+        ??
+      </time>
+
+      <div>
+
+        <span>
+          01
+        </span>
+
+        <h3>
+          O SINO
+        </h3>
+
+        <p>
+          A primeira pergunta da investigação:
+          de onde vem o som?
+        </p>
+
+
+        <div
+          class="shared-notes"
+          data-note-kind="event"
+          data-note-key="sino"
+        ></div>
+
+
+        <button
+          class="control-btn entity-note-btn"
+          type="button"
+          data-note-kind="event"
+          data-note-key="sino"
+          data-sound="edit"
+        >
+          + ANOTAÇÃO
+        </button>
+
+      </div>
+
+    </article>
+
+
+
+    <article>
+
+      <time>
+        ??
+      </time>
+
+      <div>
+
+        <span>
+          02
+        </span>
+
+        <h3>
+          O PADRÃO
+        </h3>
+
+        <p>
+          Descobrir se os cinco locais possuem alguma relação.
+        </p>
+
+
+        <div
+          class="shared-notes"
+          data-note-kind="event"
+          data-note-key="padrao"
+        ></div>
+
+
+        <button
+          class="control-btn entity-note-btn"
+          type="button"
+          data-note-kind="event"
+          data-note-key="padrao"
+          data-sound="edit"
+        >
+          + ANOTAÇÃO
+        </button>
+
+      </div>
+
+    </article>
+
+
+
+    <article>
+
+      <time>
+        ??
+      </time>
+
+      <div>
+
+        <span>
+          03
+        </span>
+
+        <h3>
+          O QUINTO
+        </h3>
+
+        <p>
+          Investigar por que o quinto ponto é tratado de maneira diferente.
+        </p>
+
+
+        <div
+          class="shared-notes"
+          data-note-kind="event"
+          data-note-key="quinto"
+        ></div>
+
+
+        <button
+          class="control-btn entity-note-btn"
+          type="button"
+          data-note-kind="event"
+          data-note-key="quinto"
+          data-sound="edit"
+        >
+          + ANOTAÇÃO
+        </button>
+
+      </div>
+
+    </article>
+
+
+
+    <article>
+
+      <time>
+        ??
+      </time>
+
+      <div>
+
+        <span>
+          04
+        </span>
+
+        <h3>
+          A VOZ
+        </h3>
+
+        <p>
+          Descobrir o que está por trás do fenômeno.
+        </p>
+
+
+        <div
+          class="shared-notes"
+          data-note-kind="event"
+          data-note-key="voz"
+        ></div>
+
+
+        <button
+          class="control-btn entity-note-btn"
+          type="button"
+          data-note-kind="event"
+          data-note-key="voz"
+          data-sound="edit"
+        >
+          + ANOTAÇÃO
+        </button>
+
+      </div>
+
+    </article>
+
+  </div>
+
+</section>
+```
 
   </main>
-
-
 
   <!-- =========================================================
        MODAL DE DOCUMENTO
@@ -1241,38 +1244,38 @@
     aria-hidden="true"
   >
 
-    <div
-      class="modal-backdrop"
-      data-close-modal
-    ></div>
+```
+<div
+  class="modal-backdrop"
+  data-close-modal
+></div>
 
 
-    <article class="document-viewer">
+<article class="document-viewer">
 
-      <button
-        class="modal-close"
-        data-close-modal
-        type="button"
-      >
-        ×
-      </button>
-
-
-      <span id="modalType">
-        DOCUMENTO
-      </span>
+  <button
+    class="modal-close"
+    data-close-modal
+    type="button"
+  >
+    ×
+  </button>
 
 
-      <h2 id="modalTitle"></h2>
+  <span id="modalType">
+    DOCUMENTO
+  </span>
 
 
-      <div id="modalContent"></div>
+  <h2 id="modalTitle"></h2>
 
-    </article>
+
+  <div id="modalContent"></div>
+
+</article>
+```
 
   </div>
-
-
 
   <!-- =========================================================
        MODAL DE EDIÇÃO
@@ -1284,76 +1287,76 @@
     aria-hidden="true"
   >
 
-    <div
-      class="modal-backdrop"
-      data-close-editor
-    ></div>
+```
+<div
+  class="modal-backdrop"
+  data-close-editor
+></div>
 
 
-    <article class="editor-viewer">
+<article class="editor-viewer">
 
-      <button
-        class="modal-close"
-        data-close-editor
-        type="button"
-      >
-        ×
-      </button>
-
-
-      <span class="eyebrow">
-        <span></span>
-        EDIÇÃO
-      </span>
+  <button
+    class="modal-close"
+    data-close-editor
+    type="button"
+  >
+    ×
+  </button>
 
 
-      <h2 id="editorTitle">
-        ANOTAÇÃO
-      </h2>
+  <span class="eyebrow">
+    <span></span>
+    EDIÇÃO
+  </span>
 
 
-      <label>
-
-        <span>
-          ANOTAÇÃO DA EQUIPE
-        </span>
-
-        <textarea
-          id="editorText"
-          rows="7"
-          placeholder="Escreva a sua leitura, hipótese ou descoberta..."
-        ></textarea>
-
-      </label>
+  <h2 id="editorTitle">
+    ANOTAÇÃO
+  </h2>
 
 
-      <div class="editor-actions">
+  <label>
 
-        <button
-          class="control-btn"
-          id="cancelEditor"
-          type="button"
-        >
-          CANCELAR
-        </button>
+    <span>
+      ANOTAÇÃO DA EQUIPE
+    </span>
+
+    <textarea
+      id="editorText"
+      rows="7"
+      placeholder="Escreva a sua leitura, hipótese ou descoberta..."
+    ></textarea>
+
+  </label>
 
 
-        <button
-          class="control-btn"
-          id="saveEditor"
-          type="button"
-          data-sound="save"
-        >
-          SALVAR
-        </button>
+  <div class="editor-actions">
 
-      </div>
+    <button
+      class="control-btn"
+      id="cancelEditor"
+      type="button"
+    >
+      CANCELAR
+    </button>
 
-    </article>
+
+    <button
+      class="control-btn"
+      id="saveEditor"
+      type="button"
+      data-sound="save"
+    >
+      SALVAR
+    </button>
 
   </div>
 
+</article>
+```
 
+  </div>
 
   <!-- =========================================================
        MODAL DE NOVA PISTA
@@ -1365,97 +1368,97 @@
     aria-hidden="true"
   >
 
-    <div
-      class="modal-backdrop"
-      data-close-new-card
-    ></div>
+```
+<div
+  class="modal-backdrop"
+  data-close-new-card
+></div>
 
 
-    <article class="editor-viewer compact-editor">
+<article class="editor-viewer compact-editor">
 
-      <button
-        class="modal-close"
-        data-close-new-card
-        type="button"
-      >
-        ×
-      </button>
-
-
-      <span class="eyebrow">
-        <span></span>
-        NOVA PISTA
-      </span>
+  <button
+    class="modal-close"
+    data-close-new-card
+    type="button"
+  >
+    ×
+  </button>
 
 
-      <h2>
-        ADICIONAR AO QUADRO
-      </h2>
+  <span class="eyebrow">
+    <span></span>
+    NOVA PISTA
+  </span>
 
 
-      <label>
-
-        <span>
-          TÍTULO
-        </span>
-
-        <input
-          id="newCardTitle"
-          type="text"
-          placeholder="Ex.: Foto do beco"
-        >
-
-      </label>
+  <h2>
+    ADICIONAR AO QUADRO
+  </h2>
 
 
-      <label>
+  <label>
 
-        <span>
-          TIPO
-        </span>
+    <span>
+      TÍTULO
+    </span>
 
-        <input
-          id="newCardType"
-          type="text"
-          placeholder="Pista, objeto, teoria..."
-        >
+    <input
+      id="newCardTitle"
+      type="text"
+      placeholder="Ex.: Uma marca encontrada..."
+    >
 
-      </label>
-
-
-      <label>
-
-        <span>
-          CONTEXTO
-        </span>
-
-        <input
-          id="newCardContext"
-          type="text"
-          placeholder="Uma linha curta sobre a evidência"
-        >
-
-      </label>
+  </label>
 
 
-      <div class="editor-actions">
+  <label>
 
-        <button
-          class="control-btn"
-          id="createCard"
-          type="button"
-          data-sound="save"
-        >
-          CRIAR PISTA
-        </button>
+    <span>
+      TIPO
+    </span>
 
-      </div>
+    <input
+      id="newCardType"
+      type="text"
+      placeholder="Pista, objeto, teoria..."
+    >
 
-    </article>
+  </label>
+
+
+  <label>
+
+    <span>
+      CONTEXTO
+    </span>
+
+    <input
+      id="newCardContext"
+      type="text"
+      placeholder="Uma linha curta sobre a descoberta"
+    >
+
+  </label>
+
+
+  <div class="editor-actions">
+
+    <button
+      class="control-btn"
+      id="createCard"
+      type="button"
+      data-sound="save"
+    >
+      CRIAR PISTA
+    </button>
 
   </div>
 
+</article>
+```
 
+  </div>
 
   <!-- =========================================================
        PAINEL DE AMBIENTE / TRILHA
@@ -1467,241 +1470,241 @@
     aria-hidden="true"
   >
 
-    <div>
+```
+<div>
 
-      <span class="eyebrow">
-        <span></span>
-        AMBIENTE
+  <span class="eyebrow">
+    <span></span>
+    AMBIENTE
+  </span>
+
+
+  <h2>
+    SOM DA INVESTIGAÇÃO
+  </h2>
+
+
+  <p>
+    Trilha sonora da investigação.
+    O volume é controlado pelo mestre.
+  </p>
+
+
+  <div
+    id="youtubePlayer"
+    class="youtube-player"
+  ></div>
+
+
+  <div class="music-status">
+
+    <span>
+      TOCANDO
+    </span>
+
+    <strong id="musicTrack">
+      PARADO
+    </strong>
+
+  </div>
+
+
+  <div class="music-control-group">
+
+    <label
+      class="music-volume-label"
+      for="musicVolume"
+    >
+
+      <span>
+        VOLUME
       </span>
 
+      <strong id="musicVolumeLabel">
+        10%
+      </strong>
 
-      <h2>
-        SOM DA INVESTIGAÇÃO
-      </h2>
-
-
-      <p>
-        Trilha sonora da investigação.
-        O volume é controlado pelo mestre.
-      </p>
+    </label>
 
 
-      <div
-        id="youtubePlayer"
-        class="youtube-player"
-      ></div>
+    <input
+      id="musicVolume"
+      type="range"
+      min="0"
+      max="30"
+      value="10"
+      step="1"
+    >
+
+  </div>
 
 
-      <div class="music-status">
-
-        <span>
-          TOCANDO
-        </span>
-
-        <strong id="musicTrack">
-          PARADO
-        </strong>
-
-      </div>
+  <button
+    class="control-btn"
+    id="musicPlayPause"
+    type="button"
+  >
+    ▶ TOCAR
+  </button>
 
 
-      <div class="music-control-group">
-
-        <label
-          class="music-volume-label"
-          for="musicVolume"
-        >
-
-          <span>
-            VOLUME
-          </span>
-
-          <strong id="musicVolumeLabel">
-            10%
-          </strong>
-
-        </label>
+  <button
+    class="control-btn"
+    id="voiceDuckToggle"
+    type="button"
+  >
+    🎙 ABAIXAR QUANDO EU FALO: OFF
+  </button>
 
 
-        <input
-          id="musicVolume"
-          type="range"
-          min="0"
-          max="30"
-          value="10"
-          step="1"
-        >
+  <div class="music-scenes">
 
-      </div>
+    <span class="music-scenes-title">
+      CENÁRIO
+    </span>
 
 
-      <button
-        class="control-btn"
-        id="musicPlayPause"
-        type="button"
-      >
-        ▶ TOCAR
-      </button>
+    <button
+      class="control-btn music-scene"
+      type="button"
+      data-time="1675"
+      data-track="ANSIEDADE (HEXATOMBE)"
+    >
+      INVESTIGAÇÃO
+    </button>
 
 
-      <button
-        class="control-btn"
-        id="voiceDuckToggle"
-        type="button"
-      >
-        🎙 ABAIXAR QUANDO EU FALO: OFF
-      </button>
+    <button
+      class="control-btn music-scene"
+      type="button"
+      data-time="4089"
+      data-track="MÁSCARA"
+    >
+      TENSÃO
+    </button>
 
 
-      <div class="music-scenes">
-
-        <span class="music-scenes-title">
-          CENÁRIO
-        </span>
-
-
-        <button
-          class="control-btn music-scene"
-          type="button"
-          data-time="1675"
-          data-track="ANSIEDADE (HEXATOMBE)"
-        >
-          INVESTIGAÇÃO
-        </button>
+    <button
+      class="control-btn music-scene"
+      type="button"
+      data-time="3191"
+      data-track="PELEJA"
+    >
+      COMBATE
+    </button>
 
 
-        <button
-          class="control-btn music-scene"
-          type="button"
-          data-time="4089"
-          data-track="MÁSCARA"
-        >
-          TENSÃO
-        </button>
+    <button
+      class="control-btn music-scene"
+      type="button"
+      data-time="8836"
+      data-track="A LUA DE SANGUE"
+    >
+      CLÍMAX
+    </button>
+
+  </div>
 
 
-        <button
-          class="control-btn music-scene"
-          type="button"
-          data-time="3191"
-          data-track="PELEJA"
-        >
-          COMBATE
-        </button>
+  <div class="music-manual">
+
+    <span>
+      FAIXAS DISPONÍVEIS
+    </span>
 
 
-        <button
-          class="control-btn music-scene"
-          type="button"
-          data-time="8836"
-          data-track="A LUA DE SANGUE"
-        >
-          CLÍMAX
-        </button>
-
-      </div>
+    <button
+      class="music-jump"
+      type="button"
+      data-time="0"
+      data-track="ABERTURA (HEXATOMBE)"
+    >
+      ABERTURA
+    </button>
 
 
-      <div class="music-manual">
-
-        <span>
-          FAIXAS DISPONÍVEIS
-        </span>
-
-
-        <button
-          class="music-jump"
-          type="button"
-          data-time="0"
-          data-track="ABERTURA (HEXATOMBE)"
-        >
-          ABERTURA
-        </button>
+    <button
+      class="music-jump"
+      type="button"
+      data-time="63"
+      data-track="VERMELHO"
+    >
+      VERMELHO
+    </button>
 
 
-        <button
-          class="music-jump"
-          type="button"
-          data-time="63"
-          data-track="VERMELHO"
-        >
-          VERMELHO
-        </button>
+    <button
+      class="music-jump"
+      type="button"
+      data-time="744"
+      data-track="CURIOSIDADE (CIDADE)"
+    >
+      CURIOSIDADE
+    </button>
 
 
-        <button
-          class="music-jump"
-          type="button"
-          data-time="744"
-          data-track="CURIOSIDADE (CIDADE)"
-        >
-          CURIOSIDADE
-        </button>
+    <button
+      class="music-jump"
+      type="button"
+      data-time="2589"
+      data-track="LAR ABANDONADO"
+    >
+      LAR ABANDONADO
+    </button>
 
 
-        <button
-          class="music-jump"
-          type="button"
-          data-time="2589"
-          data-track="LAR ABANDONADO"
-        >
-          LAR ABANDONADO
-        </button>
+    <button
+      class="music-jump"
+      type="button"
+      data-time="3934"
+      data-track="SUSPEITA"
+    >
+      SUSPEITA
+    </button>
 
 
-        <button
-          class="music-jump"
-          type="button"
-          data-time="3934"
-          data-track="SUSPEITA"
-        >
-          SUSPEITA
-        </button>
+    <button
+      class="music-jump"
+      type="button"
+      data-time="4089"
+      data-track="MÁSCARA"
+    >
+      MÁSCARA
+    </button>
 
 
-        <button
-          class="music-jump"
-          type="button"
-          data-time="4089"
-          data-track="MÁSCARA"
-        >
-          MÁSCARA
-        </button>
+    <button
+      class="music-jump"
+      type="button"
+      data-time="9138"
+      data-track="O ÚLTIMO SACRIFÍCIO"
+    >
+      ÚLTIMO SACRIFÍCIO
+    </button>
 
 
-        <button
-          class="music-jump"
-          type="button"
-          data-time="9138"
-          data-track="O ÚLTIMO SACRIFÍCIO"
-        >
-          ÚLTIMO SACRIFÍCIO
-        </button>
+    <button
+      class="music-jump"
+      type="button"
+      data-time="9702"
+      data-track="RENASCIMENTO"
+    >
+      RENASCIMENTO
+    </button>
+
+  </div>
 
 
-        <button
-          class="music-jump"
-          type="button"
-          data-time="9702"
-          data-track="RENASCIMENTO"
-        >
-          RENASCIMENTO
-        </button>
+  <small class="music-source">
+    Trilha sonora oficial de
+    Ordem Paranormal: HEXATOMBE —
+    Schiavoto.
+  </small>
 
-      </div>
-
-
-      <small class="music-source">
-        Trilha sonora oficial de
-        Ordem Paranormal: HEXATOMBE —
-        Schiavoto.
-      </small>
-
-    </div>
+</div>
+```
 
   </aside>
-
-
 
   <!-- =========================================================
        TOAST
@@ -1714,25 +1717,23 @@
     aria-live="polite"
   ></div>
 
-
-
   <!-- =========================================================
        RODAPÉ
        ========================================================= -->
 
   <footer>
 
-    <span>
-      ARQUIVO DE OPERAÇÃO // SESSÃO 03
-    </span>
+```
+<span>
+  ARQUIVO DE OPERAÇÃO // SESSÃO 03
+</span>
 
-    <span id="footerState">
-      CONECTANDO...
-    </span>
+<span id="footerState">
+  CONECTANDO...
+</span>
+```
 
   </footer>
-
-
 
   <!-- =========================================================
        SCRIPTS
@@ -1742,12 +1743,9 @@
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
   ></script>
 
-
   <script src="config.js"></script>
 
-
   <script src="script.js?v=8"></script>
-
 
   <script src="https://www.youtube.com/iframe_api"></script>
 
