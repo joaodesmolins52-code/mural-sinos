@@ -4489,57 +4489,74 @@
   }
 
 /* ============================================================
-   SOM / YOUTUBE
+   SOM / YOUTUBE HEXATOMBE
    ============================================================ */
 
 let youtubePlayer = null;
-
 let youtubeReady = false;
 
 let musicVolume = 10;
 
-let duckingEnabled = false;
-
-let microphoneStream = null;
-
-let microphoneContext = null;
-
-let microphoneAnalyser = null;
-
-let microphoneData = null;
-
-let duckingTimer = null;
-
-let speakingNow = false;
+const HEXATOMBE_VIDEO_ID = "eVV1S_zal4o";
 
 
-const HEXATOMBE_VIDEO_ID =
-  "eVV1S_zal4o";
+function updateMusicTrack(name) {
 
+  const element = $("#musicTrack");
 
-/* ============================================================
-   PLAYER DO YOUTUBE
-   ============================================================ */
-
-function createYoutubePlayer() {
-
-  if (
-    youtubeReady ||
-    !window.YT ||
-    !window.YT.Player
-  ) {
-    return;
+  if (element) {
+    element.textContent = name;
   }
 
+}
+
+
+function setMusicVolume(value) {
+
+  musicVolume = Math.max(
+    0,
+    Math.min(
+      30,
+      Number(value) || 0
+    )
+  );
+
+  const slider = $("#musicVolume");
+  const label = $("#musicVolumeLabel");
+
+  if (slider) {
+    slider.value = musicVolume;
+  }
+
+  if (label) {
+    label.textContent = `${musicVolume}%`;
+  }
+
+  if (
+    youtubeReady &&
+    youtubePlayer
+  ) {
+    youtubePlayer.setVolume(
+      musicVolume
+    );
+  }
+
+}
+
+
+function createYoutubePlayer() {
 
   const container =
     $("#youtubePlayer");
 
-
-  if (!container) {
+  if (
+    !container ||
+    !window.YT ||
+    !window.YT.Player ||
+    youtubePlayer
+  ) {
     return;
   }
-
 
   youtubePlayer =
     new YT.Player(
@@ -4551,122 +4568,89 @@ function createYoutubePlayer() {
 
         playerVars: {
 
-          autoplay:
-            0,
+          autoplay: 0,
 
-          controls:
-            1,
+          controls: 1,
 
-          rel:
-            0,
+          rel: 0,
 
-          playsinline:
-            1
+          playsinline: 1,
+
+          origin:
+            window.location.origin
 
         },
 
         events: {
 
-          onReady:
-            event => {
+          onReady: event => {
 
-              youtubeReady =
-                true;
+            youtubeReady =
+              true;
 
+            event.target.setVolume(
+              musicVolume
+            );
 
-              event.target.setVolume(
-                musicVolume
-              );
+            updateMusicTrack(
+              "PRONTO"
+            );
 
+          },
 
-              updateMusicTrack(
-                "PRONTO"
-              );
+          onStateChange: event => {
 
-            },
+            const button =
+              $("#musicPlayPause");
 
+            if (!button) {
+              return;
+            }
 
-          onStateChange:
-            event => {
+            if (
+              event.data ===
+              YT.PlayerState.PLAYING
+            ) {
 
-              if (
-                event.data ===
-                YT.PlayerState.PLAYING
-              ) {
-
-                const button =
-                  $("#musicPlayPause");
-
-
-                if (button) {
-
-                  button.textContent =
-                    "Ⅱ PAUSAR";
-
-                }
-
-              }
-
-
-              if (
-                event.data ===
-                YT.PlayerState.PAUSED
-              ) {
-
-                const button =
-                  $("#musicPlayPause");
-
-
-                if (button) {
-
-                  button.textContent =
-                    "▶ TOCAR";
-
-                }
-
-              }
-
-
-              if (
-                event.data ===
-                YT.PlayerState.ENDED
-              ) {
-
-                const button =
-                  $("#musicPlayPause");
-
-
-                if (button) {
-
-                  button.textContent =
-                    "▶ TOCAR";
-
-                }
-
-              }
-
-            },
-
-
-          onError:
-            event => {
-
-              console.error(
-                "YouTube Player Error:",
-                event.data
-              );
-
-
-              updateMusicTrack(
-                "ERRO NO PLAYER"
-              );
-
-
-              toast(
-                "O player da trilha não conseguiu reproduzir este vídeo."
-              );
+              button.textContent =
+                "Ⅱ PAUSAR";
 
             }
+
+            if (
+              event.data ===
+              YT.PlayerState.PAUSED
+            ) {
+
+              button.textContent =
+                "▶ TOCAR";
+
+            }
+
+            if (
+              event.data ===
+              YT.PlayerState.ENDED
+            ) {
+
+              button.textContent =
+                "▶ TOCAR";
+
+            }
+
+          },
+
+          onError: event => {
+
+            console.error(
+              "YouTube:",
+              event.data
+            );
+
+            updateMusicTrack(
+              "ERRO NO PLAYER"
+            );
+
+          }
 
         }
 
@@ -4676,108 +4660,51 @@ function createYoutubePlayer() {
 }
 
 
-/*
-  A API do YouTube chama esta função
-  quando termina de carregar.
-*/
-
 window.onYouTubeIframeAPIReady =
-  () => {
+  function () {
 
     createYoutubePlayer();
 
   };
 
 
-/* ============================================================
-   TEXTO DA FAIXA
-   ============================================================ */
-
-function updateMusicTrack(
-  name
-) {
-
-  const element =
-    $("#musicTrack");
-
+function toggleMusic() {
 
   if (
-    element
+    !youtubeReady ||
+    !youtubePlayer
   ) {
 
-    element.textContent =
-      name;
-
-  }
-
-}
-
-
-/* ============================================================
-   VOLUME
-   ============================================================ */
-
-function setMusicVolume(
-  value
-) {
-
-  musicVolume =
-    Math.max(
-      0,
-      Math.min(
-        30,
-        Number(
-          value
-        ) || 0
-      )
+    toast(
+      "A trilha ainda está carregando."
     );
 
-
-  const slider =
-    $("#musicVolume");
-
-
-  const label =
-    $("#musicVolumeLabel");
-
-
-  if (
-    slider
-  ) {
-
-    slider.value =
-      musicVolume;
+    return;
 
   }
 
+  const state =
+    youtubePlayer.getPlayerState();
 
   if (
-    label
+    state ===
+    YT.PlayerState.PLAYING
   ) {
 
-    label.textContent =
-      `${musicVolume}%`;
+    youtubePlayer.pauseVideo();
 
-  }
-
-
-  if (
-    youtubeReady &&
-    youtubePlayer
-  ) {
+  } else {
 
     youtubePlayer.setVolume(
       musicVolume
     );
 
+    youtubePlayer.playVideo();
+
   }
 
 }
 
-
-/* ============================================================
-   TOCAR EM DETERMINADO PONTO
-   ============================================================ */
 
 function playMusicAt(
   seconds,
@@ -4790,650 +4717,79 @@ function playMusicAt(
   ) {
 
     toast(
-      "O player da trilha ainda está carregando."
+      "A trilha ainda está carregando."
     );
-
 
     return;
 
   }
 
-
   const position =
-    Number(
-      seconds
-    );
-
+    Number(seconds);
 
   if (
     !Number.isFinite(
       position
     )
   ) {
-
     return;
-
   }
-
 
   youtubePlayer.seekTo(
     position,
     true
   );
 
-
   youtubePlayer.setVolume(
     musicVolume
   );
 
-
   youtubePlayer.playVideo();
-
 
   updateMusicTrack(
     trackName ||
     "TRILHA"
   );
 
-
-  const button =
-    $("#musicPlayPause");
-
-
-  if (
-    button
-  ) {
-
-    button.textContent =
-      "Ⅱ PAUSAR";
-
-  }
-
 }
 
-
-/* ============================================================
-   PLAY / PAUSE
-   ============================================================ */
-
-function toggleMusic() {
-
-  if (
-    !youtubeReady ||
-    !youtubePlayer
-  ) {
-
-    toast(
-      "O player da trilha ainda está carregando."
-    );
-
-
-    return;
-
-  }
-
-
-  const state =
-    youtubePlayer.getPlayerState();
-
-
-  if (
-    state ===
-    YT.PlayerState.PLAYING
-  ) {
-
-    youtubePlayer.pauseVideo();
-
-
-    return;
-
-  }
-
-
-  youtubePlayer.setVolume(
-    musicVolume
-  );
-
-
-  youtubePlayer.playVideo();
-
-}
-
-
-/* ============================================================
-   ABRIR / FECHAR PAINEL
-   ============================================================ */
 
 function toggleSoundPanel() {
 
   const panel =
     $("#soundPanel");
 
-
-  if (
-    !panel
-  ) {
-
+  if (!panel) {
     return;
-
   }
 
-
-  const willOpen =
+  const open =
     !panel.classList.contains(
       "open"
     );
 
-
   panel.classList.toggle(
     "open",
-    willOpen
+    open
   );
-
 
   panel.setAttribute(
     "aria-hidden",
-    String(
-      !willOpen
-    )
+    String(!open)
   );
 
+  if (
+    open &&
+    !youtubePlayer
+  ) {
+
+    createYoutubePlayer();
+
+  }
 
   playSound(
     "panel"
   );
-
-
-  if (
-    willOpen &&
-    !youtubeReady
-  ) {
-
-    if (
-      window.YT &&
-      window.YT.Player
-    ) {
-
-      createYoutubePlayer();
-
-    }
-
-  }
-
-}
-
-
-/* ============================================================
-   DUCKING DA VOZ
-   ============================================================ */
-
-async function enableVoiceDucking() {
-
-  if (
-    duckingEnabled
-  ) {
-
-    disableVoiceDucking();
-
-
-    return;
-
-  }
-
-
-  if (
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices.getUserMedia
-  ) {
-
-    toast(
-      "Seu navegador não permite detectar o microfone."
-    );
-
-
-    return;
-
-  }
-
-
-  try {
-
-    microphoneStream =
-      await navigator.mediaDevices.getUserMedia(
-        {
-          audio: {
-
-            echoCancellation:
-              true,
-
-            noiseSuppression:
-              true,
-
-            autoGainControl:
-              true
-
-          }
-        }
-      );
-
-
-    const AudioContextClass =
-      window.AudioContext ||
-      window.webkitAudioContext;
-
-
-    if (
-      !AudioContextClass
-    ) {
-
-      throw new Error(
-        "AudioContext não suportado."
-      );
-
-    }
-
-
-    microphoneContext =
-      new AudioContextClass();
-
-
-    if (
-      microphoneContext.state ===
-      "suspended"
-    ) {
-
-      await microphoneContext.resume();
-
-    }
-
-
-    const source =
-      microphoneContext.createMediaStreamSource(
-        microphoneStream
-      );
-
-
-    microphoneAnalyser =
-      microphoneContext.createAnalyser();
-
-
-    microphoneAnalyser.fftSize =
-      512;
-
-
-    microphoneAnalyser.smoothingTimeConstant =
-      0.65;
-
-
-    microphoneData =
-      new Uint8Array(
-        microphoneAnalyser.fftSize
-      );
-
-
-    source.connect(
-      microphoneAnalyser
-    );
-
-
-    duckingEnabled =
-      true;
-
-
-    const button =
-      $("#voiceDuckToggle");
-
-
-    if (
-      button
-    ) {
-
-      button.textContent =
-        "🎙 ABAIXAR QUANDO EU FALO: ON";
-
-
-      button.classList.add(
-        "active"
-      );
-
-    }
-
-
-    startVoiceDucking();
-
-
-    toast(
-      "Ducking ativado."
-    );
-
-
-  } catch (
-    error
-  ) {
-
-    console.error(
-      "Microfone:",
-      error
-    );
-
-
-    if (
-      microphoneStream
-    ) {
-
-      microphoneStream
-        .getTracks()
-        .forEach(
-          track =>
-            track.stop()
-        );
-
-      microphoneStream =
-        null;
-
-    }
-
-
-    if (
-      microphoneContext
-    ) {
-
-      microphoneContext
-        .close()
-        .catch(
-          () => {}
-        );
-
-      microphoneContext =
-        null;
-
-    }
-
-
-    toast(
-      "Permissão do microfone não foi concedida."
-    );
-
-  }
-
-}
-
-
-/* ============================================================
-   MONITORAMENTO DA VOZ
-   ============================================================ */
-
-function startVoiceDucking() {
-
-  if (
-    duckingTimer
-  ) {
-
-    clearInterval(
-      duckingTimer
-    );
-
-  }
-
-
-  duckingTimer =
-    setInterval(
-      () => {
-
-        if (
-          !duckingEnabled ||
-          !microphoneAnalyser ||
-          !microphoneData ||
-          !youtubeReady ||
-          !youtubePlayer
-        ) {
-
-          return;
-
-        }
-
-
-        microphoneAnalyser.getByteTimeDomainData(
-          microphoneData
-        );
-
-
-        let sum =
-          0;
-
-
-        for (
-          let i = 0;
-          i <
-          microphoneData.length;
-          i++
-        ) {
-
-          const normalized =
-            (
-              microphoneData[i] -
-              128
-            ) /
-            128;
-
-
-          sum +=
-            normalized *
-            normalized;
-
-        }
-
-
-        const rms =
-          Math.sqrt(
-            sum /
-            microphoneData.length
-          );
-
-
-        /*
-          O valor 0.045 é o limiar
-          de fala.
-
-          Ele evita que pequenos
-          ruídos ativem o ducking.
-        */
-
-        const speaking =
-          rms >
-          0.045;
-
-
-        if (
-          speaking ===
-          speakingNow
-        ) {
-
-          return;
-
-        }
-
-
-        speakingNow =
-          speaking;
-
-
-        if (
-          speakingNow
-        ) {
-
-          youtubePlayer.setVolume(
-            Math.min(
-              musicVolume,
-              3
-            )
-          );
-
-        } else {
-
-          youtubePlayer.setVolume(
-            musicVolume
-          );
-
-        }
-
-      },
-      100
-    );
-
-}
-
-
-/* ============================================================
-   DESATIVAR DUCKING
-   ============================================================ */
-
-function disableVoiceDucking() {
-
-  duckingEnabled =
-    false;
-
-
-  speakingNow =
-    false;
-
-
-  if (
-    duckingTimer
-  ) {
-
-    clearInterval(
-      duckingTimer
-    );
-
-
-    duckingTimer =
-      null;
-
-  }
-
-
-  if (
-    microphoneStream
-  ) {
-
-    microphoneStream
-      .getTracks()
-      .forEach(
-        track =>
-          track.stop()
-      );
-
-
-    microphoneStream =
-      null;
-
-  }
-
-
-  if (
-    microphoneContext
-  ) {
-
-    microphoneContext
-      .close()
-      .catch(
-        () => {}
-      );
-
-
-    microphoneContext =
-      null;
-
-  }
-
-
-  microphoneAnalyser =
-    null;
-
-
-  microphoneData =
-    null;
-
-
-  if (
-    youtubeReady &&
-    youtubePlayer
-  ) {
-
-    youtubePlayer.setVolume(
-      musicVolume
-    );
-
-  }
-
-
-  const button =
-    $("#voiceDuckToggle");
-
-
-  if (
-    button
-  ) {
-
-    button.textContent =
-      "🎙 ABAIXAR QUANDO EU FALO: OFF";
-
-
-    button.classList.remove(
-      "active"
-    );
-
-  }
-
-}
-
-
-/* ============================================================
-   SOM DE INTERFACE
-   ============================================================ */
-
-function toggleInterfaceSounds() {
-
-  uiSoundsEnabled =
-    !uiSoundsEnabled;
-
-
-  localStorage.setItem(
-    storageKeys.sounds,
-    String(
-      uiSoundsEnabled
-    )
-  );
-
-
-  const button =
-    $("#interfaceSoundToggle");
-
-
-  if (
-    button
-  ) {
-
-    button.textContent =
-      `SONS DE INTERFACE: ${
-        uiSoundsEnabled
-          ? "ON"
-          : "OFF"
-      }`;
-
-  }
-
-
-  if (
-    uiSoundsEnabled
-  ) {
-
-    playSound(
-      "save"
-    );
-
-  }
 
 }
   /* ============================================================
