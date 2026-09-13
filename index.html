@@ -1123,64 +1123,222 @@
   </div>
 
 
-  <aside
-    class="sound-panel"
-    id="soundPanel"
-    aria-hidden="true"
-  >
+<aside
+  class="sound-panel"
+  id="soundPanel"
+  aria-hidden="true"
+>
+  <div>
 
-    <div>
+    <span class="eyebrow">
+      <span></span>
+      AMBIENTE
+    </span>
 
-      <span class="eyebrow">
-        <span></span>
-        AMBIENTE
-      </span>
+    <h2>
+      SOM DA INVESTIGAÇÃO
+    </h2>
 
-      <h2>
-        SOM DA INVESTIGAÇÃO
-      </h2>
+    <p>
+      Trilha sonora da investigação.
+      O volume é controlado pelo mestre.
+    </p>
 
-      <p>
-        A música de fundo é sua.
-        Os sons de interface são gerados pelo navegador
-        para manter o projeto leve.
-      </p>
 
-      <audio
-        id="ambientAudio"
-        controls
-        loop
-        preload="metadata"
+    <div
+      id="youtubePlayer"
+      class="youtube-player"
+    ></div>
+
+
+    <div class="music-status">
+      <span>TOCANDO</span>
+      <strong id="musicTrack">
+        PARADO
+      </strong>
+    </div>
+
+
+    <div class="music-control-group">
+
+      <label
+        class="music-volume-label"
+        for="musicVolume"
       >
-        <source
-          src="assets/audio/ambient.mp3"
-          type="audio/mpeg"
-        >
-      </audio>
-
-
-      <label class="audio-upload">
-
-        TESTAR ÁUDIO LOCAL
-
-        <input
-          type="file"
-          id="audioFile"
-          accept="audio/*"
-        >
-
+        VOLUME
+        <strong id="musicVolumeLabel">
+          10%
+        </strong>
       </label>
 
-
-      <small>
-        Para publicar música no GitHub:
-        <code>assets/audio/ambient.mp3</code>.
-      </small>
+      <input
+        id="musicVolume"
+        type="range"
+        min="0"
+        max="30"
+        value="10"
+        step="1"
+      >
 
     </div>
 
-  </aside>
 
+    <button
+      class="control-btn"
+      id="musicPlayPause"
+      type="button"
+    >
+      ▶ TOCAR
+    </button>
+
+
+    <button
+      class="control-btn"
+      id="voiceDuckToggle"
+      type="button"
+    >
+      🎙 ABAIXAR QUANDO EU FALO: OFF
+    </button>
+
+
+    <div class="music-scenes">
+
+      <span class="music-scenes-title">
+        CENÁRIO
+      </span>
+
+
+      <button
+        class="control-btn music-scene"
+        type="button"
+        data-time="1675"
+        data-track="ANSIEDADE (HEXATOMBE)"
+      >
+        INVESTIGAÇÃO
+      </button>
+
+
+      <button
+        class="control-btn music-scene"
+        type="button"
+        data-time="4089"
+        data-track="MÁSCARA"
+      >
+        TENSÃO
+      </button>
+
+
+      <button
+        class="control-btn music-scene"
+        type="button"
+        data-time="3191"
+        data-track="PELEJA"
+      >
+        COMBATE
+      </button>
+
+
+      <button
+        class="control-btn music-scene"
+        type="button"
+        data-time="8836"
+        data-track="A LUA DE SANGUE"
+      >
+        CLÍMAX
+      </button>
+
+    </div>
+
+
+    <div class="music-manual">
+
+      <span>
+        FAIXAS DISPONÍVEIS
+      </span>
+
+      <button
+        class="music-jump"
+        type="button"
+        data-time="0"
+        data-track="ABERTURA (HEXATOMBE)"
+      >
+        ABERTURA
+      </button>
+
+      <button
+        class="music-jump"
+        type="button"
+        data-time="63"
+        data-track="VERMELHO"
+      >
+        VERMELHO
+      </button>
+
+      <button
+        class="music-jump"
+        type="button"
+        data-time="744"
+        data-track="CURIOSIDADE (CIDADE)"
+      >
+        CURIOSIDADE
+      </button>
+
+      <button
+        class="music-jump"
+        type="button"
+        data-time="2589"
+        data-track="LAR ABANDONADO"
+      >
+        LAR ABANDONADO
+      </button>
+
+      <button
+        class="music-jump"
+        type="button"
+        data-time="3934"
+        data-track="SUSPEITA"
+      >
+        SUSPEITA
+      </button>
+
+      <button
+        class="music-jump"
+        type="button"
+        data-time="4089"
+        data-track="MÁSCARA"
+      >
+        MÁSCARA
+      </button>
+
+      <button
+        class="music-jump"
+        type="button"
+        data-time="9138"
+        data-track="O ÚLTIMO SACRIFÍCIO"
+      >
+        ÚLTIMO SACRIFÍCIO
+      </button>
+
+      <button
+        class="music-jump"
+        type="button"
+        data-time="9702"
+        data-track="RENASCIMENTO"
+      >
+        RENASCIMENTO
+      </button>
+
+    </div>
+
+
+    <small class="music-source">
+      Trilha sonora oficial de
+      Ordem Paranormal: HEXATOMBE —
+      Schiavoto.
+    </small>
+
+  </div>
+</aside>
 
   <div
     class="toast"
