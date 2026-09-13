@@ -1825,3 +1825,17 @@ footer span:last-child {
     gap: 10px;
   }
 }
+
+
+.master-link {
+  color: #a6a3a6;
+  font-size: 9px;
+  letter-spacing: .14em;
+  font-weight: 700;
+  text-decoration: none;
+  transition: .2s;
+}
+
+.master-link:hover {
+  color: #fff;
+}
