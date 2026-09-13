@@ -34,7 +34,9 @@
   }
 
   function clone(value) {
-    return JSON.parse(JSON.stringify(value));
+    return JSON.parse(
+      JSON.stringify(value)
+    );
   }
 
   function safeJSON(value, fallback) {
@@ -510,6 +512,14 @@
 
   };
 
+  const locationKeys = [
+    "praca",
+    "apartamento",
+    "tunel",
+    "escola",
+    "torre"
+  ];
+
 
   /* ============================================================
      DOCUMENTOS
@@ -646,6 +656,7 @@
      ============================================================ */
 
   const frequencies = {
+
     D3: 146.83,
     F3: 174.61,
     A3: 220,
@@ -655,6 +666,7 @@
     A4: 440,
     C5: 523.25,
     D5: 587.33
+
   };
 
 
@@ -669,8 +681,10 @@
     }
 
     if (!audioContext) {
+
       audioContext =
         new AudioContextClass();
+
     }
 
     if (
@@ -744,9 +758,7 @@
       .connect(gain)
       .connect(context.destination);
 
-    oscillator.start(
-      start
-    );
+    oscillator.start(start);
 
     oscillator.stop(
       start +
@@ -1071,8 +1083,10 @@
       $("#footerState");
 
     if (sync) {
+
       sync.textContent =
         text;
+
     }
 
     if (footer) {
@@ -1104,6 +1118,7 @@
       return false;
     }
 
+
     try {
 
       supabase =
@@ -1112,8 +1127,10 @@
           config.anonKey
         );
 
+
       const sessionResult =
         await supabase.auth.getSession();
+
 
       if (
         sessionResult.error
@@ -1122,6 +1139,7 @@
         throw sessionResult.error;
       }
 
+
       currentUser =
         sessionResult
           .data
@@ -1129,11 +1147,13 @@
           ?.user ||
         null;
 
+
       if (!currentUser) {
 
         const authResult =
           await supabase.auth
             .signInAnonymously();
+
 
         if (
           authResult.error
@@ -1142,11 +1162,13 @@
           throw authResult.error;
         }
 
+
         currentUser =
           authResult.data
             ?.user ||
           null;
       }
+
 
       if (!currentUser) {
 
@@ -1155,18 +1177,22 @@
         );
       }
 
+
       supabaseReady =
         true;
 
       appMode =
         "supabase";
 
+
       setSync(
         "Supabase conectado",
         false
       );
 
+
       return true;
+
 
     } catch (error) {
 
@@ -1174,6 +1200,7 @@
         "Erro Supabase:",
         error
       );
+
 
       supabase =
         null;
@@ -1184,10 +1211,12 @@
       appMode =
         "local";
 
+
       setSync(
         "modo local",
         false
       );
+
 
       return false;
     }
@@ -1204,10 +1233,12 @@
       return false;
     }
 
+
     const result =
       await supabase.rpc(
         "enter_main_campaign"
       );
+
 
     if (
       result.error
@@ -1216,8 +1247,10 @@
       throw result.error;
     }
 
+
     const row =
       result.data?.[0];
+
 
     if (!row) {
 
@@ -1226,12 +1259,15 @@
       );
     }
 
+
     campaignId =
       row.campaign_id;
+
 
     campaignCode =
       row.campaign_code ||
       "PONTO03";
+
 
     return true;
   }
@@ -1247,33 +1283,31 @@
       safeJSON(
         localStorage.getItem(
           storageKeys.cards
-        ) || "null",
+        ) ||
+        "null",
         null
       );
+
 
     const savedObjects =
       safeJSON(
         localStorage.getItem(
           storageKeys.objects
-        ) || "null",
+        ) ||
+        "null",
         null
       );
+
 
     const savedConnections =
       safeJSON(
         localStorage.getItem(
           storageKeys.connections
-        ) || "null",
+        ) ||
+        "null",
         null
       );
 
-
-    /*
-      IMPORTANTE:
-      Se o localStorage tiver [] vazio, não usamos esse
-      array vazio como se fossem os dados reais.
-      Voltamos para as pistas/objetos iniciais.
-    */
 
     cards =
       Array.isArray(savedCards) &&
@@ -1329,12 +1363,14 @@
       )
     );
 
+
     localStorage.setItem(
       storageKeys.objects,
       JSON.stringify(
         objects
       )
     );
+
 
     localStorage.setItem(
       storageKeys.connections,
@@ -1351,9 +1387,11 @@
       safeJSON(
         localStorage.getItem(
           storageKeys.notes
-        ) || "{}",
+        ) ||
+        "{}",
         {}
       );
+
 
     window._entityNotes =
       Object.entries(
@@ -1366,6 +1404,7 @@
               ":"
             );
 
+
           return {
 
             entity_kind:
@@ -1376,6 +1415,7 @@
                   )
                 : "",
 
+
             entity_key:
               index >= 0
                 ? compoundKey.slice(
@@ -1383,8 +1423,10 @@
                   )
                 : compoundKey,
 
+
             author_name:
               "Jogador",
+
 
             text
 
@@ -1410,6 +1452,7 @@
       return;
     }
 
+
     const [
       cluesResult,
       objectsResult,
@@ -1432,6 +1475,7 @@
             }
           ),
 
+
         supabase
           .from("objects")
           .select("*")
@@ -1446,6 +1490,7 @@
                 true
             }
           ),
+
 
         supabase
           .from("connections")
@@ -1465,12 +1510,14 @@
       throw cluesResult.error;
     }
 
+
     if (
       objectsResult.error
     ) {
 
       throw objectsResult.error;
     }
+
 
     if (
       connectionsResult.error
@@ -1520,6 +1567,7 @@
 
     renderAll();
 
+
     setSync(
       "sincronizado",
       true
@@ -1539,6 +1587,7 @@
       return;
     }
 
+
     const result =
       await supabase
         .from(
@@ -1550,12 +1599,14 @@
           campaignId
         );
 
+
     if (
       result.error
     ) {
 
       throw result.error;
     }
+
 
     window._entityNotes =
       result.data ||
@@ -1564,7 +1615,7 @@
 
 
   /* ============================================================
-     RENDERIZAÇÃO GERAL
+     RENDERIZAÇÃO
      ============================================================ */
 
   function renderAll() {
@@ -1582,7 +1633,7 @@
 
 
   /* ============================================================
-     FILTRO DO QUADRO
+     FILTRO
      ============================================================ */
 
   function filterCards() {
@@ -1590,23 +1641,28 @@
     const input =
       $("#boardSearch");
 
+
     const query =
       input?.value
         ?.trim()
         ?.toLowerCase() ||
       "";
 
+
     const canvas =
       $("#boardCanvas");
+
 
     if (!canvas) {
       return;
     }
 
-    const cardsElements =
+
+    const elements =
       $$(".evidence-card", canvas);
 
-    cardsElements.forEach(
+
+    elements.forEach(
       element => {
 
         if (!query) {
@@ -1618,10 +1674,12 @@
           return;
         }
 
+
         const id =
           String(
             element.dataset.id
           );
+
 
         const card =
           cards.find(
@@ -1632,6 +1690,7 @@
               id
           );
 
+
         if (!card) {
 
           element.classList.add(
@@ -1640,6 +1699,7 @@
 
           return;
         }
+
 
         const content =
           [
@@ -1654,14 +1714,10 @@
             .join(" ")
             .toLowerCase();
 
-        const match =
-          content.includes(
-            query
-          );
 
         element.classList.toggle(
           "dimmed",
-          !match
+          !content.includes(query)
         );
       }
     );
@@ -1672,7 +1728,9 @@
      MURAL
      ============================================================ */
 
-  function isSeedCard(id) {
+  function isSeedCard(
+    id
+  ) {
 
     return seedCards.some(
       card =>
@@ -1691,9 +1749,11 @@
     const canvas =
       $("#boardCanvas");
 
+
     if (!canvas) {
       return;
     }
+
 
     canvas
       .querySelectorAll(
@@ -1716,13 +1776,16 @@
             "article"
           );
 
+
         element.className =
           "evidence-card";
+
 
         element.dataset.id =
           String(
             card.id
           );
+
 
         element.style.left =
           `${Number(
@@ -1730,11 +1793,13 @@
             10
           )}%`;
 
+
         element.style.top =
           `${Number(
             card.y ??
             10
           )}%`;
+
 
         element.style.setProperty(
           "--rotation",
@@ -1824,11 +1889,13 @@
         const textarea =
           $(".card-notes", element);
 
+
         if (textarea) {
 
           textarea.value =
             card.notes ||
             "";
+
 
           [
             "pointerdown",
@@ -1861,6 +1928,7 @@
         canvas.appendChild(
           element
         );
+
 
         wireCard(
           element
@@ -1920,7 +1988,9 @@
       "click",
       event => {
 
-        if (dragMoved) {
+        if (
+          dragMoved
+        ) {
 
           dragMoved =
             false;
@@ -1966,6 +2036,7 @@
             );
           }
 
+
           return;
         }
 
@@ -1980,7 +2051,10 @@
     const editButton =
       $(".mini-edit", card);
 
-    if (editButton) {
+
+    if (
+      editButton
+    ) {
 
       editButton.addEventListener(
         "click",
@@ -2003,7 +2077,10 @@
     const deleteButton =
       $(".mini-delete", card);
 
-    if (deleteButton) {
+
+    if (
+      deleteButton
+    ) {
 
       deleteButton.addEventListener(
         "click",
@@ -2044,6 +2121,7 @@
 
     dragMoved =
       false;
+
 
     card.classList.add(
       "dragging"
@@ -2096,6 +2174,7 @@
 
       return;
     }
+
 
     dragMoved =
       true;
@@ -2194,13 +2273,11 @@
     card.style.left =
       `${
         canvas.clientWidth
-
           ? (
               finalX /
               canvas.clientWidth
             ) *
             100
-
           : 0
       }%`;
 
@@ -2208,13 +2285,11 @@
     card.style.top =
       `${
         canvas.clientHeight
-
           ? (
               finalY /
               canvas.clientHeight
             ) *
             100
-
           : 0
       }%`;
 
@@ -2231,7 +2306,9 @@
       );
 
 
-    if (model) {
+    if (
+      model
+    ) {
 
       model.x =
         parseFloat(
@@ -2265,12 +2342,16 @@
     draggingCard =
       null;
 
+
     card.classList.remove(
       "dragging"
     );
 
 
-    if (!dragMoved) {
+    if (
+      !dragMoved
+    ) {
+
       return;
     }
 
@@ -2287,7 +2368,9 @@
       );
 
 
-    if (model) {
+    if (
+      model
+    ) {
 
       await saveCardPosition(
         model
@@ -2300,7 +2383,9 @@
     card
   ) {
 
-    if (selectedCard) {
+    if (
+      selectedCard
+    ) {
 
       selectedCard.classList.remove(
         "selected"
@@ -2312,7 +2397,9 @@
       card;
 
 
-    if (selectedCard) {
+    if (
+      selectedCard
+    ) {
 
       selectedCard.classList.add(
         "selected"
@@ -2335,6 +2422,7 @@
     const a =
       connection?.clue_a ??
       connection?.[0];
+
 
     const b =
       connection?.clue_b ??
@@ -2378,6 +2466,7 @@
               connection
             );
 
+
           return (
             existing &&
             existing[0] ===
@@ -2385,7 +2474,6 @@
             existing[1] ===
               pair[1]
           );
-
         }
       );
 
@@ -2397,7 +2485,10 @@
 
       try {
 
-        if (index >= 0) {
+        if (
+          index >=
+          0
+        ) {
 
           const existing =
             connections[index];
@@ -2463,6 +2554,7 @@
 
         await loadCampaignData();
 
+
       } catch (
         error
       ) {
@@ -2471,6 +2563,7 @@
           "Conexão:",
           error
         );
+
 
         toast(
           "Não foi possível sincronizar a conexão."
@@ -2482,11 +2575,15 @@
         "connect"
       );
 
+
       return;
     }
 
 
-    if (index >= 0) {
+    if (
+      index >=
+      0
+    ) {
 
       connections.splice(
         index,
@@ -2516,6 +2613,7 @@
     const svg =
       $("#connections");
 
+
     const canvas =
       $("#boardCanvas");
 
@@ -2542,13 +2640,19 @@
           );
 
 
-        if (!pair) {
+        if (
+          !pair
+        ) {
+
           return;
         }
 
 
-        let a;
-        let b;
+        let a =
+          null;
+
+        let b =
+          null;
 
 
         try {
@@ -2559,6 +2663,7 @@
                 pair[0]
               )}"]`
             );
+
 
           b =
             canvas.querySelector(
@@ -2650,18 +2755,23 @@
     const cardCount =
       $("#cardCount");
 
+
     const connectionCount =
       $("#connectionCount");
 
 
-    if (cardCount) {
+    if (
+      cardCount
+    ) {
 
       cardCount.textContent =
         cards.length;
     }
 
 
-    if (connectionCount) {
+    if (
+      connectionCount
+    ) {
 
       connectionCount.textContent =
         connections.length;
@@ -2688,7 +2798,9 @@
 
       const result =
         await supabase
-          .from("clues")
+          .from(
+            "clues"
+          )
           .update({
 
             x:
@@ -2714,6 +2826,7 @@
 
         throw result.error;
       }
+
 
     } catch (
       error
@@ -2744,7 +2857,9 @@
       );
 
 
-    if (card) {
+    if (
+      card
+    ) {
 
       card.notes =
         text;
@@ -2769,7 +2884,9 @@
 
               const result =
                 await supabase
-                  .from("clues")
+                  .from(
+                    "clues"
+                  )
                   .update({
                     notes:
                       text
@@ -2787,6 +2904,7 @@
                 throw result.error;
               }
 
+
             } catch (
               error
             ) {
@@ -2796,6 +2914,7 @@
                 error
               );
             }
+
 
           } else {
 
@@ -2819,7 +2938,10 @@
       $("#newCardModal");
 
 
-    if (!modal) {
+    if (
+      !modal
+    ) {
+
       return;
     }
 
@@ -2846,7 +2968,10 @@
       $("#newCardModal");
 
 
-    if (!modal) {
+    if (
+      !modal
+    ) {
+
       return;
     }
 
@@ -2868,8 +2993,10 @@
     const titleInput =
       $("#newCardTitle");
 
+
     const typeInput =
       $("#newCardType");
+
 
     const contextInput =
       $("#newCardContext");
@@ -2890,13 +3017,17 @@
       "";
 
 
-    if (!title) {
+    if (
+      !title
+    ) {
 
       toast(
         "Dê um título à pista."
       );
 
+
       titleInput?.focus();
+
 
       return;
     }
@@ -2941,7 +3072,9 @@
 
         const result =
           await supabase
-            .from("clues")
+            .from(
+              "clues"
+            )
             .insert({
 
               ...newCard,
@@ -2970,6 +3103,7 @@
           result.data
         );
 
+
       } catch (
         error
       ) {
@@ -2979,21 +3113,26 @@
           error
         );
 
+
         toast(
           "Não foi possível criar a pista."
         );
 
+
         return;
       }
+
 
     } else {
 
       newCard.id =
         crypto.randomUUID();
 
+
       cards.push(
         newCard
       );
+
 
       saveLocal();
     }
@@ -3008,22 +3147,37 @@
     closeNewCard();
 
 
-    if (titleInput) {
-      titleInput.value = "";
+    if (
+      titleInput
+    ) {
+
+      titleInput.value =
+        "";
     }
 
-    if (typeInput) {
-      typeInput.value = "";
+
+    if (
+      typeInput
+    ) {
+
+      typeInput.value =
+        "";
     }
 
-    if (contextInput) {
-      contextInput.value = "";
+
+    if (
+      contextInput
+    ) {
+
+      contextInput.value =
+        "";
     }
 
 
     toast(
       "Nova pista adicionada."
     );
+
 
     playSound(
       "save"
@@ -3032,7 +3186,7 @@
 
 
   /* ============================================================
-     EDITOR DE CARD
+     EDITOR
      ============================================================ */
 
   function openCardEditor(
@@ -3051,7 +3205,10 @@
       );
 
 
-    if (!card) {
+    if (
+      !card
+    ) {
+
       return;
     }
 
@@ -3070,11 +3227,14 @@
     const title =
       $("#editorTitle");
 
+
     const text =
       $("#editorText");
 
 
-    if (title) {
+    if (
+      title
+    ) {
 
       title.textContent =
         card.title ||
@@ -3082,7 +3242,9 @@
     }
 
 
-    if (text) {
+    if (
+      text
+    ) {
 
       text.value =
         card.notes ||
@@ -3094,11 +3256,14 @@
       $("#editorModal");
 
 
-    if (modal) {
+    if (
+      modal
+    ) {
 
       modal.classList.add(
         "open"
       );
+
 
       modal.setAttribute(
         "aria-hidden",
@@ -3114,7 +3279,10 @@
       $("#editorModal");
 
 
-    if (!modal) {
+    if (
+      !modal
+    ) {
+
       return;
     }
 
@@ -3137,7 +3305,10 @@
 
   async function saveEditor() {
 
-    if (!editingNote) {
+    if (
+      !editingNote
+    ) {
+
       return;
     }
 
@@ -3154,10 +3325,11 @@
       "clue"
     ) {
 
-      await saveCardNotes(
+      saveCardNotes(
         editingNote.key,
         text
       );
+
 
     } else {
 
@@ -3204,7 +3376,9 @@
 
         const result =
           await supabase
-            .from("clues")
+            .from(
+              "clues"
+            )
             .delete()
             .eq(
               "id",
@@ -3219,6 +3393,7 @@
           throw result.error;
         }
 
+
       } catch (
         error
       ) {
@@ -3228,9 +3403,11 @@
           error
         );
 
+
         toast(
           "Não foi possível excluir a pista."
         );
+
 
         return;
       }
@@ -3333,18 +3510,23 @@
     const title =
       $("#editorTitle");
 
+
     const text =
       $("#editorText");
 
 
-    if (title) {
+    if (
+      title
+    ) {
 
       title.textContent =
         "ANOTAÇÃO";
     }
 
 
-    if (text) {
+    if (
+      text
+    ) {
 
       text.value =
         existing?.text ||
@@ -3356,11 +3538,14 @@
       $("#editorModal");
 
 
-    if (modal) {
+    if (
+      modal
+    ) {
 
       modal.classList.add(
         "open"
       );
+
 
       modal.setAttribute(
         "aria-hidden",
@@ -3468,12 +3653,15 @@
           error
         );
 
+
         toast(
           "Não foi possível salvar a anotação."
         );
 
+
         return;
       }
+
 
     } else {
 
@@ -3481,7 +3669,8 @@
         safeJSON(
           localStorage.getItem(
             storageKeys.notes
-          ) || "{}",
+          ) ||
+          "{}",
           {}
         );
 
@@ -3521,6 +3710,7 @@
 
           const kind =
             box.dataset.noteKind;
+
 
           const key =
             box.dataset.noteKey;
@@ -3578,7 +3768,7 @@
 
 
   /* ============================================================
-     OBJETOS / EVIDÊNCIAS DO CASO
+     OBJETOS / EVIDÊNCIAS
      ============================================================ */
 
   function renderObjects() {
@@ -3586,18 +3776,23 @@
     const grid =
       $("#objectGrid");
 
+
     const layer =
       $("#boardObjectLayer");
 
 
-    if (grid) {
+    if (
+      grid
+    ) {
 
       grid.innerHTML =
         "";
     }
 
 
-    if (layer) {
+    if (
+      layer
+    ) {
 
       layer.innerHTML =
         "";
@@ -3607,7 +3802,9 @@
     objects.forEach(
       object => {
 
-        if (grid) {
+        if (
+          grid
+        ) {
 
           const tile =
             document.createElement(
@@ -3654,6 +3851,7 @@
                 "document"
               );
 
+
               openObject(
                 object
               );
@@ -3667,7 +3865,9 @@
         }
 
 
-        if (layer) {
+        if (
+          layer
+        ) {
 
           const item =
             document.createElement(
@@ -3724,9 +3924,11 @@
 
               event.stopPropagation();
 
+
               playSound(
                 "document"
               );
+
 
               openObject(
                 object
@@ -3752,7 +3954,10 @@
       $("#documentModal");
 
 
-    if (!modal) {
+    if (
+      !modal
+    ) {
+
       return;
     }
 
@@ -3819,6 +4024,7 @@
     const location =
       locations[key];
 
+
     const modal =
       $("#documentModal");
 
@@ -3872,6 +4078,7 @@
     const data =
       documents[key];
 
+
     const modal =
       $("#documentModal");
 
@@ -3915,7 +4122,10 @@
       $("#documentModal");
 
 
-    if (!modal) {
+    if (
+      !modal
+    ) {
+
       return;
     }
 
@@ -3944,7 +4154,9 @@
       $("#musicTrack");
 
 
-    if (element) {
+    if (
+      element
+    ) {
 
       element.textContent =
         name;
@@ -3977,18 +4189,23 @@
     const slider =
       $("#musicVolume");
 
+
     const label =
       $("#musicVolumeLabel");
 
 
-    if (slider) {
+    if (
+      slider
+    ) {
 
       slider.value =
         musicVolume;
     }
 
 
-    if (label) {
+    if (
+      label
+    ) {
 
       label.textContent =
         `${musicVolume}%`;
@@ -4034,6 +4251,7 @@
           videoId:
             HEXATOMBE_VIDEO_ID,
 
+
           playerVars: {
 
             autoplay:
@@ -4077,7 +4295,6 @@
                 updateMusicTrack(
                   "PARADO"
                 );
-
               },
 
 
@@ -4088,7 +4305,10 @@
                   $("#musicPlayPause");
 
 
-                if (!button) {
+                if (
+                  !button
+                ) {
+
                   return;
                 }
 
@@ -4112,7 +4332,6 @@
 
                   button.textContent =
                     "▶ TOCAR";
-
                 }
               },
 
@@ -4135,9 +4354,7 @@
                   "A trilha não pôde ser reproduzida."
                 );
               }
-
           }
-
         }
       );
   }
@@ -4158,12 +4375,18 @@
       !youtubePlayer
     ) {
 
-      createYoutubePlayer();
+      if (
+        window.YT?.Player
+      ) {
+
+        createYoutubePlayer();
+      }
 
 
       toast(
         "A trilha ainda está carregando."
       );
+
 
       return;
     }
@@ -4180,14 +4403,15 @@
 
       youtubePlayer.pauseVideo();
 
+
     } else {
 
       youtubePlayer.setVolume(
         musicVolume
       );
 
-      youtubePlayer.playVideo();
 
+      youtubePlayer.playVideo();
     }
   }
 
@@ -4202,19 +4426,27 @@
       !youtubePlayer
     ) {
 
-      createYoutubePlayer();
+      if (
+        window.YT?.Player
+      ) {
+
+        createYoutubePlayer();
+      }
 
 
       toast(
         "A trilha ainda está carregando."
       );
 
+
       return;
     }
 
 
     const position =
-      Number(seconds);
+      Number(
+        seconds
+      );
 
 
     if (
@@ -4249,7 +4481,7 @@
 
 
   /* ============================================================
-     DUCKING DO MICROFONE
+     DUCKING
      ============================================================ */
 
   async function toggleVoiceDucking() {
@@ -4272,6 +4504,7 @@
         "Seu navegador não permite detectar o microfone."
       );
 
+
       return;
     }
 
@@ -4292,7 +4525,9 @@
         window.webkitAudioContext;
 
 
-      if (!AudioContextClass) {
+      if (
+        !AudioContextClass
+      ) {
 
         throw new Error(
           "AudioContext não suportado."
@@ -4351,10 +4586,13 @@
         $("#voiceDuckToggle");
 
 
-      if (button) {
+      if (
+        button
+      ) {
 
         button.textContent =
           "🎙 ABAIXAR QUANDO EU FALO: ON";
+
 
         button.classList.add(
           "active"
@@ -4369,7 +4607,10 @@
         "Controle automático da voz ativado."
       );
 
-    } catch (error) {
+
+    } catch (
+      error
+    ) {
 
       console.error(
         "Microfone:",
@@ -4518,6 +4759,7 @@
     microphoneAnalyser =
       null;
 
+
     microphoneData =
       null;
 
@@ -4537,10 +4779,13 @@
       $("#voiceDuckToggle");
 
 
-    if (button) {
+    if (
+      button
+    ) {
 
       button.textContent =
         "🎙 ABAIXAR QUANDO EU FALO: OFF";
+
 
       button.classList.remove(
         "active"
@@ -4559,7 +4804,10 @@
       $("#soundPanel");
 
 
-    if (!panel) {
+    if (
+      !panel
+    ) {
+
       return;
     }
 
@@ -4584,7 +4832,9 @@
     );
 
 
-    if (willOpen) {
+    if (
+      willOpen
+    ) {
 
       if (
         window.YT?.Player &&
@@ -4592,6 +4842,7 @@
       ) {
 
         createYoutubePlayer();
+
       }
 
 
@@ -4630,7 +4881,9 @@
       $("#boardCanvas");
 
 
-    if (canvas) {
+    if (
+      canvas
+    ) {
 
       canvas.style.transform =
         `scale(${zoom})`;
@@ -4641,7 +4894,9 @@
       $("#zoomLabel");
 
 
-    if (label) {
+    if (
+      label
+    ) {
 
       label.textContent =
         `${Math.round(
@@ -4665,7 +4920,10 @@
       $("#boardSection");
 
 
-    if (!board) {
+    if (
+      !board
+    ) {
+
       return;
     }
 
@@ -4698,7 +4956,9 @@
     }
 
 
-    if (realtimeChannel) {
+    if (
+      realtimeChannel
+    ) {
 
       supabase.removeChannel(
         realtimeChannel
@@ -4769,7 +5029,10 @@
                 );
 
 
-              if (index >= 0) {
+              if (
+                index >=
+                0
+              ) {
 
                 cards[index] = {
 
@@ -4863,7 +5126,10 @@
                 );
 
 
-              if (index >= 0) {
+              if (
+                index >=
+                0
+              ) {
 
                 connections[index] =
                   payload.new;
@@ -4953,7 +5219,10 @@
                 );
 
 
-              if (index >= 0) {
+              if (
+                index >=
+                0
+              ) {
 
                 window._entityNotes[index] =
                   payload.new;
@@ -5051,10 +5320,8 @@
 
                   }
                 );
-
             }
           );
-
         },
 
 
@@ -5086,33 +5353,17 @@
 
   function bindEvents() {
 
-    /* ----------------------------------------------------------
-       PAINEL DE AMBIENTE
-       ---------------------------------------------------------- */
-
     on(
       "#soundToggle",
       "click",
-      () => {
-
-        toggleSoundPanel();
-
-      }
+      toggleSoundPanel
     );
 
-
-    /* ----------------------------------------------------------
-       MÚSICA
-       ---------------------------------------------------------- */
 
     on(
       "#musicPlayPause",
       "click",
-      () => {
-
-        toggleMusic();
-
-      }
+      toggleMusic
     );
 
 
@@ -5132,11 +5383,7 @@
     on(
       "#voiceDuckToggle",
       "click",
-      () => {
-
-        toggleVoiceDucking();
-
-      }
+      toggleVoiceDucking
     );
 
 
@@ -5163,18 +5410,21 @@
 
 
     /* ----------------------------------------------------------
-       LOCAIS
+       OS CINCO LOCAIS
+
+       O HTML atual não tem data-note-key nos location-item.
+       Portanto usamos a ordem dos cinco artigos.
        ---------------------------------------------------------- */
 
     $$(".location-item")
       .forEach(
-        location => {
+        (locationElement, index) => {
 
-          location.style.cursor =
+          locationElement.style.cursor =
             "pointer";
 
 
-          location.addEventListener(
+          locationElement.addEventListener(
             "click",
             event => {
 
@@ -5189,10 +5439,13 @@
 
 
               const key =
-                location.dataset.noteKey;
+                locationKeys[index];
 
 
-              if (!key) {
+              if (
+                !key
+              ) {
+
                 return;
               }
 
@@ -5249,11 +5502,7 @@
     on(
       "#createCard",
       "click",
-      () => {
-
-        createCard();
-
-      }
+      createCard
     );
 
 
@@ -5278,7 +5527,9 @@
           $("#connectionHint");
 
 
-        if (button) {
+        if (
+          button
+        ) {
 
           button.classList.toggle(
             "active",
@@ -5287,7 +5538,9 @@
         }
 
 
-        if (hint) {
+        if (
+          hint
+        ) {
 
           hint.textContent =
 
@@ -5340,7 +5593,10 @@
               );
 
 
-            if (!card) {
+            if (
+              !card
+            ) {
+
               return;
             }
 
@@ -5348,8 +5604,10 @@
             card.x =
               original.x;
 
+
             card.y =
               original.y;
+
 
             card.rotation =
               original.rotation;
@@ -5373,13 +5631,17 @@
             } catch {}
 
 
-            if (element) {
+            if (
+              element
+            ) {
 
               element.style.left =
                 `${original.x}%`;
 
+
               element.style.top =
                 `${original.y}%`;
+
 
               element.style.setProperty(
                 "--rotation",
@@ -5417,11 +5679,7 @@
     on(
       "#boardSearch",
       "input",
-      () => {
-
-        filterCards();
-
-      }
+      filterCards
     );
 
 
@@ -5472,22 +5730,14 @@
     on(
       "#cancelEditor",
       "click",
-      () => {
-
-        closeEditor();
-
-      }
+      closeEditor
     );
 
 
     on(
       "#saveEditor",
       "click",
-      () => {
-
-        saveEditor();
-
-      }
+      saveEditor
     );
 
 
@@ -5499,8 +5749,7 @@
 
           element.addEventListener(
             "click",
-            () =>
-              closeEditor()
+            closeEditor
           );
 
         }
@@ -5508,7 +5757,7 @@
 
 
     /* ----------------------------------------------------------
-       MODAL DE DOCUMENTO / OBJETO / LOCAL
+       MODAL
        ---------------------------------------------------------- */
 
     $$(
@@ -5519,8 +5768,7 @@
 
           element.addEventListener(
             "click",
-            () =>
-              closeDocument()
+            closeDocument
           );
 
         }
@@ -5528,7 +5776,7 @@
 
 
     /* ----------------------------------------------------------
-       MODAL DE NOVA PISTA
+       NOVA PISTA
        ---------------------------------------------------------- */
 
     $$(
@@ -5539,8 +5787,7 @@
 
           element.addEventListener(
             "click",
-            () =>
-              closeNewCard()
+            closeNewCard
           );
 
         }
@@ -5548,7 +5795,7 @@
 
 
     /* ----------------------------------------------------------
-       ANOTAÇÕES DE PERSONAGENS / LOCAIS / EVENTOS
+       ANOTAÇÕES
        ---------------------------------------------------------- */
 
     $$(
@@ -5563,14 +5810,15 @@
 
               event.stopPropagation();
 
+
               playSound(
                 "edit"
               );
 
+
               openEntityEditor(
                 button
               );
-
             }
           );
 
@@ -5595,6 +5843,7 @@
               playSound(
                 "document"
               );
+
 
               openDocument(
                 button.dataset.document
@@ -5633,7 +5882,9 @@
       $(".brand");
 
 
-    if (brand) {
+    if (
+      brand
+    ) {
 
       brand.addEventListener(
         "click",
@@ -5673,7 +5924,9 @@
           $("#soundPanel");
 
 
-        if (panel) {
+        if (
+          panel
+        ) {
 
           panel.classList.remove(
             "open"
@@ -5690,13 +5943,12 @@
 
 
     /* ----------------------------------------------------------
-       REDIMENSIONAMENTO
+       RESIZE
        ---------------------------------------------------------- */
 
     window.addEventListener(
       "resize",
-      () =>
-        renderConnections()
+      renderConnections
     );
   }
 
@@ -5707,14 +5959,7 @@
 
   async function start() {
 
-    /*
-      Primeiro registramos TODOS os eventos.
-      Assim o site já responde mesmo se o Supabase
-      ou o YouTube demorarem para carregar.
-    */
-
     bindEvents();
-
 
     initNavigationObserver();
 
@@ -5724,29 +5969,25 @@
     );
 
 
-    /*
-      Carregamento inicial local.
-      Isso também garante que o mural e as evidências
-      não desapareçam quando localStorage estiver vazio.
-    */
-
     loadLocalData();
 
-
-    /*
-      Tentativa de conectar ao Supabase.
-    */
 
     const connected =
       await initSupabase();
 
 
-    if (!connected) {
+    if (
+      !connected
+    ) {
 
-      /*
-        Mesmo sem Supabase, o site permanece funcional
-        localmente.
-      */
+      if (
+        window.YT?.Player &&
+        !youtubePlayer
+      ) {
+
+        createYoutubePlayer();
+      }
+
 
       return;
     }
@@ -5759,6 +6000,7 @@
       await loadCampaignData();
 
       subscribeRealtime();
+
 
     } catch (
       error
@@ -5782,10 +6024,6 @@
         "LOCAL";
 
 
-      /*
-        Se o banco falhar, voltamos para os dados locais.
-      */
-
       loadLocalData();
 
 
@@ -5800,13 +6038,6 @@
       );
     }
 
-
-    /*
-      Se o YouTube API já tiver chegado,
-      criamos o player imediatamente.
-      Caso ainda não tenha chegado,
-      onYouTubeIframeAPIReady() fará isso.
-    */
 
     if (
       window.YT?.Player &&
