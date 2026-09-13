@@ -1,681 +1,291 @@
 (() => {
   "use strict";
 
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-  /* ============================================================
-     UTILIDADES
-     ============================================================ */
+  const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    '"': "&quot;"
+  })[char]);
 
-  const $ = (
-    selector,
-    root = document
-  ) =>
-    root.querySelector(
-      selector
-    );
-
-
-  const $$ = (
-    selector,
-    root = document
-  ) =>
-    [
-      ...root.querySelectorAll(
-        selector
-      )
-    ];
-
-
-  function on(
-    selector,
-    event,
-    handler
-  ) {
-
-    const element =
-      $(selector);
-
-
-    if (element) {
-
-      element.addEventListener(
-        event,
-        handler
-      );
-
-    }
-
-  }
-
-
-  function escapeHtml(
-    value
-  ) {
-
-    return String(
-      value ?? ""
-    ).replace(
-      /[&<>'"]/g,
-      character =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          "'": "&#39;",
-          '"': "&quot;"
-        })[character]
-    );
-
-  }
-
-
-  function safeJSON(
-    value,
-    fallback
-  ) {
-
-    try {
-
-      return JSON.parse(
-        value
-      );
-
-    } catch {
-
-      return fallback;
-
-    }
-
-  }
-
-
-  /* ============================================================
-     CONFIGURAÇÃO
-     ============================================================ */
-
-  const config =
-    window.SUPABASE_CONFIG ||
-    {};
-
+  const config = window.SUPABASE_CONFIG || {};
 
   const storageKeys = {
-
-    cards:
-      "sinosLocalCards",
-
-    objects:
-      "sinosLocalObjects",
-
-    connections:
-      "sinosLocalConnections",
-
-    notes:
-      "sinosLocalNotes",
-
-    sounds:
-      "sinosUISounds"
-
+    cards: "sinosLocalCards",
+    objects: "sinosLocalObjects",
+    connections: "sinosLocalConnections",
+    notes: "sinosLocalNotes",
+    uiSounds: "sinosUISounds",
+    musicVolume: "sinosMusicVolume"
   };
 
+  let supabase = null;
+  let supabaseReady = false;
+  let realtimeChannel = null;
+  let appMode = "local";
+  let campaignId = "local";
+  let campaignCode = "LOCAL";
+  let currentUser = null;
 
-  let supabase =
-    null;
+  let cards = [];
+  let objects = [];
+  let connections = [];
+  let selectedCard = null;
+  let draggingCard = null;
+  let dragMoved = false;
+  let connectingMode = false;
+  let zoom = 1;
+  let editingNote = null;
+  let toastTimer = null;
+  let noteTimer = null;
+  let audioContext = null;
+  let uiSoundsEnabled = localStorage.getItem(storageKeys.uiSounds) !== "false";
 
+  let youtubePlayer = null;
+  let youtubeReady = false;
+  let musicVolume = Number(localStorage.getItem(storageKeys.musicVolume) || 10);
+  let voiceDucking = false;
+  let microphoneStream = null;
+  let microphoneContext = null;
+  let microphoneAnalyser = null;
+  let microphoneData = null;
+  let duckingTimer = null;
 
-  let supabaseReady =
-    false;
-
-
-  let realtimeChannel =
-    null;
-
-
-  let appMode =
-    "local";
-
-
-  let campaignId =
-    "local";
-
-
-  let campaignCode =
-    "LOCAL";
-
-
-  let currentUser =
-    null;
-
-
-  let cards =
-    [];
-
-
-  let objects =
-    [];
-
-
-  let connections =
-    [];
-
-
-  let selectedCard =
-    null;
-
-
-  let draggingCard =
-    null;
-
-
-  let dragMoved =
-    false;
-
-
-  let connectingMode =
-    false;
-
-
-  let zoom =
-    1;
-
-
-  let editingNote =
-    null;
-
-
-  let toastTimer =
-    null;
-
-
-  let noteTimer =
-    null;
-
-
-  let audioObjectUrl =
-    null;
-
-
-  let audioContext =
-    null;
-
-
-  /* ============================================================
-     PISTAS INICIAIS
-     ============================================================ */
+  const HEXATOMBE_VIDEO_ID = "eVV1S_zal4o";
 
   const seedCards = [
-
     {
-      id:
-        "sangue",
-
-      title:
-        "SANGUE",
-
-      clue_type:
-        "PISTA",
-
-      context:
-        "Praça / condição do ritual",
-
-      notes:
-        "",
-
-      x:
-        6,
-
-      y:
-        13,
-
-      rotation:
-        -3
+      id: "sangue",
+      title: "SANGUE",
+      clue_type: "PISTA",
+      context: "Praça / condição do ritual",
+      notes: "",
+      x: 6,
+      y: 13,
+      rotation: -3
     },
-
-
     {
-      id:
-        "medo",
-
-      title:
-        "MEDO",
-
-      clue_type:
-        "PISTA",
-
-      context:
-        "Atenção / amplificação",
-
-      notes:
-        "",
-
-      x:
-        39,
-
-      y:
-        8,
-
-      rotation:
-        2
+      id: "medo",
+      title: "MEDO",
+      clue_type: "PISTA",
+      context: "Atenção / amplificação",
+      notes: "",
+      x: 39,
+      y: 8,
+      rotation: 2
     },
-
-
     {
-      id:
-        "grupo",
-
-      title:
-        "GRUPO",
-
-      clue_type:
-        "PISTA",
-
-      context:
-        "Pessoas coordenadas",
-
-      notes:
-        "",
-
-      x:
-        70,
-
-      y:
-        16,
-
-      rotation:
-        -1
+      id: "grupo",
+      title: "GRUPO",
+      clue_type: "PISTA",
+      context: "Pessoas coordenadas",
+      notes: "",
+      x: 70,
+      y: 16,
+      rotation: -1
     },
-
-
     {
-      id:
-        "fragmentos",
-
-      title:
-        "FRAGMENTOS",
-
-      clue_type:
-        "PISTA",
-
-      context:
-        "Metal / ressonância",
-
-      notes:
-        "",
-
-      x:
-        13,
-
-      y:
-        59,
-
-      rotation:
-        3
+      id: "fragmentos",
+      title: "FRAGMENTOS",
+      clue_type: "PISTA",
+      context: "Metal / ressonância",
+      notes: "",
+      x: 13,
+      y: 59,
+      rotation: 3
     },
-
-
     {
-      id:
-        "sino",
-
-      title:
-        "SINO ANTECIPADO",
-
-      clue_type:
-        "ANOMALIA",
-
-      context:
-        "Registro acústico",
-
-      notes:
-        "",
-
-      x:
-        45,
-
-      y:
-        49,
-
-      rotation:
-        -2
+      id: "sino",
+      title: "SINO ANTECIPADO",
+      clue_type: "ANOMALIA",
+      context: "Registro acústico",
+      notes: "",
+      x: 45,
+      y: 49,
+      rotation: -2
     },
-
-
     {
-      id:
-        "quinto",
-
-      title:
-        "QUINTO CÍRCULO",
-
-      clue_type:
-        "PISTA",
-
-      context:
-        "Símbolos / ritual",
-
-      notes:
-        "",
-
-      x:
-        72,
-
-      y:
-        58,
-
-      rotation:
-        2
+      id: "quinto",
+      title: "QUINTO CÍRCULO",
+      clue_type: "PISTA",
+      context: "Símbolos / ritual",
+      notes: "",
+      x: 72,
+      y: 58,
+      rotation: 2
     },
-
-
     {
-      id:
-        "sombra",
-
-      title:
-        "SOMBRA SEM OBJETO",
-
-      clue_type:
-        "MANIFESTAÇÃO",
-
-      context:
-        "Presença visual",
-
-      notes:
-        "",
-
-      x:
-        37,
-
-      y:
-        78,
-
-      rotation:
-        1
+      id: "sombra",
+      title: "SOMBRA SEM OBJETO",
+      clue_type: "MANIFESTAÇÃO",
+      context: "Presença visual",
+      notes: "",
+      x: 37,
+      y: 78,
+      rotation: 1
     }
-
   ];
-
-
-  /* ============================================================
-     OBJETOS
-     ============================================================ */
 
   const seedObjects = [
-
     {
-      id:
-        "radio",
-
-      name:
-        "RÁDIO",
-
-      object_type:
-        "ÁUDIO",
-
-      description:
-        "Um rádio que perdeu sinal por um segundo.",
-
-      content:
-        "O aparelho registra um ruído impossível de localizar.",
-
-      x:
-        8,
-
-      y:
-        7
+      id: "radio",
+      name: "RÁDIO",
+      object_type: "ÁUDIO",
+      description: "Um rádio que perdeu sinal por um segundo.",
+      content: "O aparelho registra um ruído impossível de localizar.",
+      x: 8,
+      y: 7
     },
-
-
     {
-      id:
-        "fragmento-obj",
-
-      name:
-        "FRAGMENTO",
-
-      object_type:
-        "EVIDÊNCIA",
-
-      description:
-        "Peça de metal escuro sem ferrugem.",
-
-      content:
-        "Reage ao sangue e vibra perto de outro fragmento.",
-
-      x:
-        91,
-
-      y:
-        15
+      id: "fragmento-obj",
+      name: "FRAGMENTO",
+      object_type: "EVIDÊNCIA",
+      description: "Peça de metal escuro sem ferrugem.",
+      content: "Reage ao sangue e vibra perto de outro fragmento.",
+      x: 91,
+      y: 15
     },
-
-
     {
-      id:
-        "chave",
-
-      name:
-        "CHAVE",
-
-      object_type:
-        "OBJETO",
-
-      description:
-        "Chave de ferro escuro.",
-
-      content:
-        "Há indícios de que abre uma porta associada à escola municipal.",
-
-      x:
-        87,
-
-      y:
-        80
+      id: "chave",
+      name: "CHAVE",
+      object_type: "OBJETO",
+      description: "Chave de ferro escuro.",
+      content: "Há indícios de que abre uma porta associada à escola municipal.",
+      x: 87,
+      y: 80
     }
-
   ];
 
-
-  /* ============================================================
-     SOM DE INTERFACE
-     ============================================================ */
-
   const frequencies = {
-
-    D3:
-      146.83,
-
-    F3:
-      174.61,
-
-    A3:
-      220,
-
-    C4:
-      261.63,
-
-    D4:
-      293.66,
-
-    F4:
-      349.23,
-
-    A4:
-      440,
-
-    C5:
-      523.25,
-
-    D5:
-      587.33
-
+    D3: 146.83,
+    F3: 174.61,
+    A3: 220,
+    C4: 261.63,
+    D4: 293.66,
+    F4: 349.23,
+    A4: 440,
+    C5: 523.25,
+    D5: 587.33
   };
 
+  function clone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
 
-  let uiSoundsEnabled =
-    localStorage.getItem(
-      storageKeys.sounds
-    ) !==
-    "false";
+  function on(selector, event, handler) {
+    const element = $(selector);
+    if (element) {
+      element.addEventListener(event, handler);
+    }
+  }
 
+  function toast(message) {
+    const element = $("#toast");
+
+    if (!element) {
+      return;
+    }
+
+    element.textContent = message;
+    element.classList.add("show");
+
+    clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
+      element.classList.remove("show");
+    }, 2400);
+  }
 
   function getAudioContext() {
-
     const AudioContextClass =
       window.AudioContext ||
       window.webkitAudioContext;
 
-
     if (!AudioContextClass) {
-
       return null;
-
     }
-
 
     if (!audioContext) {
-
-      audioContext =
-        new AudioContextClass();
-
+      audioContext = new AudioContextClass();
     }
 
-
-    if (
-      audioContext.state ===
-      "suspended"
-    ) {
-
-      audioContext
-        .resume()
-        .catch(
-          () => {}
-        );
-
+    if (audioContext.state === "suspended") {
+      audioContext.resume().catch(() => {});
     }
-
 
     return audioContext;
-
   }
 
-
   function playTone(
-
     note,
-
-    duration =
-      0.06,
-
-    delay =
-      0,
-
-    type =
-      "sine",
-
-    volume =
-      0.02
-
+    duration = 0.06,
+    delay = 0,
+    type = "sine",
+    volume = 0.02
   ) {
-
     if (!uiSoundsEnabled) {
-
       return;
-
     }
 
-
-    const context =
-      getAudioContext();
-
+    const context = getAudioContext();
 
     if (!context) {
-
       return;
-
     }
 
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
 
-    const oscillator =
-      context.createOscillator();
-
-
-    const gain =
-      context.createGain();
-
-
-    const now =
+    const start =
       context.currentTime +
       delay;
 
-
-    oscillator.type =
-      type;
-
+    oscillator.type = type;
 
     oscillator.frequency.value =
-      frequencies[note] ||
-      note;
-
+      frequencies[note] || note;
 
     gain.gain.setValueAtTime(
       0.0001,
-      now
+      start
     );
-
 
     gain.gain.exponentialRampToValueAtTime(
       volume,
-      now +
-      0.008
+      start + 0.008
     );
-
 
     gain.gain.exponentialRampToValueAtTime(
       0.0001,
-      now +
-      duration
+      start + duration
     );
-
 
     oscillator
       .connect(gain)
-      .connect(
-        context.destination
-      );
+      .connect(context.destination);
 
-
-    oscillator.start(
-      now
-    );
-
+    oscillator.start(start);
 
     oscillator.stop(
-      now +
+      start +
       duration +
       0.02
     );
-
   }
 
-
   function playSound(
-    type =
-      "click"
+    type = "click"
   ) {
-
-    if (
-      !uiSoundsEnabled
-    ) {
-
+    if (!uiSoundsEnabled) {
       return;
-
     }
 
-
     switch (type) {
-
       case "nav":
-
         playTone(
           "D4",
           0.05,
@@ -691,12 +301,9 @@
           "sine",
           0.014
         );
-
         break;
 
-
       case "panel":
-
         playTone(
           "F4",
           0.06,
@@ -712,12 +319,9 @@
           "sine",
           0.014
         );
-
         break;
 
-
       case "document":
-
         playTone(
           "A3",
           0.08,
@@ -733,12 +337,9 @@
           "sine",
           0.014
         );
-
         break;
 
-
       case "edit":
-
         playTone(
           "A4",
           0.05,
@@ -754,12 +355,9 @@
           "sine",
           0.014
         );
-
         break;
 
-
       case "save":
-
         playTone(
           "D4",
           0.06,
@@ -783,12 +381,9 @@
           "sine",
           0.013
         );
-
         break;
 
-
       case "enter":
-
         playTone(
           "D3",
           0.11,
@@ -812,12 +407,9 @@
           "triangle",
           0.012
         );
-
         break;
 
-
       case "connect":
-
         playTone(
           "D4",
           0.07,
@@ -841,12 +433,9 @@
           "sine",
           0.014
         );
-
         break;
 
-
       case "danger":
-
         playTone(
           "F4",
           0.05,
@@ -862,46 +451,9 @@
           "sine",
           0.014
         );
-
         break;
-
-
-      case "tool":
-
-        playTone(
-          "F4",
-          0.06,
-          0,
-          "triangle",
-          0.022
-        );
-
-        break;
-
-
-      case "card":
-
-        playTone(
-          "D4",
-          0.06,
-          0,
-          "triangle",
-          0.025
-        );
-
-        playTone(
-          "F4",
-          0.08,
-          0.04,
-          "sine",
-          0.015
-        );
-
-        break;
-
 
       default:
-
         playTone(
           "D4",
           0.05,
@@ -909,434 +461,265 @@
           "triangle",
           0.02
         );
-
     }
-
   }
-
-
-  function toast(
-    message
-  ) {
-
-    const element =
-      $("#toast");
-
-
-    if (!element) {
-
-      return;
-
-    }
-
-
-    element.textContent =
-      message;
-
-
-    element.classList.add(
-      "show"
-    );
-
-
-    clearTimeout(
-      toastTimer
-    );
-
-
-    toastTimer =
-      setTimeout(
-        () =>
-          element.classList.remove(
-            "show"
-          ),
-        2400
-      );
-
-  }
-
-
-  /* ============================================================
-     SUPABASE
-     ============================================================ */
 
   function getSupabaseUrl() {
-
     const raw =
-      String(
-        config.url ||
-        ""
-      ).trim();
-
+      String(config.url || "").trim();
 
     if (!raw) {
-
       return "";
-
     }
 
-
-    if (
-      raw.startsWith(
-        "//"
-      )
-    ) {
-
+    if (raw.startsWith("//")) {
       return (
         window.location.protocol +
         raw
       );
-
     }
 
-
     return raw;
-
   }
 
-
   function hasSupabaseConfig() {
-
     const url =
       getSupabaseUrl();
 
-
     const key =
-      String(
-        config.anonKey ||
-        ""
-      ).trim();
-
+      String(config.anonKey || "").trim();
 
     return Boolean(
-
       url &&
-
       key &&
-
-      (
-        url.startsWith(
-          "http://"
-        ) ||
-
-        url.startsWith(
-          "https://"
-        )
-
-      )
-
+      /^https?:\/\//i.test(url)
     );
-
   }
-
 
   function setSync(
     text,
-    connected =
-      false
+    connected = false
   ) {
-
     const sync =
       $("#syncStatus");
-
 
     const footer =
       $("#footerState");
 
-
     if (sync) {
-
-      sync.textContent =
-        text;
-
+      sync.textContent = text;
     }
 
-
     if (footer) {
-
       footer.textContent =
         connected
           ? "MESA COMPARTILHADA"
           : "MODO LOCAL";
-
     }
-
   }
 
-
   async function initSupabase() {
-
     if (
       !hasSupabaseConfig() ||
       !window.supabase?.createClient
     ) {
-
-      appMode =
-        "local";
-
+      appMode = "local";
 
       setSync(
         "modo local",
         false
       );
 
-
       return false;
-
     }
 
-
     try {
-
       supabase =
         window.supabase.createClient(
           getSupabaseUrl(),
           config.anonKey
         );
 
-
-      const sessionResult =
+      const session =
         await supabase.auth.getSession();
 
-
-      if (
-        sessionResult.error
-      ) {
-
-        throw sessionResult.error;
-
+      if (session.error) {
+        throw session.error;
       }
-
 
       currentUser =
-        sessionResult.data
-          ?.session
-          ?.user ||
+        session.data?.session?.user ||
         null;
 
-
       if (!currentUser) {
+        const auth =
+          await supabase.auth.signInAnonymously();
 
-        const authResult =
-          await supabase.auth
-            .signInAnonymously();
-
-
-        if (
-          authResult.error
-        ) {
-
-          throw authResult.error;
-
+        if (auth.error) {
+          throw auth.error;
         }
 
-
         currentUser =
-          authResult.data
-            ?.user ||
+          auth.data?.user ||
           null;
-
       }
 
-
       if (!currentUser) {
-
         throw new Error(
           "USUARIO_ANONIMO_NAO_CRIADO"
         );
-
       }
-
 
       supabaseReady =
         true;
 
-
       appMode =
         "supabase";
-
 
       setSync(
         "Supabase conectado",
         false
       );
 
-
       return true;
 
     } catch (error) {
-
       console.error(
         "Erro Supabase:",
         error
       );
 
-
       supabase =
         null;
-
 
       supabaseReady =
         false;
 
-
       appMode =
         "local";
-
 
       setSync(
         "modo local",
         false
       );
 
-
       return false;
-
     }
-
   }
 
-
-  /* ============================================================
-     ENTRADA AUTOMÁTICA NA MESA
-     ============================================================ */
-
   async function enterMainCampaign() {
-
     if (
       !supabaseReady ||
       !supabase
     ) {
-
       return false;
-
     }
-
 
     const result =
       await supabase.rpc(
         "enter_main_campaign"
       );
 
-
-    if (
-      result.error
-    ) {
-
+    if (result.error) {
       throw result.error;
-
     }
-
 
     const row =
       result.data?.[0];
 
-
     if (!row) {
-
       throw new Error(
         "MESA_PRINCIPAL_NAO_ENCONTRADA"
       );
-
     }
-
 
     campaignId =
       row.campaign_id;
-
 
     campaignCode =
       row.campaign_code ||
       "PONTO03";
 
-
     return true;
-
   }
 
-
-  /* ============================================================
-     DADOS LOCAIS
-     ============================================================ */
-
   function loadLocalData() {
-
     const savedCards =
       localStorage.getItem(
         storageKeys.cards
       );
-
 
     const savedObjects =
       localStorage.getItem(
         storageKeys.objects
       );
 
-
     const savedConnections =
       localStorage.getItem(
         storageKeys.connections
       );
 
-
-    cards =
-      savedCards
-        ? safeJSON(
-            savedCards,
-            structuredClone(
+    try {
+      cards =
+        savedCards
+          ? JSON.parse(
+              savedCards
+            )
+          : clone(
               seedCards
+            );
+    } catch {
+      cards =
+        clone(
+          seedCards
+        );
+    }
+
+    try {
+      objects =
+        savedObjects
+          ? JSON.parse(
+              savedObjects
             )
-          )
-        : structuredClone(
-            seedCards
-          );
-
-
-    objects =
-      savedObjects
-        ? safeJSON(
-            savedObjects,
-            structuredClone(
+          : clone(
               seedObjects
+            );
+    } catch {
+      objects =
+        clone(
+          seedObjects
+        );
+    }
+
+    try {
+      connections =
+        savedConnections
+          ? JSON.parse(
+              savedConnections
             )
-          )
-        : structuredClone(
-            seedObjects
-          );
-
-
-    connections =
-      savedConnections
-        ? safeJSON(
-            savedConnections,
-            []
-          )
-        : [];
-
+          : [];
+    } catch {
+      connections =
+        [];
+    }
 
     applyLocalNotes();
 
-
     renderAll();
-
 
     setSync(
       "modo local",
       false
     );
-
   }
 
-
   function saveLocal() {
-
     localStorage.setItem(
       storageKeys.cards,
       JSON.stringify(
         cards
       )
     );
-
 
     localStorage.setItem(
       storageKeys.objects,
@@ -1345,255 +728,210 @@
       )
     );
 
-
     localStorage.setItem(
       storageKeys.connections,
       JSON.stringify(
         connections
       )
     );
-
   }
 
-
   function applyLocalNotes() {
+    let saved = {};
 
-    const saved =
-      safeJSON(
-        localStorage.getItem(
-          storageKeys.notes
-        ) ||
-        "{}",
-        {}
-      );
-
+    try {
+      saved =
+        JSON.parse(
+          localStorage.getItem(
+            storageKeys.notes
+          ) ||
+          "{}"
+        );
+    } catch {
+      saved = {};
+    }
 
     window._entityNotes =
       Object.entries(
         saved
       ).map(
-        ([compoundKey, text]) => {
+        ([key, text]) => {
 
           const separator =
-            compoundKey.indexOf(
+            key.indexOf(
               ":"
             );
 
-
           return {
-
             entity_kind:
-              compoundKey.slice(
-                0,
-                separator
-              ),
+              separator >= 0
+                ? key.slice(
+                    0,
+                    separator
+                  )
+                : "",
 
             entity_key:
-              compoundKey.slice(
-                separator +
-                1
-              ),
+              separator >= 0
+                ? key.slice(
+                    separator + 1
+                  )
+                : key,
 
             author_name:
               "Jogador",
 
             text
-
           };
-
         }
       );
-
   }
 
-
-  /* ============================================================
-     DADOS SUPABASE
-     ============================================================ */
-
   async function loadCampaignData() {
-
     if (
       appMode !==
       "supabase"
     ) {
-
       loadLocalData();
-
       return;
-
     }
 
+    const [
+      cluesResult,
+      objectsResult,
+      connectionsResult
+    ] =
+      await Promise.all([
+        supabase
+          .from(
+            "clues"
+          )
+          .select("*")
+          .eq(
+            "campaign_id",
+            campaignId
+          )
+          .order(
+            "created_at",
+            {
+              ascending:
+                true
+            }
+          ),
 
-    const cluesResult =
-      await supabase
-        .from("clues")
-        .select("*")
-        .eq(
-          "campaign_id",
-          campaignId
-        )
-        .order(
-          "created_at",
-          {
-            ascending:
-              true
-          }
-        );
+        supabase
+          .from(
+            "objects"
+          )
+          .select("*")
+          .eq(
+            "campaign_id",
+            campaignId
+          )
+          .order(
+            "created_at",
+            {
+              ascending:
+                true
+            }
+          ),
 
+        supabase
+          .from(
+            "connections"
+          )
+          .select("*")
+          .eq(
+            "campaign_id",
+            campaignId
+          )
+      ]);
 
     if (
       cluesResult.error
     ) {
-
       throw cluesResult.error;
-
     }
-
-
-    const objectsResult =
-      await supabase
-        .from("objects")
-        .select("*")
-        .eq(
-          "campaign_id",
-          campaignId
-        )
-        .order(
-          "created_at",
-          {
-            ascending:
-              true
-          }
-        );
-
 
     if (
       objectsResult.error
     ) {
-
       throw objectsResult.error;
-
     }
-
-
-    const connectionsResult =
-      await supabase
-        .from("connections")
-        .select("*")
-        .eq(
-          "campaign_id",
-          campaignId
-        );
-
 
     if (
       connectionsResult.error
     ) {
-
       throw connectionsResult.error;
-
     }
 
-
     cards =
-      cluesResult.data ||
-      [];
-
+      cluesResult.data?.length
+        ? cluesResult.data
+        : clone(seedCards);
 
     objects =
-      objectsResult.data ||
-      [];
-
+      objectsResult.data?.length
+        ? objectsResult.data
+        : clone(seedObjects);
 
     connections =
       connectionsResult.data ||
       [];
 
-
     await loadEntityNotes();
 
-
     renderAll();
-
 
     setSync(
       "sincronizado",
       true
     );
-
   }
 
-
   async function loadEntityNotes() {
-
     if (
       appMode !==
       "supabase"
     ) {
-
       applyLocalNotes();
-
       return;
-
     }
-
 
     const result =
       await supabase
-        .from("entity_notes")
+        .from(
+          "entity_notes"
+        )
         .select("*")
         .eq(
           "campaign_id",
           campaignId
         );
 
-
     if (
       result.error
     ) {
-
       throw result.error;
-
     }
-
 
     window._entityNotes =
       result.data ||
       [];
-
   }
-
-
-  /* ============================================================
-     RENDER GERAL
-     ============================================================ */
 
   function renderAll() {
-
     renderCards();
-
     renderObjects();
-
     renderConnections();
-
     renderEntityNotes();
-
     applyImageAssets();
-
     filterCards();
-
   }
-
-
-  /* ============================================================
-     CARDS DO MURAL
-     ============================================================ */
 
   function isSeedCard(
     id
   ) {
-
     return seedCards.some(
       card =>
         String(
@@ -1603,22 +941,15 @@
           id
         )
     );
-
   }
 
-
   function renderCards() {
-
     const canvas =
       $("#boardCanvas");
 
-
     if (!canvas) {
-
       return;
-
     }
-
 
     canvas
       .querySelectorAll(
@@ -1628,7 +959,6 @@
         element =>
           element.remove()
       );
-
 
     cards.forEach(
       (
@@ -1641,16 +971,13 @@
             "article"
           );
 
-
         element.className =
           "evidence-card";
-
 
         element.dataset.id =
           String(
             card.id
           );
-
 
         element.style.left =
           `${Number(
@@ -1658,13 +985,11 @@
             10
           )}%`;
 
-
         element.style.top =
           `${Number(
             card.y ??
             10
           )}%`;
-
 
         element.style.setProperty(
           "--rotation",
@@ -1674,36 +999,24 @@
           )}deg`
         );
 
-
         element.innerHTML = `
+          <div class="card-pin"></div>
 
-          <div
-            class="card-pin"
-          ></div>
-
-
-          <span
-            class="card-number"
-          >
+          <span class="card-number">
             ${String(
-              index +
-              1
+              index + 1
             ).padStart(
               2,
               "0"
             )}
           </span>
 
-
-          <span
-            class="card-type"
-          >
+          <span class="card-type">
             ${escapeHtml(
               card.clue_type ||
               "PISTA"
             )}
           </span>
-
 
           <h3>
             ${escapeHtml(
@@ -1712,66 +1025,45 @@
             )}
           </h3>
 
-
-          <p
-            class="card-context"
-          >
+          <p class="card-context">
             ${escapeHtml(
               card.context ||
               ""
             )}
           </p>
 
-
-          <div
-            class="card-notes-wrap"
-          >
-
-            <span
-              class="card-notes-label"
-            >
+          <div class="card-notes-wrap">
+            <span class="card-notes-label">
               ANOTAÇÕES DA EQUIPE
             </span>
-
 
             <textarea
               class="card-notes"
               data-card-notes
               placeholder="Escreva aqui..."
             ></textarea>
-
           </div>
-
 
           <button
             class="mini-edit"
             type="button"
-            data-sound="edit"
           >
             EDITAR
           </button>
 
-
           ${
-            isSeedCard(
-              card.id
-            )
-
+            isSeedCard(card.id)
               ? ""
-
               : `
                 <button
                   class="mini-delete"
                   type="button"
-                  data-sound="danger"
                 >
                   ×
                 </button>
               `
           }
-
         `;
-
 
         const textarea =
           $(
@@ -1779,27 +1071,27 @@
             element
           );
 
-
         if (textarea) {
 
           textarea.value =
             card.notes ||
             "";
 
-
-          textarea.addEventListener(
+          [
             "pointerdown",
-            event =>
-              event.stopPropagation()
-          );
-
-
-          textarea.addEventListener(
             "click",
-            event =>
-              event.stopPropagation()
-          );
+            "dblclick"
+          ].forEach(
+            type => {
 
+              textarea.addEventListener(
+                type,
+                event =>
+                  event.stopPropagation()
+              );
+
+            }
+          );
 
           textarea.addEventListener(
             "input",
@@ -1809,24 +1101,18 @@
                 textarea.value
               )
           );
-
         }
-
 
         canvas.appendChild(
           element
         );
 
-
         wireCard(
           element
         );
-
       }
     );
-
   }
-
 
   function wireCard(
     card
@@ -1841,7 +1127,6 @@
         )
     );
 
-
     card.addEventListener(
       "pointermove",
       event =>
@@ -1851,7 +1136,6 @@
         )
     );
 
-
     card.addEventListener(
       "pointerup",
       () =>
@@ -1860,7 +1144,6 @@
         )
     );
 
-
     card.addEventListener(
       "pointercancel",
       () =>
@@ -1868,7 +1151,6 @@
           card
         )
     );
-
 
     card.addEventListener(
       "click",
@@ -1882,9 +1164,7 @@
             false;
 
           return;
-
         }
-
 
         if (
           event.target.closest(
@@ -1893,9 +1173,7 @@
         ) {
 
           return;
-
         }
-
 
         if (
           connectingMode
@@ -1919,36 +1197,26 @@
               card.dataset.id
             );
 
-
             selectCard(
               null
             );
-
           }
 
-
           return;
-
         }
-
 
         selectCard(
           card
         );
-
       }
     );
 
+    const edit =
+      $(".mini-edit", card);
 
-    const editButton =
-      $(".mini-edit",card);
+    if (edit) {
 
-
-    if (
-      editButton
-    ) {
-
-      editButton.addEventListener(
+      edit.addEventListener(
         "click",
         event => {
 
@@ -1961,22 +1229,16 @@
           openCardEditor(
             card.dataset.id
           );
-
         }
       );
-
     }
 
+    const remove =
+      $(".mini-delete", card);
 
-    const deleteButton =
-      $(".mini-delete",card);
+    if (remove) {
 
-
-    if (
-      deleteButton
-    ) {
-
-      deleteButton.addEventListener(
+      remove.addEventListener(
         "click",
         event => {
 
@@ -1989,18 +1251,10 @@
           deleteCard(
             card.dataset.id
           );
-
         }
       );
-
     }
-
   }
-
-
-  /* ============================================================
-     ARRASTAR CARD
-     ============================================================ */
 
   function beginDrag(
     card,
@@ -2014,22 +1268,17 @@
     ) {
 
       return;
-
     }
-
 
     draggingCard =
       card;
 
-
     dragMoved =
       false;
-
 
     card.classList.add(
       "dragging"
     );
-
 
     try {
 
@@ -2039,10 +1288,8 @@
 
     } catch {}
 
-
     const rect =
       card.getBoundingClientRect();
-
 
     card.dataset.offsetX =
       String(
@@ -2053,7 +1300,6 @@
         zoom
       );
 
-
     card.dataset.offsetY =
       String(
         (
@@ -2062,9 +1308,7 @@
         ) /
         zoom
       );
-
   }
-
 
   function moveDrag(
     card,
@@ -2077,21 +1321,16 @@
     ) {
 
       return;
-
     }
-
 
     dragMoved =
       true;
 
-
     const board =
       $("#evidenceBoard");
 
-
     const canvas =
       $("#boardCanvas");
-
 
     if (
       !board ||
@@ -2099,45 +1338,44 @@
     ) {
 
       return;
-
     }
-
 
     const rect =
       board.getBoundingClientRect();
 
-
     const offsetX =
       Number(
-        card.dataset.offsetX
+        card.dataset.offsetX ||
+        0
       );
-
 
     const offsetY =
       Number(
-        card.dataset.offsetY
+        card.dataset.offsetY ||
+        0
       );
-
 
     const x =
       (
-        event.clientX -
-        rect.left +
+        (
+          event.clientX -
+          rect.left
+        ) +
         board.scrollLeft
       ) /
       zoom -
       offsetX;
 
-
     const y =
       (
-        event.clientY -
-        rect.top +
+        (
+          event.clientY -
+          rect.top
+        ) +
         board.scrollTop
       ) /
       zoom -
       offsetY;
-
 
     const maxX =
       Math.max(
@@ -2146,14 +1384,12 @@
         card.offsetWidth
       );
 
-
     const maxY =
       Math.max(
         0,
         canvas.clientHeight -
         card.offsetHeight
       );
-
 
     const finalX =
       Math.max(
@@ -2164,7 +1400,6 @@
         )
       );
 
-
     const finalY =
       Math.max(
         0,
@@ -2174,26 +1409,27 @@
         )
       );
 
-
     card.style.left =
       `${
-        (
-          finalX /
-          canvas.clientWidth
-        ) *
-        100
+        canvas.clientWidth
+          ? (
+              finalX /
+              canvas.clientWidth
+            ) *
+            100
+          : 0
       }%`;
-
 
     card.style.top =
       `${
-        (
-          finalY /
-          canvas.clientHeight
-        ) *
-        100
+        canvas.clientHeight
+          ? (
+              finalY /
+              canvas.clientHeight
+            ) *
+            100
+          : 0
       }%`;
-
 
     const model =
       cards.find(
@@ -2206,7 +1442,6 @@
           )
       );
 
-
     if (model) {
 
       model.x =
@@ -2214,19 +1449,14 @@
           card.style.left
         );
 
-
       model.y =
         parseFloat(
           card.style.top
         );
-
     }
 
-
     renderConnections();
-
   }
-
 
   async function endDrag(
     card
@@ -2238,27 +1468,21 @@
     ) {
 
       return;
-
     }
-
 
     draggingCard =
       null;
 
-
     card.classList.remove(
       "dragging"
     );
-
 
     if (
       !dragMoved
     ) {
 
       return;
-
     }
-
 
     const model =
       cards.find(
@@ -2271,7 +1495,6 @@
           )
       );
 
-
     if (
       model
     ) {
@@ -2279,15 +1502,8 @@
       await saveCardPosition(
         model
       );
-
     }
-
   }
-
-
-  /* ============================================================
-     SELEÇÃO
-     ============================================================ */
 
   function selectCard(
     card
@@ -2300,13 +1516,10 @@
       selectedCard.classList.remove(
         "selected"
       );
-
     }
-
 
     selectedCard =
       card;
-
 
     if (
       selectedCard
@@ -2315,34 +1528,66 @@
       selectedCard.classList.add(
         "selected"
       );
-
     }
 
-
     renderConnections();
-
   }
 
+  function connectionPair(
+    connection
+  ) {
 
-  /* ============================================================
-     CONEXÕES
-     ============================================================ */
+    const a =
+      connection?.clue_a ??
+      connection?.[0];
+
+    const b =
+      connection?.clue_b ??
+      connection?.[1];
+
+    if (
+      a == null ||
+      b == null
+    ) {
+
+      return null;
+    }
+
+    return [
+      String(a),
+      String(b)
+    ].sort();
+  }
 
   async function toggleConnection(
     firstId,
     secondId
   ) {
 
-    const [
-      a,
-      b
-    ] =
+    const pair =
       [
         String(firstId),
         String(secondId)
-      ]
-      .sort();
+      ].sort();
 
+    const index =
+      connections.findIndex(
+        connection => {
+
+          const existing =
+            connectionPair(
+              connection
+            );
+
+          return (
+            existing &&
+            existing[0] ===
+              pair[0] &&
+            existing[1] ===
+              pair[1]
+          );
+        }
+      );
 
     if (
       appMode ===
@@ -2351,46 +1596,35 @@
 
       try {
 
-        const existing =
-          connections.find(
-            connection =>
-
-              String(
-                connection.clue_a ??
-                connection[0]
-              ) ===
-              a &&
-
-              String(
-                connection.clue_b ??
-                connection[1]
-              ) ===
-              b
-          );
-
-
         if (
-          existing
+          index >=
+          0
         ) {
 
-          const result =
-            await supabase
-              .from(
-                "connections"
-              )
-              .delete()
-              .eq(
-                "id",
-                existing.id
-              );
-
+          const existing =
+            connections[index];
 
           if (
-            result.error
+            existing.id
           ) {
 
-            throw result.error;
+            const result =
+              await supabase
+                .from(
+                  "connections"
+                )
+                .delete()
+                .eq(
+                  "id",
+                  existing.id
+                );
 
+            if (
+              result.error
+            ) {
+
+              throw result.error;
+            }
           }
 
         } else {
@@ -2406,27 +1640,25 @@
                   campaignId,
 
                 clue_a:
-                  a,
+                  pair[0],
 
                 clue_b:
-                  b,
+                  pair[1],
 
                 created_by:
                   currentUser?.id ||
                   null
-
               });
-
 
           if (
             result.error
           ) {
 
             throw result.error;
-
           }
-
         }
+
+        await loadCampaignData();
 
       } catch (
         error
@@ -2437,40 +1669,17 @@
           error
         );
 
-
         toast(
           "Não foi possível sincronizar a conexão."
         );
-
       }
-
 
       playSound(
         "connect"
       );
 
-
       return;
-
     }
-
-
-    const index =
-      connections.findIndex(
-        connection =>
-          String(
-            connection.clue_a ??
-            connection[0]
-          ) ===
-          a &&
-
-          String(
-            connection.clue_b ??
-            connection[1]
-          ) ===
-          b
-      );
-
 
     if (
       index >=
@@ -2485,37 +1694,26 @@
     } else {
 
       connections.push(
-        [
-          a,
-          b
-        ]
+        pair
       );
-
     }
-
 
     saveLocal();
 
-
     renderConnections();
-
 
     playSound(
       "connect"
     );
-
   }
-
 
   function renderConnections() {
 
     const svg =
       $("#connections");
 
-
     const canvas =
       $("#boardCanvas");
-
 
     if (
       !svg ||
@@ -2523,42 +1721,39 @@
     ) {
 
       return;
-
     }
-
 
     svg.innerHTML =
       "";
 
-
     connections.forEach(
       connection => {
 
-        const aId =
-          connection.clue_a ??
-          connection[0];
+        const pair =
+          connectionPair(
+            connection
+          );
 
+        if (
+          !pair
+        ) {
 
-        const bId =
-          connection.clue_b ??
-          connection[1];
-
+          return;
+        }
 
         const a =
           canvas.querySelector(
             `[data-id="${CSS.escape(
-              String(aId)
+              pair[0]
             )}"]`
           );
-
 
         const b =
           canvas.querySelector(
             `[data-id="${CSS.escape(
-              String(bId)
+              pair[1]
             )}"]`
           );
-
 
         if (
           !a ||
@@ -2566,39 +1761,7 @@
         ) {
 
           return;
-
         }
-
-
-        const p1 = {
-
-          x:
-            a.offsetLeft +
-            a.offsetWidth /
-            2,
-
-          y:
-            a.offsetTop +
-            a.offsetHeight /
-            2
-
-        };
-
-
-        const p2 = {
-
-          x:
-            b.offsetLeft +
-            b.offsetWidth /
-            2,
-
-          y:
-            b.offsetTop +
-            b.offsetHeight /
-            2
-
-        };
-
 
         const line =
           document.createElementNS(
@@ -2606,63 +1769,62 @@
             "line"
           );
 
-
         line.setAttribute(
           "x1",
-          p1.x
+          a.offsetLeft +
+          a.offsetWidth /
+          2
         );
-
 
         line.setAttribute(
           "y1",
-          p1.y
+          a.offsetTop +
+          a.offsetHeight /
+          2
         );
-
 
         line.setAttribute(
           "x2",
-          p2.x
+          b.offsetLeft +
+          b.offsetWidth /
+          2
         );
-
 
         line.setAttribute(
           "y2",
-          p2.y
+          b.offsetTop +
+          b.offsetHeight /
+          2
         );
-
 
         line.classList.add(
           "connection-line"
         );
 
-
         if (
-          selectedCard === a ||
-          selectedCard === b
+          selectedCard &&
+          (
+            selectedCard === a ||
+            selectedCard === b
+          )
         ) {
 
           line.classList.add(
             "highlight"
           );
-
         }
-
 
         svg.appendChild(
           line
         );
-
       }
     );
-
 
     const cardCount =
       $("#cardCount");
 
-
     const connectionCount =
       $("#connectionCount");
-
 
     if (
       cardCount
@@ -2670,9 +1832,7 @@
 
       cardCount.textContent =
         cards.length;
-
     }
-
 
     if (
       connectionCount
@@ -2680,15 +1840,8 @@
 
       connectionCount.textContent =
         connections.length;
-
     }
-
   }
-
-
-  /* ============================================================
-     SALVAR POSIÇÃO
-     ============================================================ */
 
   async function saveCardPosition(
     card
@@ -2702,9 +1855,7 @@
       saveLocal();
 
       return;
-
     }
-
 
     try {
 
@@ -2714,30 +1865,25 @@
             "clues"
           )
           .update({
-
             x:
               Number(
                 card.x
               ),
-
             y:
               Number(
                 card.y
               )
-
           })
           .eq(
             "id",
             card.id
           );
 
-
       if (
         result.error
       ) {
 
         throw result.error;
-
       }
 
     } catch (
@@ -2748,11 +1894,8 @@
         "Posição:",
         error
       );
-
     }
-
   }
-
 
   function saveCardNotes(
     id,
@@ -2770,21 +1913,17 @@
           )
       );
 
-
     if (
       card
     ) {
 
       card.notes =
         text;
-
     }
-
 
     clearTimeout(
       noteTimer
     );
-
 
     noteTimer =
       setTimeout(
@@ -2811,13 +1950,11 @@
                     id
                   );
 
-
               if (
                 result.error
               ) {
 
                 throw result.error;
-
               }
 
             } catch (
@@ -2828,7 +1965,6 @@
                 "Anotação da pista:",
                 error
               );
-
             }
 
           } else {
@@ -2840,69 +1976,54 @@
         },
         250
       );
-
   }
-
-
-  /* ============================================================
-     NOVA PISTA
-     ============================================================ */
 
   function openNewCard() {
 
     const modal =
       $("#newCardModal");
 
-
-    if (!modal) {
+    if (
+      !modal
+    ) {
 
       return;
-
     }
-
 
     modal.classList.add(
       "open"
     );
-
 
     modal.setAttribute(
       "aria-hidden",
       "false"
     );
 
-
     $("#newCardTitle")
       ?.focus();
-
   }
-
 
   function closeNewCard() {
 
     const modal =
       $("#newCardModal");
 
-
-    if (!modal) {
+    if (
+      !modal
+    ) {
 
       return;
-
     }
-
 
     modal.classList.remove(
       "open"
     );
 
-
     modal.setAttribute(
       "aria-hidden",
       "true"
     );
-
   }
-
 
   async function createCard() {
 
@@ -2911,20 +2032,17 @@
         ?.value
         .trim();
 
-
     const type =
       $("#newCardType")
         ?.value
         .trim() ||
       "PISTA";
 
-
     const context =
       $("#newCardContext")
         ?.value
         .trim() ||
       "";
-
 
     if (
       !title
@@ -2935,9 +2053,7 @@
       );
 
       return;
-
     }
-
 
     const newCard = {
 
@@ -2968,7 +2084,6 @@
 
     };
 
-
     if (
       appMode ===
       "supabase"
@@ -2996,15 +2111,12 @@
             .select()
             .single();
 
-
         if (
           result.error
         ) {
 
           throw result.error;
-
         }
-
 
         cards.push(
           result.data
@@ -3019,14 +2131,11 @@
           error
         );
 
-
         toast(
           "Não foi possível criar a pista."
         );
 
-
         return;
-
       }
 
     } else {
@@ -3034,66 +2143,44 @@
       newCard.id =
         crypto.randomUUID();
 
-
       cards.push(
         newCard
       );
-
 
       saveLocal();
 
     }
 
-
     renderCards();
-
 
     renderConnections();
 
-
     closeNewCard();
 
+    [
+      "#newCardTitle",
+      "#newCardType",
+      "#newCardContext"
+    ].forEach(
+      selector => {
 
-    if (
-      $("#newCardTitle")
-    ) {
+        const input =
+          $(selector);
 
-      $("#newCardTitle").value =
-        "";
+        if (
+          input
+        ) {
 
-    }
-
-
-    if (
-      $("#newCardType")
-    ) {
-
-      $("#newCardType").value =
-        "";
-
-    }
-
-
-    if (
-      $("#newCardContext")
-    ) {
-
-      $("#newCardContext").value =
-        "";
-
-    }
-
+          input.value =
+            "";
+        }
+      }
+    );
 
     toast(
       "Nova pista adicionada."
     );
-
   }
-
-
-  /* ============================================================
-     EDITAR PISTA
-     ============================================================ */
 
   function openCardEditor(
     id
@@ -3110,34 +2197,26 @@
           )
       );
 
-
     if (
       !card
     ) {
 
       return;
-
     }
 
-
     editingNote = {
-
       kind:
         "clue",
 
       key:
         id
-
     };
-
 
     const title =
       $("#editorTitle");
 
-
     const text =
       $("#editorText");
-
 
     if (
       title
@@ -3146,9 +2225,7 @@
       title.textContent =
         card.title ||
         "ANOTAÇÃO";
-
     }
-
 
     if (
       text
@@ -3157,13 +2234,10 @@
       text.value =
         card.notes ||
         "";
-
     }
-
 
     const modal =
       $("#editorModal");
-
 
     if (
       modal
@@ -3173,16 +2247,12 @@
         "open"
       );
 
-
       modal.setAttribute(
         "aria-hidden",
         "false"
       );
-
     }
-
   }
-
 
   async function deleteCard(
     id
@@ -3195,9 +2265,7 @@
     ) {
 
       return;
-
     }
-
 
     if (
       appMode ===
@@ -3217,13 +2285,11 @@
               id
             );
 
-
         if (
           result.error
         ) {
 
           throw result.error;
-
         }
 
       } catch (
@@ -3235,18 +2301,13 @@
           error
         );
 
-
         toast(
           "Não foi possível excluir a pista."
         );
 
-
         return;
-
       }
-
     }
-
 
     cards =
       cards.filter(
@@ -3259,27 +2320,26 @@
           )
       );
 
-
     connections =
       connections.filter(
-        connection =>
-          String(
-            connection.clue_a ??
-            connection[0]
-          ) !==
-          String(
-            id
-          ) &&
+        connection => {
 
-          String(
-            connection.clue_b ??
-            connection[1]
-          ) !==
-          String(
-            id
-          )
+          const pair =
+            connectionPair(
+              connection
+            );
+
+          return (
+            !pair ||
+            (
+              pair[0] !==
+                String(id) &&
+              pair[1] !==
+                String(id)
+            )
+          );
+        }
       );
-
 
     if (
       appMode !==
@@ -3287,49 +2347,39 @@
     ) {
 
       saveLocal();
-
     }
 
-
     renderAll();
-
 
     toast(
       "Pista excluída."
     );
-
   }
-
 
   function closeEditor() {
 
     const modal =
       $("#editorModal");
 
-
-    if (!modal) {
+    if (
+      !modal
+    ) {
 
       return;
-
     }
-
 
     modal.classList.remove(
       "open"
     );
-
 
     modal.setAttribute(
       "aria-hidden",
       "true"
     );
 
-
     editingNote =
       null;
-
   }
-
 
   async function saveEditor() {
 
@@ -3338,16 +2388,13 @@
     ) {
 
       return;
-
     }
-
 
     const text =
       $("#editorText")
         ?.value
         .trim() ||
       "";
-
 
     if (
       editingNote.kind ===
@@ -3369,26 +2416,16 @@
 
     }
 
-
     closeEditor();
-
 
     renderCards();
 
-
     renderEntityNotes();
-
 
     playSound(
       "save"
     );
-
   }
-
-
-  /* ============================================================
-     ANOTAÇÕES DE ENTIDADES
-     ============================================================ */
 
   function openEntityEditor(
     button
@@ -3404,7 +2441,6 @@
 
     };
 
-
     const existing =
       (
         window._entityNotes ||
@@ -3418,23 +2454,38 @@
           note.entity_key ===
             editingNote.key &&
 
-          note.user_id ===
-            currentUser?.id
+          (
+            !currentUser ||
+            note.user_id ===
+              currentUser.id
+          )
       );
 
+    const title =
+      $("#editorTitle");
 
-    $("#editorTitle").textContent =
-      "ANOTAÇÃO";
+    const text =
+      $("#editorText");
 
+    if (
+      title
+    ) {
 
-    $("#editorText").value =
-      existing?.text ||
-      "";
+      title.textContent =
+        "ANOTAÇÃO";
+    }
 
+    if (
+      text
+    ) {
+
+      text.value =
+        existing?.text ||
+        "";
+    }
 
     const modal =
       $("#editorModal");
-
 
     if (
       modal
@@ -3444,16 +2495,12 @@
         "open"
       );
 
-
       modal.setAttribute(
         "aria-hidden",
         "false"
       );
-
     }
-
   }
-
 
   async function saveEntityNote(
     kind,
@@ -3497,25 +2544,20 @@
               },
 
               {
-
                 onConflict:
                   "campaign_id,entity_kind,entity_key,user_id"
-
               }
 
             )
             .select()
             .single();
 
-
         if (
           result.error
         ) {
 
           throw result.error;
-
         }
-
 
         const remaining =
           (
@@ -3535,15 +2577,10 @@
               )
           );
 
-
         window._entityNotes = [
-
           ...remaining,
-
           result.data
-
         ];
-
 
       } catch (
         error
@@ -3554,33 +2591,37 @@
           error
         );
 
-
         toast(
           "Não foi possível salvar a anotação."
         );
 
-
         return;
-
       }
 
     } else {
 
-      const saved =
-        safeJSON(
-          localStorage.getItem(
-            storageKeys.notes
-          ) ||
-          "{}",
-          {}
-        );
+      let saved = {};
 
+      try {
+
+        saved =
+          JSON.parse(
+            localStorage.getItem(
+              storageKeys.notes
+            ) ||
+            "{}"
+          );
+
+      } catch {
+
+        saved =
+          {};
+      }
 
       saved[
         `${kind}:${key}`
       ] =
         text;
-
 
       localStorage.setItem(
         storageKeys.notes,
@@ -3589,43 +2630,33 @@
         )
       );
 
-
       applyLocalNotes();
-
     }
 
-
     renderEntityNotes();
-
   }
-
 
   function renderEntityNotes() {
 
-    const allNotes =
+    const notes =
       window._entityNotes ||
       [];
 
-
     $(
       ".shared-notes"
-    )
-    .forEach(
+    ).forEach(
       box => {
 
         const kind =
           box.dataset.noteKind;
 
-
         const key =
           box.dataset.noteKey;
-
 
         box.innerHTML =
           "";
 
-
-        allNotes
+        notes
           .filter(
             note =>
 
@@ -3648,53 +2679,33 @@
                   "div"
                 );
 
-
               line.className =
                 "note-line";
 
-
-              line.innerHTML = `
-
-                <strong>
-                  ${escapeHtml(
-                    note.author_name ||
-                    "Jogador"
-                  )}
-                </strong>
-
-                ${escapeHtml(
+              line.innerHTML =
+                `<strong>${escapeHtml(
+                  note.author_name ||
+                  "Jogador"
+                )}</strong> ${escapeHtml(
                   note.text
-                )}
-
-              `;
-
+                )}`;
 
               box.appendChild(
                 line
               );
-
             }
           );
-
       }
     );
-
   }
-
-
-  /* ============================================================
-     OBJETOS
-     ============================================================ */
 
   function renderObjects() {
 
     const grid =
       $("#objectGrid");
 
-
     const layer =
       $("#boardObjectLayer");
-
 
     if (
       grid
@@ -3702,9 +2713,7 @@
 
       grid.innerHTML =
         "";
-
     }
-
 
     if (
       layer
@@ -3712,9 +2721,7 @@
 
       layer.innerHTML =
         "";
-
     }
-
 
     objects.forEach(
       object => {
@@ -3728,21 +2735,13 @@
               "button"
             );
 
-
           tile.type =
             "button";
-
 
           tile.className =
             "object-tile";
 
-
-          tile.dataset.sound =
-            "document";
-
-
           tile.innerHTML = `
-
             <span>
               ${escapeHtml(
                 object.object_type ||
@@ -3759,25 +2758,26 @@
             <small>
               ABRIR ↗
             </small>
-
           `;
-
 
           tile.addEventListener(
             "click",
-            () =>
+            () => {
+
+              playSound(
+                "document"
+              );
+
               openObject(
                 object
-              )
+              );
+            }
           );
-
 
           grid.appendChild(
             tile
           );
-
         }
-
 
         if (
           layer
@@ -3788,14 +2788,11 @@
               "button"
             );
 
-
           item.type =
             "button";
 
-
           item.className =
             "board-object";
-
 
           item.style.left =
             `${Number(
@@ -3803,18 +2800,14 @@
               50
             )}%`;
 
-
           item.style.top =
             `${Number(
               object.y ??
               50
             )}%`;
 
-
           item.innerHTML = `
-
             <span>
-
               ${escapeHtml(
                 object.name
               )}
@@ -3825,11 +2818,8 @@
                   "OBJETO"
                 )}
               </small>
-
             </span>
-
           `;
-
 
           item.addEventListener(
             "click",
@@ -3837,26 +2827,23 @@
 
               event.stopPropagation();
 
+              playSound(
+                "document"
+              );
 
               openObject(
                 object
               );
-
             }
           );
-
 
           layer.appendChild(
             item
           );
-
         }
-
       }
     );
-
   }
-
 
   function openObject(
     object
@@ -3865,65 +2852,31 @@
     const modal =
       $("#documentModal");
 
-
     if (
       !modal
     ) {
 
       return;
-
     }
 
+    $("#modalType").textContent =
+      object.object_type ||
+      "OBJETO";
 
-    const type =
-      $("#modalType");
+    $("#modalTitle").textContent =
+      object.name ||
+      "OBJETO";
 
-
-    const title =
-      $("#modalTitle");
-
-
-    const content =
-      $("#modalContent");
-
-
-    if (
-      type
-    ) {
-
-      type.textContent =
-        object.object_type ||
-        "OBJETO";
-
-    }
-
-
-    if (
-      title
-    ) {
-
-      title.textContent =
-        object.name ||
-        "OBJETO";
-
-    }
-
-
-    if (
-      content
-    ) {
-
-      content.innerHTML = `
+    $("#modalContent").innerHTML = `
+      <div class="paper">
 
         <p>
-
           <strong>
             ${escapeHtml(
               object.description ||
               ""
             )}
           </strong>
-
         </p>
 
         <p>
@@ -3933,35 +2886,23 @@
           )}
         </p>
 
-      `;
-
-    }
-
+      </div>
+    `;
 
     modal.classList.add(
       "open"
     );
 
-
     modal.setAttribute(
       "aria-hidden",
       "false"
     );
-
   }
-
-
-  /* ============================================================
-     IMAGENS
-     ============================================================ */
 
   async function applyImageAssets() {
 
     const slots =
-      $(
-        ".image-slot[data-asset]"
-      );
-
+      $$(".image-slot[data-asset]");
 
     for (
       const element
@@ -3971,36 +2912,29 @@
       const requested =
         element.dataset.asset;
 
-
       if (
         !requested
       ) {
 
         continue;
-
       }
-
 
       const candidates =
         buildAssetCandidates(
           requested
         );
 
-
       const imageUrl =
         await findWorkingImage(
           candidates
         );
-
 
       if (
         !imageUrl
       ) {
 
         continue;
-
       }
-
 
       if (
         element.classList.contains(
@@ -4008,21 +2942,26 @@
         )
       ) {
 
+        if (
+          element.dataset.loadedAsset ===
+          imageUrl
+        ) {
+
+          continue;
+        }
+
         element.innerHTML =
           "";
 
-
-        const image =
+        const img =
           document.createElement(
             "img"
           );
 
-
-        image.src =
+        img.src =
           imageUrl;
 
-
-        image.alt =
+        img.alt =
           element
             .closest(
               "[data-entity]"
@@ -4030,23 +2969,21 @@
             ?.dataset.entity ||
           "";
 
-
-        image.loading =
+        img.loading =
           "lazy";
 
-
-        image.decoding =
+        img.decoding =
           "async";
 
-
-        image.draggable =
+        img.draggable =
           false;
 
-
         element.appendChild(
-          image
+          img
         );
 
+        element.dataset.loadedAsset =
+          imageUrl;
 
         element.classList.add(
           "asset-loaded"
@@ -4057,23 +2994,17 @@
         element.style.backgroundImage =
           `url("${imageUrl}")`;
 
-
         element.style.setProperty(
           "--location-image",
           `url("${imageUrl}")`
         );
 
-
         element.classList.add(
           "has-image"
         );
-
       }
-
     }
-
   }
-
 
   function buildAssetCandidates(
     path
@@ -4085,30 +3016,20 @@
         "/"
       );
 
-
     const base =
       clean.replace(
         /\.(webp|png|jpg|jpeg|gif)$/i,
         ""
       );
 
-
     return [
-
       clean,
-
       `${base}.webp`,
-
       `${base}.png`,
-
       `${base}.jpg`,
-
       `${base}.jpeg`
-
     ];
-
   }
-
 
   function findWorkingImage(
     candidates
@@ -4120,125 +3041,99 @@
         let index =
           0;
 
+        const test =
+          () => {
 
-        function testNext() {
+            if (
+              index >=
+              candidates.length
+            ) {
 
-          if (
-            index >=
-            candidates.length
-          ) {
-
-            resolve(
-              null
-            );
-
-
-            return;
-
-          }
-
-
-          const url =
-            candidates[
-              index
-            ];
-
-
-          index++;
-
-
-          const image =
-            new Image();
-
-
-          image.onload =
-            () =>
               resolve(
-                url
+                null
               );
 
+              return;
+            }
 
-          image.onerror =
-            () =>
-              testNext();
+            const url =
+              candidates[
+                index
+              ];
 
+            index++;
 
-          image.src =
-            url;
+            const image =
+              new Image();
 
-        }
+            image.onload =
+              () =>
+                resolve(
+                  url
+                );
 
+            image.onerror =
+              () =>
+                test();
 
-        testNext();
+            image.src =
+              url;
+          };
 
+        test();
       }
     );
-
   }
-
-
-  /* ============================================================
-     PESQUISA
-     ============================================================ */
 
   function filterCards() {
 
     const input =
       $("#boardSearch");
 
-
     if (
       !input
     ) {
 
       return;
-
     }
-
 
     const query =
       input.value
         .trim()
         .toLowerCase();
 
-
     cards.forEach(
       card => {
 
         const element =
           $(
-            `#boardCanvas [data-id="${CSS.escape(
-              String(card.id)
-            )}"]`
+            "#boardCanvas [data-id=\"" +
+            CSS.escape(
+              String(
+                card.id
+              )
+            ) +
+            "\"]"
           );
-
 
         if (
           !element
         ) {
 
           return;
-
         }
-
 
         const text =
           [
-
             card.title,
-
             card.context,
-
             card.clue_type,
-
             card.notes
-
           ]
             .join(
               " "
             )
             .toLowerCase();
-
 
         element.classList.toggle(
           "dimmed",
@@ -4249,16 +3144,9 @@
             )
           )
         );
-
       }
     );
-
   }
-
-
-  /* ============================================================
-     DOCUMENTOS
-     ============================================================ */
 
   const documents = {
 
@@ -4271,7 +3159,6 @@
         "Relatório encontrado",
 
       html: `
-
         <div class="paper">
 
           <p>
@@ -4279,27 +3166,22 @@
             — registro acústico identificado.
           </p>
 
-
           <p>
             <strong>02:16</strong>
             — preparação do estímulo.
           </p>
-
 
           <p>
             <strong>02:17</strong>
             — presença de sangue.
           </p>
 
-
           <p>
             <strong>02:20</strong>
             — manifestação.
           </p>
 
-
           <hr>
-
 
           <p>
             <strong>OBSERVAÇÃO:</strong>
@@ -4307,23 +3189,18 @@
             preparação do estímulo.
           </p>
 
-
           <p>
             <strong>OBSERVAÇÃO COMPLEMENTAR:</strong>
             não repetir o procedimento sem autorização.
           </p>
-
 
           <p class="hand">
             Quem autorizou?
           </p>
 
         </div>
-
       `
-
     },
-
 
     fifth: {
 
@@ -4334,7 +3211,6 @@
         "A frase do quinto",
 
       html: `
-
         <div class="paper">
 
           <p class="hand">
@@ -4344,11 +3220,8 @@
           </p>
 
         </div>
-
       `
-
     },
-
 
     box: {
 
@@ -4359,341 +3232,366 @@
         "Mapa + recibos",
 
       html: `
-
         <div class="paper">
 
           <p>
-
             <strong>LOCAIS:</strong>
-
             Praça Santa Cecília,
             Apartamento 18,
             Túnel ferroviário,
             Escola municipal,
             Torre sem nome.
-
           </p>
 
-
           <p>
-
             <strong>HORÁRIOS:</strong>
-
             02:12 • 02:40 • 03:05 •
             03:30 • 03:55
-
           </p>
-
 
           <p>
-
             <strong>OBJETOS:</strong>
-
             recibos de metal e velas,
-            lista de horários
-            e uma chave de ferro escuro.
-
+            lista de horários e uma
+            chave de ferro escuro.
           </p>
 
-
           <p class="hand">
-
             O quinto não é convocado.<br>
             O quinto convoca.
-
           </p>
 
         </div>
-
       `
-
     }
-
   };
-
 
   function openDocument(
     key
   ) {
 
-    const documentData =
+    const data =
       documents[
         key
       ];
 
-
     const modal =
       $("#documentModal");
 
-
     if (
-      !documentData ||
+      !data ||
       !modal
     ) {
 
       return;
-
     }
 
-
     $("#modalType").textContent =
-      documentData.type;
-
+      data.type;
 
     $("#modalTitle").textContent =
-      documentData.title;
-
+      data.title;
 
     $("#modalContent").innerHTML =
-      documentData.html;
-
+      data.html;
 
     modal.classList.add(
       "open"
     );
 
-
     modal.setAttribute(
       "aria-hidden",
       "false"
     );
-
   }
-
 
   function closeDocument() {
 
     const modal =
       $("#documentModal");
 
-
     if (
       !modal
     ) {
 
       return;
-
     }
-
 
     modal.classList.remove(
       "open"
     );
 
-
     modal.setAttribute(
       "aria-hidden",
       "true"
     );
-
   }
 
-/* ============================================================
-   SOM / YOUTUBE HEXATOMBE
-   ============================================================ */
+  /* ============================================================
+     MÚSICA — YOUTUBE / HEXATOMBE
+     ============================================================ */
 
-let youtubePlayer = null;
-let youtubeReady = false;
-
-let musicVolume = 10;
-
-const HEXATOMBE_VIDEO_ID = "eVV1S_zal4o";
-
-
-function updateMusicTrack(name) {
-
-  const element = $("#musicTrack");
-
-  if (element) {
-    element.textContent = name;
-  }
-
-}
-
-
-function setMusicVolume(value) {
-
-  musicVolume = Math.max(
-    0,
-    Math.min(
-      30,
-      Number(value) || 0
-    )
-  );
-
-  const slider = $("#musicVolume");
-  const label = $("#musicVolumeLabel");
-
-  if (slider) {
-    slider.value = musicVolume;
-  }
-
-  if (label) {
-    label.textContent = `${musicVolume}%`;
-  }
-
-  if (
-    youtubeReady &&
-    youtubePlayer
+  function updateMusicTrack(
+    name
   ) {
-    youtubePlayer.setVolume(
-      musicVolume
+
+    const element =
+      $("#musicTrack");
+
+    if (
+      element
+    ) {
+
+      element.textContent =
+        name;
+    }
+  }
+
+  function setMusicVolume(
+    value
+  ) {
+
+    musicVolume =
+      Math.max(
+        0,
+        Math.min(
+          30,
+          Number(
+            value
+          ) || 0
+        )
+      );
+
+    localStorage.setItem(
+      storageKeys.musicVolume,
+      String(
+        musicVolume
+      )
     );
+
+    const slider =
+      $("#musicVolume");
+
+    const label =
+      $("#musicVolumeLabel");
+
+    if (
+      slider
+    ) {
+
+      slider.value =
+        musicVolume;
+    }
+
+    if (
+      label
+    ) {
+
+      label.textContent =
+        `${musicVolume}%`;
+    }
+
+    if (
+      youtubeReady &&
+      youtubePlayer
+    ) {
+
+      youtubePlayer.setVolume(
+        musicVolume
+      );
+    }
   }
 
-}
+  function createYoutubePlayer() {
 
+    const container =
+      $("#youtubePlayer");
 
-function createYoutubePlayer() {
+    if (
+      !container ||
+      !window.YT ||
+      !window.YT.Player ||
+      youtubePlayer
+    ) {
 
-  const container =
-    $("#youtubePlayer");
+      return;
+    }
 
-  if (
-    !container ||
-    !window.YT ||
-    !window.YT.Player ||
-    youtubePlayer
-  ) {
-    return;
-  }
+    youtubePlayer =
+      new YT.Player(
+        "youtubePlayer",
+        {
 
-  youtubePlayer =
-    new YT.Player(
-      "youtubePlayer",
-      {
+          videoId:
+            HEXATOMBE_VIDEO_ID,
 
-        videoId:
-          HEXATOMBE_VIDEO_ID,
+          playerVars: {
 
-        playerVars: {
+            autoplay:
+              0,
 
-          autoplay: 0,
+            controls:
+              1,
 
-          controls: 1,
+            rel:
+              0,
 
-          rel: 0,
+            playsinline:
+              1,
 
-          playsinline: 1,
+            modestbranding:
+              1,
 
-          origin:
-            window.location.origin
-
-        },
-
-        events: {
-
-          onReady: event => {
-
-            youtubeReady =
-              true;
-
-            event.target.setVolume(
-              musicVolume
-            );
-
-            updateMusicTrack(
-              "PRONTO"
-            );
-
+            origin:
+              window.location.origin
           },
 
-          onStateChange: event => {
+          events: {
 
-            const button =
-              $("#musicPlayPause");
+            onReady:
+              event => {
 
-            if (!button) {
-              return;
-            }
+                youtubeReady =
+                  true;
 
-            if (
-              event.data ===
-              YT.PlayerState.PLAYING
-            ) {
+                event.target.setVolume(
+                  musicVolume
+                );
 
-              button.textContent =
-                "Ⅱ PAUSAR";
+                updateMusicTrack(
+                  "PARADO"
+                );
+              },
 
-            }
+            onStateChange:
+              event => {
 
-            if (
-              event.data ===
-              YT.PlayerState.PAUSED
-            ) {
+                const button =
+                  $("#musicPlayPause");
 
-              button.textContent =
-                "▶ TOCAR";
+                if (
+                  !button ||
+                  !window.YT
+                ) {
 
-            }
+                  return;
+                }
 
-            if (
-              event.data ===
-              YT.PlayerState.ENDED
-            ) {
+                if (
+                  event.data ===
+                  YT.PlayerState.PLAYING
+                ) {
 
-              button.textContent =
-                "▶ TOCAR";
+                  button.textContent =
+                    "Ⅱ PAUSAR";
 
-            }
+                } else if (
+                  event.data ===
+                    YT.PlayerState.PAUSED ||
+                  event.data ===
+                    YT.PlayerState.ENDED
+                ) {
 
-          },
+                  button.textContent =
+                    "▶ TOCAR";
 
-          onError: event => {
+                }
+              },
 
-            console.error(
-              "YouTube:",
-              event.data
-            );
+            onError:
+              error => {
 
-            updateMusicTrack(
-              "ERRO NO PLAYER"
-            );
+                console.error(
+                  "YouTube Player:",
+                  error
+                );
 
+                updateMusicTrack(
+                  "ERRO NO PLAYER"
+                );
+
+                toast(
+                  "A trilha não pôde ser reproduzida."
+                );
+              }
           }
-
         }
-
-      }
-    );
-
-}
-
-
-window.onYouTubeIframeAPIReady =
-  function () {
-
-    createYoutubePlayer();
-
-  };
-
-
-function toggleMusic() {
-
-  if (
-    !youtubeReady ||
-    !youtubePlayer
-  ) {
-
-    toast(
-      "A trilha ainda está carregando."
-    );
-
-    return;
-
+      );
   }
 
-  const state =
-    youtubePlayer.getPlayerState();
+  window.onYouTubeIframeAPIReady =
+    () =>
+      createYoutubePlayer();
 
-  if (
-    state ===
-    YT.PlayerState.PLAYING
+  function toggleMusic() {
+
+    if (
+      !youtubeReady ||
+      !youtubePlayer
+    ) {
+
+      toast(
+        "A trilha ainda está carregando."
+      );
+
+      return;
+    }
+
+    const state =
+      youtubePlayer.getPlayerState();
+
+    if (
+      state ===
+      YT.PlayerState.PLAYING
+    ) {
+
+      youtubePlayer.pauseVideo();
+
+    } else {
+
+      youtubePlayer.setVolume(
+        musicVolume
+      );
+
+      youtubePlayer.playVideo();
+    }
+  }
+
+  function playMusicAt(
+    seconds,
+    trackName
   ) {
 
-    youtubePlayer.pauseVideo();
+    if (
+      !youtubeReady ||
+      !youtubePlayer
+    ) {
 
-  } else {
+      toast(
+        "A trilha ainda está carregando."
+      );
+
+      return;
+    }
+
+    const position =
+      Number(
+        seconds
+      );
+
+    if (
+      !Number.isFinite(
+        position
+      )
+    ) {
+
+      return;
+    }
+
+    youtubePlayer.seekTo(
+      position,
+      true
+    );
 
     youtubePlayer.setVolume(
       musicVolume
@@ -4701,100 +3599,366 @@ function toggleMusic() {
 
     youtubePlayer.playVideo();
 
+    updateMusicTrack(
+      trackName ||
+      "TRILHA"
+    );
   }
 
-}
+  function toggleSoundPanel() {
 
+    const panel =
+      $("#soundPanel");
 
-function playMusicAt(
-  seconds,
-  trackName
-) {
+    if (
+      !panel
+    ) {
 
-  if (
-    !youtubeReady ||
-    !youtubePlayer
-  ) {
+      return;
+    }
 
-    toast(
-      "A trilha ainda está carregando."
+    const willOpen =
+      !panel.classList.contains(
+        "open"
+      );
+
+    panel.classList.toggle(
+      "open",
+      willOpen
     );
 
-    return;
-
-  }
-
-  const position =
-    Number(seconds);
-
-  if (
-    !Number.isFinite(
-      position
-    )
-  ) {
-    return;
-  }
-
-  youtubePlayer.seekTo(
-    position,
-    true
-  );
-
-  youtubePlayer.setVolume(
-    musicVolume
-  );
-
-  youtubePlayer.playVideo();
-
-  updateMusicTrack(
-    trackName ||
-    "TRILHA"
-  );
-
-}
-
-
-function toggleSoundPanel() {
-
-  const panel =
-    $("#soundPanel");
-
-  if (!panel) {
-    return;
-  }
-
-  const open =
-    !panel.classList.contains(
-      "open"
+    panel.setAttribute(
+      "aria-hidden",
+      String(
+        !willOpen
+      )
     );
 
-  panel.classList.toggle(
-    "open",
-    open
-  );
+    if (
+      willOpen
+    ) {
 
-  panel.setAttribute(
-    "aria-hidden",
-    String(!open)
-  );
+      panel.style.overflowY =
+        "auto";
 
-  if (
-    open &&
-    !youtubePlayer
-  ) {
+      panel.style.overflowX =
+        "hidden";
 
-    createYoutubePlayer();
+      panel.style.maxHeight =
+        "calc(100vh - 74px)";
 
+      if (
+        window.YT?.Player
+      ) {
+
+        createYoutubePlayer();
+      }
+    }
+
+    playSound(
+      "panel"
+    );
   }
 
-  playSound(
-    "panel"
-  );
+  async function toggleVoiceDucking() {
 
-}
-  /* ============================================================
-     ZOOM
-     ============================================================ */
+    if (
+      voiceDucking
+    ) {
+
+      disableVoiceDucking();
+
+      return;
+    }
+
+    if (
+      !navigator.mediaDevices?.getUserMedia
+    ) {
+
+      toast(
+        "Seu navegador não permite detectar o microfone."
+      );
+
+      return;
+    }
+
+    try {
+
+      microphoneStream =
+        await navigator.mediaDevices.getUserMedia(
+          {
+            audio:
+              true
+          }
+        );
+
+      const AudioContextClass =
+        window.AudioContext ||
+        window.webkitAudioContext;
+
+      if (
+        !AudioContextClass
+      ) {
+
+        throw new Error(
+          "AudioContext não suportado"
+        );
+      }
+
+      microphoneContext =
+        new AudioContextClass();
+
+      if (
+        microphoneContext.state ===
+        "suspended"
+      ) {
+
+        await microphoneContext.resume();
+      }
+
+      microphoneAnalyser =
+        microphoneContext.createAnalyser();
+
+      microphoneAnalyser.fftSize =
+        512;
+
+      microphoneAnalyser.smoothingTimeConstant =
+        0.65;
+
+      microphoneData =
+        new Uint8Array(
+          microphoneAnalyser.fftSize
+        );
+
+      const source =
+        microphoneContext.createMediaStreamSource(
+          microphoneStream
+        );
+
+      source.connect(
+        microphoneAnalyser
+      );
+
+      voiceDucking =
+        true;
+
+      const button =
+        $("#voiceDuckToggle");
+
+      if (
+        button
+      ) {
+
+        button.textContent =
+          "🎙 ABAIXAR QUANDO EU FALO: ON";
+
+        button.classList.add(
+          "active"
+        );
+      }
+
+      startVoiceDucking();
+
+      toast(
+        "Controle automático da voz ativado."
+      );
+
+    } catch (
+      error
+    ) {
+
+      console.error(
+        "Microfone:",
+        error
+      );
+
+      disableVoiceDucking();
+
+      toast(
+        "Não foi possível acessar o microfone."
+      );
+    }
+  }
+
+  function startVoiceDucking() {
+
+    clearInterval(
+      duckingTimer
+    );
+
+    duckingTimer =
+      setInterval(
+        () => {
+
+          if (
+            !voiceDucking ||
+            !microphoneAnalyser ||
+            !microphoneData ||
+            !youtubeReady ||
+            !youtubePlayer
+          ) {
+
+            return;
+          }
+
+          microphoneAnalyser.getByteTimeDomainData(
+            microphoneData
+          );
+
+          let sum =
+            0;
+
+          for (
+            let i = 0;
+            i <
+            microphoneData.length;
+            i++
+          ) {
+
+            const normalized =
+              (
+                microphoneData[i] -
+                128
+              ) /
+              128;
+
+            sum +=
+              normalized *
+              normalized;
+          }
+
+          const rms =
+            Math.sqrt(
+              sum /
+              microphoneData.length
+            );
+
+          youtubePlayer.setVolume(
+            rms >
+            0.045
+
+              ? Math.min(
+                  musicVolume,
+                  3
+                )
+
+              : musicVolume
+          );
+
+        },
+        100
+      );
+  }
+
+  function disableVoiceDucking() {
+
+    voiceDucking =
+      false;
+
+    clearInterval(
+      duckingTimer
+    );
+
+    duckingTimer =
+      null;
+
+    if (
+      microphoneStream
+    ) {
+
+      microphoneStream
+        .getTracks()
+        .forEach(
+          track =>
+            track.stop()
+        );
+
+      microphoneStream =
+        null;
+    }
+
+    if (
+      microphoneContext
+    ) {
+
+      microphoneContext
+        .close()
+        .catch(
+          () => {}
+        );
+
+      microphoneContext =
+        null;
+    }
+
+    microphoneAnalyser =
+      null;
+
+    microphoneData =
+      null;
+
+    if (
+      youtubeReady &&
+      youtubePlayer
+    ) {
+
+      youtubePlayer.setVolume(
+        musicVolume
+      );
+    }
+
+    const button =
+      $("#voiceDuckToggle");
+
+    if (
+      button
+    ) {
+
+      button.textContent =
+        "🎙 ABAIXAR QUANDO EU FALO: OFF";
+
+      button.classList.remove(
+        "active"
+      );
+    }
+  }
+
+  function toggleInterfaceSounds() {
+
+    uiSoundsEnabled =
+      !uiSoundsEnabled;
+
+    localStorage.setItem(
+      storageKeys.uiSounds,
+      String(
+        uiSoundsEnabled
+      )
+    );
+
+    const button =
+      $("#interfaceSoundToggle");
+
+    if (
+      button
+    ) {
+
+      button.textContent =
+        `SONS DE INTERFACE: ${
+          uiSoundsEnabled
+            ? "ON"
+            : "OFF"
+        }`;
+    }
+
+    if (
+      uiSoundsEnabled
+    ) {
+
+      playSound(
+        "save"
+      );
+    }
+  }
 
   function setZoom(
     value
@@ -4807,14 +3971,12 @@ function toggleSoundPanel() {
           1.35,
           Number(
             value
-          )
+          ) || 1
         )
       );
 
-
     const canvas =
       $("#boardCanvas");
-
 
     if (
       canvas
@@ -4822,13 +3984,10 @@ function toggleSoundPanel() {
 
       canvas.style.transform =
         `scale(${zoom})`;
-
     }
-
 
     const label =
       $("#zoomLabel");
-
 
     if (
       label
@@ -4839,33 +3998,22 @@ function toggleSoundPanel() {
           zoom *
           100
         )}%`;
-
     }
 
-
     renderConnections();
-
   }
-
-
-  /* ============================================================
-     ABRIR QUADRO
-     ============================================================ */
 
   function openBoard() {
 
     const board =
       $("#boardSection");
 
-
     if (
       !board
     ) {
 
       return;
-
     }
-
 
     board.scrollIntoView({
       behavior:
@@ -4873,15 +4021,8 @@ function toggleSoundPanel() {
 
       block:
         "start"
-
     });
-
   }
-
-
-  /* ============================================================
-     REALTIME
-     ============================================================ */
 
   function subscribeRealtime() {
 
@@ -4892,9 +4033,7 @@ function toggleSoundPanel() {
     ) {
 
       return;
-
     }
-
 
     if (
       realtimeChannel
@@ -4903,9 +4042,7 @@ function toggleSoundPanel() {
       supabase.removeChannel(
         realtimeChannel
       );
-
     }
-
 
     realtimeChannel =
       supabase
@@ -4913,10 +4050,8 @@ function toggleSoundPanel() {
           `campaign-${campaignId}`
         )
 
-
         .on(
           "postgres_changes",
-
           {
             event:
               "*",
@@ -4929,32 +4064,24 @@ function toggleSoundPanel() {
 
             filter:
               `campaign_id=eq.${campaignId}`
-
           },
 
           payload => {
 
             if (
               payload.eventType ===
-              "INSERT"
+              "INSERT" &&
+              !cards.some(
+                card =>
+                  card.id ===
+                  payload.new.id
+              )
             ) {
 
-              if (
-                !cards.some(
-                  card =>
-                    card.id ===
-                    payload.new.id
-                )
-              ) {
-
-                cards.push(
-                  payload.new
-                );
-
-              }
-
+              cards.push(
+                payload.new
+              );
             }
-
 
             if (
               payload.eventType ===
@@ -4968,24 +4095,18 @@ function toggleSoundPanel() {
                     payload.new.id
                 );
 
-
               if (
                 index >=
                 0
               ) {
 
-                cards[index] = {
-
-                  ...cards[index],
-
-                  ...payload.new
-
-                };
-
+                cards[index] =
+                  {
+                    ...cards[index],
+                    ...payload.new
+                  };
               }
-
             }
-
 
             if (
               payload.eventType ===
@@ -4998,26 +4119,18 @@ function toggleSoundPanel() {
                     card.id !==
                     payload.old.id
                 );
-
             }
-
 
             renderCards();
 
-
             renderConnections();
 
-
             filterCards();
-
           }
-
         )
-
 
         .on(
           "postgres_changes",
-
           {
             event:
               "*",
@@ -5030,32 +4143,24 @@ function toggleSoundPanel() {
 
             filter:
               `campaign_id=eq.${campaignId}`
-
           },
 
           payload => {
 
             if (
               payload.eventType ===
-              "INSERT"
+              "INSERT" &&
+              !connections.some(
+                connection =>
+                  connection.id ===
+                  payload.new.id
+              )
             ) {
 
-              if (
-                !connections.some(
-                  connection =>
-                    connection.id ===
-                    payload.new.id
-                )
-              ) {
-
-                connections.push(
-                  payload.new
-                );
-
-              }
-
+              connections.push(
+                payload.new
+              );
             }
-
 
             if (
               payload.eventType ===
@@ -5069,7 +4174,6 @@ function toggleSoundPanel() {
                     payload.new.id
                 );
 
-
               if (
                 index >=
                 0
@@ -5077,11 +4181,8 @@ function toggleSoundPanel() {
 
                 connections[index] =
                   payload.new;
-
               }
-
             }
-
 
             if (
               payload.eventType ===
@@ -5094,20 +4195,14 @@ function toggleSoundPanel() {
                     connection.id !==
                     payload.old.id
                 );
-
             }
 
-
             renderConnections();
-
           }
-
         )
-
 
         .on(
           "postgres_changes",
-
           {
             event:
               "*",
@@ -5120,7 +4215,6 @@ function toggleSoundPanel() {
 
             filter:
               `campaign_id=eq.${campaignId}`
-
           },
 
           payload => {
@@ -5129,28 +4223,20 @@ function toggleSoundPanel() {
               window._entityNotes ||
               [];
 
-
             if (
               payload.eventType ===
-              "INSERT"
+              "INSERT" &&
+              !window._entityNotes.some(
+                note =>
+                  note.id ===
+                  payload.new.id
+              )
             ) {
 
-              if (
-                !window._entityNotes.some(
-                  note =>
-                    note.id ===
-                    payload.new.id
-                )
-              ) {
-
-                window._entityNotes.push(
-                  payload.new
-                );
-
-              }
-
+              window._entityNotes.push(
+                payload.new
+              );
             }
-
 
             if (
               payload.eventType ===
@@ -5164,21 +4250,15 @@ function toggleSoundPanel() {
                     payload.new.id
                 );
 
-
               if (
                 index >=
                 0
               ) {
 
-                window._entityNotes[
-                  index
-                ] =
+                window._entityNotes[index] =
                   payload.new;
-
               }
-
             }
-
 
             if (
               payload.eventType ===
@@ -5191,16 +4271,11 @@ function toggleSoundPanel() {
                     note.id !==
                     payload.old.id
                 );
-
             }
 
-
             renderEntityNotes();
-
           }
-
         )
-
 
         .subscribe(
           status => {
@@ -5214,33 +4289,26 @@ function toggleSoundPanel() {
                 "tempo real",
                 true
               );
-
             }
-
           }
         );
-
   }
-
-
-  /* ============================================================
-     NAVEGAÇÃO ATIVA
-     ============================================================ */
 
   function initNavigationObserver() {
 
     if (
-      !("IntersectionObserver" in window)
+      !(
+        "IntersectionObserver"
+        in
+        window
+      )
     ) {
 
       return;
-
     }
-
 
     const observer =
       new IntersectionObserver(
-
         entries => {
 
           entries.forEach(
@@ -5251,45 +4319,34 @@ function toggleSoundPanel() {
               ) {
 
                 return;
-
               }
 
+              $$(".main-nav a")
+                .forEach(
+                  link => {
 
-              $(
-                ".main-nav a"
-              )
-              .forEach(
-                link => {
+                    link.classList.toggle(
+                      "active",
 
-                  link.classList.toggle(
-
-                    "active",
-
-                    link.getAttribute(
-                      "href"
-                    ) ===
-                    `#${entry.target.id}`
-
-                  );
-
-                }
-              );
-
+                      link.getAttribute(
+                        "href"
+                      ) ===
+                      `#${entry.target.id}`
+                    );
+                  }
+                );
             }
           );
-
         },
 
         {
           rootMargin:
             "-35% 0px -55% 0px"
         }
-
       );
 
-
     $$(
-      "main section[id]"
+      'main section[id]'
     )
     .forEach(
       section =>
@@ -5297,50 +4354,59 @@ function toggleSoundPanel() {
           section
         )
     );
-
   }
-
-
-  /* ============================================================
-     EVENTOS
-     ============================================================ */
 
   function bindEvents() {
 
     on(
       "#soundToggle",
       "click",
-      () => {
-
-        toggleSoundPanel();
-
-      }
+      toggleSoundPanel
     );
 
+    on(
+      "#musicPlayPause",
+      "click",
+      toggleMusic
+    );
+
+    on(
+      "#musicVolume",
+      "input",
+      event =>
+        setMusicVolume(
+          event.target.value
+        )
+    );
+
+    on(
+      "#voiceDuckToggle",
+      "click",
+      toggleVoiceDucking
+    );
 
     on(
       "#interfaceSoundToggle",
       "click",
-      () => {
-
-        toggleInterfaceSounds();
-
-      }
+      toggleInterfaceSounds
     );
 
+    $$(
+      ".music-scene, .music-jump"
+    )
+    .forEach(
+      button => {
 
-    on(
-      "#audioFile",
-      "change",
-      event => {
-
-        handleAudioFile(
-          event
+        button.addEventListener(
+          "click",
+          () =>
+            playMusicAt(
+              button.dataset.time,
+              button.dataset.track
+            )
         );
-
       }
     );
-
 
     on(
       "#enterBoard",
@@ -5351,12 +4417,9 @@ function toggleSoundPanel() {
           "enter"
         );
 
-
         openBoard();
-
       }
     );
-
 
     on(
       "#addCardBtn",
@@ -5364,15 +4427,12 @@ function toggleSoundPanel() {
       () => {
 
         playSound(
-          "tool"
+          "document"
         );
 
-
         openNewCard();
-
       }
     );
-
 
     on(
       "#createCard",
@@ -5383,12 +4443,9 @@ function toggleSoundPanel() {
           "save"
         );
 
-
         createCard();
-
       }
     );
-
 
     on(
       "#connectionMode",
@@ -5398,10 +4455,11 @@ function toggleSoundPanel() {
         connectingMode =
           !connectingMode;
 
-
         const button =
           $("#connectionMode");
 
+        const hint =
+          $("#connectionHint");
 
         if (
           button
@@ -5411,13 +4469,7 @@ function toggleSoundPanel() {
             "active",
             connectingMode
           );
-
         }
-
-
-        const hint =
-          $("#connectionHint");
-
 
         if (
           hint
@@ -5429,22 +4481,17 @@ function toggleSoundPanel() {
               ? "modo conectar ativo • clique em duas pistas"
 
               : "arraste • escreva • conecte • todos veem as mudanças";
-
         }
-
 
         selectCard(
           null
         );
 
-
         playSound(
           "connect"
         );
-
       }
     );
-
 
     on(
       "#resetBoard",
@@ -5457,6 +4504,7 @@ function toggleSoundPanel() {
             const card =
               cards.find(
                 item =>
+
                   String(
                     item.id
                   ) ===
@@ -5468,23 +4516,18 @@ function toggleSoundPanel() {
                   original.title
               );
 
-
             if (
               !card
             ) {
 
               return;
-
             }
-
 
             card.x =
               original.x;
 
-
             card.y =
               original.y;
-
 
             const element =
               $(
@@ -5495,7 +4538,6 @@ function toggleSoundPanel() {
                 )}"]`
               );
 
-
             if (
               element
             ) {
@@ -5503,47 +4545,33 @@ function toggleSoundPanel() {
               element.style.left =
                 `${original.x}%`;
 
-
               element.style.top =
                 `${original.y}%`;
-
             }
-
 
             saveCardPosition(
               card
             );
-
           }
         );
 
-
         renderConnections();
-
 
         toast(
           "Posições reposicionadas."
         );
 
-
         playSound(
           "save"
         );
-
       }
     );
-
 
     on(
       "#boardSearch",
       "input",
-      () => {
-
-        filterCards();
-
-      }
+      filterCards
     );
-
 
     on(
       "#zoomIn",
@@ -5555,14 +4583,11 @@ function toggleSoundPanel() {
           0.1
         );
 
-
         playSound(
           "tool"
         );
-
       }
     );
-
 
     on(
       "#zoomOut",
@@ -5574,81 +4599,68 @@ function toggleSoundPanel() {
           0.1
         );
 
-
         playSound(
           "tool"
         );
-
       }
     );
-
 
     on(
       "#cancelEditor",
       "click",
-      () => {
-
-        closeEditor();
-
-      }
+      closeEditor
     );
-
 
     on(
       "#saveEditor",
       "click",
-      () => {
-
-        saveEditor();
-
-      }
+      saveEditor
     );
 
-
     $$(
-      "[data-close-editor]"
+      '[data-close-editor]'
     )
     .forEach(
       element =>
         element.addEventListener(
           "click",
-          () =>
-            closeEditor()
+          closeEditor
         )
     );
 
-
     $$(
-      "[data-close-modal]"
+      '[data-close-modal]'
     )
     .forEach(
       element =>
         element.addEventListener(
           "click",
-          () =>
-            closeDocument()
+          closeDocument
         )
     );
 
-
     $$(
-      "[data-close-new-card]"
+      '[data-close-new-card]'
     )
     .forEach(
       element =>
         element.addEventListener(
           "click",
-          () =>
-            closeNewCard()
+          closeNewCard
         )
     );
 
+    $(
+      ".entity-note-btn"
+    )
+    ?.addEventListener;
 
     $$(
       ".entity-note-btn"
     )
     .forEach(
-      button =>
+      button => {
+
         button.addEventListener(
           "click",
           () => {
@@ -5657,21 +4669,20 @@ function toggleSoundPanel() {
               "edit"
             );
 
-
             openEntityEditor(
               button
             );
-
           }
-        )
+        );
+      }
     );
-
 
     $$(
       ".document-card"
     )
     .forEach(
-      button =>
+      button => {
+
         button.addEventListener(
           "click",
           () => {
@@ -5680,34 +4691,32 @@ function toggleSoundPanel() {
               "document"
             );
 
-
             openDocument(
               button.dataset.document
             );
-
           }
-        )
+        );
+      }
     );
-
 
     $$(
       ".main-nav a"
     )
     .forEach(
-      link =>
+      link => {
+
         link.addEventListener(
           "click",
           () =>
             playSound(
               "nav"
             )
-        )
+        );
+      }
     );
-
 
     const brand =
       $(".brand");
-
 
     if (
       brand
@@ -5720,9 +4729,7 @@ function toggleSoundPanel() {
             "nav"
           )
       );
-
     }
-
 
     document.addEventListener(
       "keydown",
@@ -5734,22 +4741,16 @@ function toggleSoundPanel() {
         ) {
 
           return;
-
         }
-
 
         closeDocument();
 
-
         closeEditor();
-
 
         closeNewCard();
 
-
         const panel =
           $("#soundPanel");
-
 
         if (
           panel
@@ -5759,75 +4760,56 @@ function toggleSoundPanel() {
             "open"
           );
 
-
           panel.setAttribute(
             "aria-hidden",
             "true"
           );
-
         }
-
       }
     );
 
-
     window.addEventListener(
       "resize",
-      () =>
-        renderConnections()
+      renderConnections
     );
-
   }
-
-
-  /* ============================================================
-     INICIALIZAÇÃO
-     ============================================================ */
 
   async function start() {
 
-    /*
-      Primeiro a interface local é carregada.
-      Assim o site nunca fica inutilizado
-      porque o Supabase deu erro.
-    */
+    setMusicVolume(
+      musicVolume
+    );
 
     bindEvents();
 
-
     initNavigationObserver();
-
 
     loadLocalData();
 
-
-    /*
-      Depois tentamos entrar na mesa compartilhada.
-    */
-
     const connected =
       await initSupabase();
-
 
     if (
       !connected
     ) {
 
+      if (
+        window.YT?.Player
+      ) {
+
+        createYoutubePlayer();
+      }
+
       return;
-
     }
-
 
     try {
 
       await enterMainCampaign();
 
-
       await loadCampaignData();
 
-
       subscribeRealtime();
-
 
     } catch (
       error
@@ -5838,36 +4820,34 @@ function toggleSoundPanel() {
         error
       );
 
-
       appMode =
         "local";
-
 
       campaignId =
         "local";
 
-
       campaignCode =
         "LOCAL";
 
-
       loadLocalData();
-
 
       setSync(
         "modo local",
         false
       );
 
-
       toast(
         "Banco indisponível. O mural continua funcionando neste navegador."
       );
-
     }
 
-  }
+    if (
+      window.YT?.Player
+    ) {
 
+      createYoutubePlayer();
+    }
+  }
 
   if (
     document.readyState ===
