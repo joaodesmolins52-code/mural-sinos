@@ -1280,21 +1280,44 @@ h3 em {
   position: fixed;
   z-index: 90;
   top: 74px;
+  bottom: 0;
   right: 0;
   width: min(390px, 100vw);
+  box-sizing: border-box;
   padding: 30px;
   background: rgba(14, 14, 17, .97);
   border-left: 1px solid rgba(255, 255, 255, .1);
   border-bottom: 1px solid rgba(255, 255, 255, .1);
   transform: translateX(100%);
   transition: transform .25s ease;
-  box-shadow: var(--shadow)
+  box-shadow: var(--shadow);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 
 .sound-panel.open {
-  transform: translateX(0)
+  transform: translateX(0);
 }
 
+.sound-panel > div {
+  min-height: 100%;
+  box-sizing: border-box;
+  padding-bottom: 30px;
+}
+
+.sound-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sound-panel::-webkit-scrollbar-thumb {
+  background: rgba(226, 43, 49, .35);
+}
+
+.sound-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
 .sound-panel h2 {
   font-size: 42px;
   margin: 7px 0 12px
