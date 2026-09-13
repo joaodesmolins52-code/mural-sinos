@@ -2240,23 +2240,21 @@
 
   async function createCard() {
 
-    const title =
-      $("#newCardTitle")
-        ?.value
-        .trim();
+   const newCardTitleInput = $("#newCardTitle");
+const newCardTypeInput = $("#newCardType");
+const newCardContextInput = $("#newCardContext");
 
-    const type =
-      $("#newCardType")
-        ?.value
-        .trim() ||
-      "PISTA";
+if (newCardTitleInput) {
+  newCardTitleInput.value = "";
+}
 
-    const context =
-      $("#newCardContext")
-        ?.value
-        .trim() ||
-      "";
+if (newCardTypeInput) {
+  newCardTypeInput.value = "";
+}
 
+if (newCardContextInput) {
+  newCardContextInput.value = "";
+}
     if (
       !title
     ) {
