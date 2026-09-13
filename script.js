@@ -207,18 +207,6 @@
       y: 80
     },
 
-    {
-      id: "mapa",
-      name: "MAPA",
-      object_type: "DOCUMENTO",
-      description:
-        "Mapa com cinco locais marcados.",
-      content:
-        "Praça Santa Cecília, Apartamento 18, Túnel ferroviário, Escola municipal e Torre sem nome.",
-      x: 91,
-      y: 57
-    }
-  ];
 
 
   /* ============================================================
