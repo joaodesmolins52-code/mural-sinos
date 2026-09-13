@@ -205,9 +205,8 @@
         "Há indícios de que abre uma porta associada à escola municipal.",
       x: 87,
       y: 80
-    },
-
-
+    }
+  ];
 
   /* ============================================================
      SOM
