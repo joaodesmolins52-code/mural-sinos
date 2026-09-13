@@ -3264,6 +3264,322 @@ if (newCardContextInput) {
 
   };
 
+  /* ============================================================
+   LOCAIS DA INVESTIGAÇÃO
+   ============================================================ */
+
+const locations = {
+
+  praca: {
+
+    type:
+      "LOCAL 01 — SANTA CECÍLIA",
+
+    title:
+      "Praça Santa Cecília",
+
+    html: `
+
+      <div class="paper">
+
+        <p>
+          <strong>HORÁRIO:</strong>
+          02:12
+        </p>
+
+        <p>
+          <strong>ESTADO:</strong>
+          Concluído
+        </p>
+
+        <hr>
+
+        <p>
+          Praça residencial cercada por árvores,
+          postes de luz e prédios antigos.
+        </p>
+
+        <p>
+          Foi aqui que o primeiro sangue foi
+          encontrado sem qualquer corpo associado.
+        </p>
+
+        <p>
+          Cinco marcas circulares cercavam a mancha.
+          Uma pequena lasca metálica foi encontrada
+          presa ao solo.
+        </p>
+
+        <p class="hand">
+          “O sino tocou antes de encontrarmos
+          qualquer explicação.”
+        </p>
+
+      </div>
+
+    `
+  },
+
+
+  apartamento: {
+
+    type:
+      "LOCAL 02 — APARTAMENTO 18",
+
+    title:
+      "Apartamento 18",
+
+    html: `
+
+      <div class="paper">
+
+        <p>
+          <strong>HORÁRIO:</strong>
+          02:40
+        </p>
+
+        <p>
+          <strong>ELEMENTO:</strong>
+          Medo
+        </p>
+
+        <p>
+          <strong>ESTADO:</strong>
+          Concluído
+        </p>
+
+        <hr>
+
+        <p>
+          O apartamento está associado a uma
+          das manifestações registradas durante
+          a sequência de ocorrências.
+        </p>
+
+        <p>
+          Testemunhas descrevem sensação de
+          presença, alterações na percepção e
+          a repetição do sino antes dos eventos.
+        </p>
+
+        <p class="hand">
+          “Tocou antes de acontecer.”
+        </p>
+
+      </div>
+
+    `
+  },
+
+
+  tunel: {
+
+    type:
+      "LOCAL 03 — TÚNEL FERROVIÁRIO",
+
+    title:
+      "Túnel ferroviário",
+
+    html: `
+
+      <div class="paper">
+
+        <p>
+          <strong>HORÁRIO:</strong>
+          03:05
+        </p>
+
+        <p>
+          <strong>ELEMENTO:</strong>
+          Violência
+        </p>
+
+        <p>
+          <strong>ESTADO:</strong>
+          Interrompido
+        </p>
+
+        <hr>
+
+        <p>
+          O terceiro ponto da sequência apresenta
+          sinais de violência e de preparação
+          interrompida.
+        </p>
+
+        <p>
+          A ocorrência sugere que o ciclo estava
+          avançando antes que os investigadores
+          compreendessem sua ordem.
+        </p>
+
+        <p class="hand">
+          “Ainda não era para tocar.”
+        </p>
+
+      </div>
+
+    `
+  },
+
+
+  escola: {
+
+    type:
+      "LOCAL 04 — ESCOLA MUNICIPAL",
+
+    title:
+      "Escola municipal",
+
+    html: `
+
+      <div class="paper">
+
+        <p>
+          <strong>HORÁRIO:</strong>
+          03:30
+        </p>
+
+        <p>
+          <strong>ELEMENTO:</strong>
+          Silêncio
+        </p>
+
+        <p>
+          <strong>ESTADO:</strong>
+          Preparação
+        </p>
+
+        <hr>
+
+        <p>
+          A escola guarda uma das pistas mais
+          importantes da investigação.
+        </p>
+
+        <p>
+          Crianças desenharam repetidamente
+          um mesmo círculo em diferentes
+          contextos: sol, relógio, roda, lua
+          e sino.
+        </p>
+
+        <p>
+          Alguns desenhos são anteriores às
+          manifestações conhecidas pelo
+          Círculo da Vigília.
+        </p>
+
+        <p class="hand">
+          “Eles descobriram o padrão.
+          Não criaram o padrão.”
+        </p>
+
+      </div>
+
+    `
+  },
+
+
+  torre: {
+
+    type:
+      "LOCAL 05 — TORRE SEM NOME",
+
+    title:
+      "Torre sem nome",
+
+    html: `
+
+      <div class="paper">
+
+        <p>
+          <strong>HORÁRIO:</strong>
+          03:55
+        </p>
+
+        <p>
+          <strong>ELEMENTO:</strong>
+          Sino
+        </p>
+
+        <p>
+          <strong>ESTADO:</strong>
+          Desconhecido
+        </p>
+
+        <hr>
+
+        <p>
+          Uma torre esquecida, sem placa,
+          sem identificação e sem um sino
+          visível.
+        </p>
+
+        <p>
+          Quanto mais os investigadores sobem,
+          mais definido fica o som.
+        </p>
+
+        <p>
+          No topo existe uma sala circular
+          vazia com um espaço que parece ter
+          sido reservado para algo muito maior.
+        </p>
+
+        <p class="hand">
+          “O quinto não é convocado.
+          O quinto convoca.”
+        </p>
+
+      </div>
+
+    `
+  }
+
+};
+
+
+function openLocation(
+  key
+) {
+
+  const location =
+    locations[key];
+
+  const modal =
+    $("#documentModal");
+
+  if (
+    !location ||
+    !modal
+  ) {
+
+    return;
+  }
+
+  $("#modalType").textContent =
+    location.type;
+
+  $("#modalTitle").textContent =
+    location.title;
+
+  $("#modalContent").innerHTML =
+    location.html;
+
+  modal.classList.add(
+    "open"
+  );
+
+  modal.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+  playSound(
+    "document"
+  );
+}
 
   function openDocument(
     key
