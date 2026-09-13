@@ -4208,456 +4208,602 @@ async function applyImageAssets() {
      EVENTOS DA INTERFACE
      ============================================================ */
 
-  function bindEvents() {
+function bindEvents() {
 
-    on(
-      "#soundToggle",
-      "click",
-      () => {
+/* ==========================================================
+SOM / PAINEL DE AMBIENTE
+========================================================== */
 
-        playSound(
-          "panel"
-        );
+on(
+"#soundToggle",
+"click",
+() => {
 
-        toggleSoundPanel();
-      }
-    );
+```
+  toggleSoundPanel();
 
+}
+```
 
-    on(
-      "#interfaceSoundToggle",
-      "click",
-      toggleInterfaceSounds
-    );
+);
 
+on(
+"#musicPlayPause",
+"click",
+() => {
 
-    on(
-      "#audioFile",
-      "change",
-      handleAudioFile
-    );
+```
+  toggleMusic();
 
+}
+```
 
-    on(
-      "#enterBoard",
-      "click",
-      () => {
+);
 
-        playSound(
-          "enter"
-        );
+on(
+"#musicVolume",
+"input",
+event => {
 
-        openBoard();
-      }
-    );
+```
+  setMusicVolume(
+    event.target.value
+  );
 
+}
+```
 
-    on(
-      "#addCardBtn",
-      "click",
-      () => {
+);
 
-        playSound(
-          "save"
-        );
+on(
+"#voiceDuckToggle",
+"click",
+() => {
 
-        openNewCard();
-      }
-    );
+```
+  enableVoiceDucking();
 
+}
+```
 
-    on(
-      "#createCard",
-      "click",
-      () => {
+);
 
-        playSound(
-          "save"
-        );
+/* ==========================================================
+CENÁRIOS / FAIXAS
+========================================================== */
 
-        createCard();
-      }
-    );
+$(
+".music-scene, .music-jump"
+)
+.forEach(
+button => {
 
+```
+  button.addEventListener(
+    "click",
+    () => {
 
-    on(
-      "#connectionMode",
-      "click",
-      () => {
-
-        connectingMode =
-          !connectingMode;
-
-
-        const button =
-          $("#connectionMode");
-
-
-        const hint =
-          $("#connectionHint");
-
-
-        if (button) {
-
-          button.classList.toggle(
-            "active",
-            connectingMode
-          );
-        }
-
-
-        if (hint) {
-
-          hint.textContent =
-            connectingMode
-              ? "modo conectar ativo • clique em duas pistas"
-              : "arraste • escreva • conecte • todos veem as mudanças";
-        }
-
-
-        selectCard(
-          null
-        );
-
-
-        playSound(
-          "connect"
-        );
-      }
-    );
-
-
-    on(
-      "#resetBoard",
-      "click",
-      () => {
-
-        seedCards.forEach(
-          original => {
-
-            const card =
-              cards.find(
-                item =>
-                  String(
-                    item.title
-                  ) ===
-                  String(
-                    original.title
-                  )
-              );
-
-
-            if (!card) {
-              return;
-            }
-
-
-            card.x =
-              original.x;
-
-            card.y =
-              original.y;
-
-
-            const element =
-              $(
-                `#boardCanvas [data-id="${CSS.escape(String(card.id))}"]`
-              );
-
-
-            if (element) {
-
-              element.style.left =
-                `${original.x}%`;
-
-              element.style.top =
-                `${original.y}%`;
-            }
-
-
-            saveCardPosition(
-              card
-            );
-
-          }
-        );
-
-
-        renderConnections();
-
-
-        toast(
-          "Posições reposicionadas."
-        );
-
-
-        playSound(
-          "save"
-        );
-      }
-    );
-
-
-    on(
-      "#boardSearch",
-      "input",
-      filterCards
-    );
-
-
-    on(
-      "#zoomIn",
-      "click",
-      () => {
-
-        setZoom(
-          zoom + 0.1
-        );
-
-        playSound(
-          "click"
-        );
-      }
-    );
-
-
-    on(
-      "#zoomOut",
-      "click",
-      () => {
-
-        setZoom(
-          zoom - 0.1
-        );
-
-        playSound(
-          "click"
-        );
-      }
-    );
-
-
-    $(
-      "#cancelEditor"
-    )?.addEventListener(
-      "click",
-      closeEditor
-    );
-
-
-    $(
-      "#saveEditor"
-    )?.addEventListener(
-      "click",
-      saveEditor
-    );
-
-
-    $$(
-      "[data-close-editor]"
-    )
-    .forEach(
-      element =>
-        element.addEventListener(
-          "click",
-          closeEditor
-        )
-    );
-
-
-    $$(
-      "[data-close-modal]"
-    )
-    .forEach(
-      element =>
-        element.addEventListener(
-          "click",
-          closeDocument
-        )
-    );
-
-
-    $$(
-      "[data-close-new-card]"
-    )
-    .forEach(
-      element =>
-        element.addEventListener(
-          "click",
-          closeNewCard
-        )
-    );
-
-
-    $$(
-      ".entity-note-btn"
-    )
-    .forEach(
-      button =>
-        button.addEventListener(
-          "click",
-          () => {
-
-            playSound(
-              "edit"
-            );
-
-            openEntityEditor(
-              button
-            );
-          }
-        )
-    );
-
-
-    $$(
-      ".document-card"
-    )
-    .forEach(
-      button =>
-        button.addEventListener(
-          "click",
-          () => {
-
-            playSound(
-              "document"
-            );
-
-            openDocument(
-              button.dataset.document
-            );
-          }
-        )
-    );
-
-
-    $$(".main-nav a")
-      .forEach(
-        link =>
-          link.addEventListener(
-            "click",
-            () =>
-              playSound(
-                "nav"
-              )
-          )
+      playMusicAt(
+        button.dataset.time,
+        button.dataset.track
       );
 
+    }
+  );
 
-    const brand =
-      $(".brand");
+}
+```
+
+);
+
+/* ==========================================================
+ABRIR QUADRO
+========================================================== */
+
+on(
+"#enterBoard",
+"click",
+() => {
+
+```
+  playSound(
+    "enter"
+  );
+
+  openBoard();
+
+}
+```
+
+);
+
+/* ==========================================================
+NOVA PISTA
+========================================================== */
+
+on(
+"#addCardBtn",
+"click",
+() => {
+
+```
+  playSound(
+    "save"
+  );
+
+  openNewCard();
+
+}
+```
+
+);
+
+on(
+"#createCard",
+"click",
+() => {
+
+```
+  playSound(
+    "save"
+  );
+
+  createCard();
+
+}
+```
+
+);
+
+/* ==========================================================
+MODO CONECTAR
+========================================================== */
+
+on(
+"#connectionMode",
+"click",
+() => {
+
+```
+  connectingMode =
+    !connectingMode;
 
 
-    if (brand) {
+  const button =
+    $("#connectionMode");
 
-      brand.addEventListener(
+
+  const hint =
+    $("#connectionHint");
+
+
+  if (button) {
+
+    button.classList.toggle(
+      "active",
+      connectingMode
+    );
+
+  }
+
+
+  if (hint) {
+
+    hint.textContent =
+      connectingMode
+        ? "modo conectar ativo • clique em duas pistas"
+        : "arraste • escreva • conecte • todos veem as mudanças";
+
+  }
+
+
+  selectCard(
+    null
+  );
+
+
+  playSound(
+    "connect"
+  );
+
+}
+```
+
+);
+
+/* ==========================================================
+REPOSICIONAR QUADRO
+========================================================== */
+
+on(
+"#resetBoard",
+"click",
+() => {
+
+```
+  seedCards.forEach(
+    original => {
+
+      const card =
+        cards.find(
+          item =>
+            String(
+              item.title
+            ) ===
+            String(
+              original.title
+            )
+        );
+
+
+      if (!card) {
+        return;
+      }
+
+
+      card.x =
+        original.x;
+
+
+      card.y =
+        original.y;
+
+
+      const element =
+        $(
+          `#boardCanvas [data-id="${CSS.escape(String(card.id))}"]`
+        );
+
+
+      if (element) {
+
+        element.style.left =
+          `${original.x}%`;
+
+
+        element.style.top =
+          `${original.y}%`;
+
+      }
+
+
+      saveCardPosition(
+        card
+      );
+
+    }
+  );
+
+
+  renderConnections();
+
+
+  toast(
+    "Posições reposicionadas."
+  );
+
+
+  playSound(
+    "save"
+  );
+
+}
+```
+
+);
+
+/* ==========================================================
+PESQUISA DO QUADRO
+========================================================== */
+
+on(
+"#boardSearch",
+"input",
+filterCards
+);
+
+/* ==========================================================
+ZOOM
+========================================================== */
+
+on(
+"#zoomIn",
+"click",
+() => {
+
+```
+  setZoom(
+    zoom + 0.1
+  );
+
+
+  playSound(
+    "click"
+  );
+
+}
+```
+
+);
+
+on(
+"#zoomOut",
+"click",
+() => {
+
+```
+  setZoom(
+    zoom - 0.1
+  );
+
+
+  playSound(
+    "click"
+  );
+
+}
+```
+
+);
+
+/* ==========================================================
+EDITOR DE ANOTAÇÃO
+========================================================== */
+
+$(
+"#cancelEditor"
+)?.addEventListener(
+"click",
+closeEditor
+);
+
+$(
+"#saveEditor"
+)?.addEventListener(
+"click",
+saveEditor
+);
+
+$$$(
+  "[data-close-editor]"
+)
+.forEach(
+  element =>
+    element.addEventListener(
+      "click",
+      closeEditor
+    )
+);
+
+
+/* ==========================================================
+   FECHAR DOCUMENTOS
+   ========================================================== */
+
+$$(
+  "[data-close-modal]"
+)
+.forEach(
+  element =>
+    element.addEventListener(
+      "click",
+      closeDocument
+    )
+);
+
+
+/* ==========================================================
+   FECHAR NOVA PISTA
+   ========================================================== */
+
+$$(
+  "[data-close-new-card]"
+)
+.forEach(
+  element =>
+    element.addEventListener(
+      "click",
+      closeNewCard
+    )
+);
+
+
+/* ==========================================================
+   ANOTAÇÕES DE ENTIDADES
+   ========================================================== */
+
+$$(
+  ".entity-note-btn"
+)
+.forEach(
+  button =>
+    button.addEventListener(
+      "click",
+      () => {
+
+        playSound(
+          "edit"
+        );
+
+
+        openEntityEditor(
+          button
+        );
+
+      }
+    )
+);
+
+
+/* ==========================================================
+   DOCUMENTOS
+   ========================================================== */
+
+$$(
+  ".document-card"
+)
+.forEach(
+  button =>
+    button.addEventListener(
+      "click",
+      () => {
+
+        playSound(
+          "document"
+        );
+
+
+        openDocument(
+          button.dataset.document
+        );
+
+      }
+    )
+);
+
+
+/* ==========================================================
+   NAVEGAÇÃO PRINCIPAL
+   ========================================================== */
+
+$$(".main-nav a")
+  .forEach(
+    link =>
+      link.addEventListener(
         "click",
         () =>
           playSound(
             "nav"
           )
+      )
+  );
+
+
+const brand =
+  $(".brand");
+
+
+if (brand) {
+
+  brand.addEventListener(
+    "click",
+    () =>
+      playSound(
+        "nav"
+      )
+  );
+
+}
+
+
+/* ==========================================================
+   SOM DOS OUTROS BOTÕES
+   ========================================================== */
+
+document.addEventListener(
+  "click",
+  event => {
+
+    const element =
+      event.target.closest(
+        "button,a"
       );
+
+
+    if (!element) {
+      return;
     }
 
 
-    document.addEventListener(
-      "click",
-      event => {
+    /*
+      Não duplica o som dos elementos
+      que já possuem tratamento próprio.
+    */
 
-        const element =
-          event.target.closest(
-            "button,a"
-          );
-
-
-        if (!element) {
-          return;
-        }
-
-
-        if (
-          element.closest(
-            ".document-card,.main-nav,.brand"
-          )
-        ) {
-          return;
-        }
+    if (
+      element.closest(
+        ".document-card, .main-nav, .brand, #soundToggle, #enterBoard, #musicPlayPause, #voiceDuckToggle, .music-scene, .music-jump"
+      )
+    ) {
+      return;
+    }
 
 
-        const sound =
-          element.dataset.sound;
+    const sound =
+      element.dataset.sound;
 
 
-        if (
-          sound &&
-          ![
-            "panel",
-            "nav",
-            "document",
-            "save",
-            "edit",
-            "danger",
-            "enter",
-            "connect"
-          ].includes(
-            sound
-          )
-        ) {
+    if (
+      sound
+    ) {
 
-          playSound(
-            sound
-          );
-        }
+      playSound(
+        sound
+      );
 
-      }
-    );
+    }
 
-
-    document.addEventListener(
-      "keydown",
-      event => {
-
-        if (
-          event.key !==
-          "Escape"
-        ) {
-          return;
-        }
-
-
-        closeDocument();
-
-        closeEditor();
-
-        closeNewCard();
-
-
-        const panel =
-          $("#soundPanel");
-
-
-        if (panel) {
-
-          panel.classList.remove(
-            "open"
-          );
-
-          panel.setAttribute(
-            "aria-hidden",
-            "true"
-          );
-        }
-
-      }
-    );
-
-
-    window.addEventListener(
-      "resize",
-      () =>
-        renderConnections()
-    );
   }
+);
+
+
+/* ==========================================================
+   TECLA ESC
+   ========================================================== */
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key !==
+      "Escape"
+    ) {
+      return;
+    }
+
+
+    closeDocument();
+
+    closeEditor();
+
+    closeNewCard();
+
+
+    const panel =
+      $("#soundPanel");
+
+
+    if (panel) {
+
+      panel.classList.remove(
+        "open"
+      );
+
+
+      panel.setAttribute(
+        "aria-hidden",
+        "true"
+      );
+
+    }
+
+  }
+);
+
+
+/* ==========================================================
+   REDIMENSIONAMENTO
+   ========================================================== */
+
+window.addEventListener(
+  "resize",
+  () =>
+    renderConnections()
+);
+
+}
+$$$
 
 
   /* ============================================================
