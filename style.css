@@ -1512,3 +1512,115 @@ footer span:last-child {
   position: relative;
   z-index: 0;
 }
+ /* ============================================================
+   PLAYER DE TRILHA
+   ============================================================ */
+
+.youtube-player {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 22px 0;
+  overflow: hidden;
+  background: #090808;
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.youtube-player iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+
+.music-status {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 18px;
+}
+
+.music-status span {
+  font-size: 10px;
+  letter-spacing: .16em;
+  opacity: .55;
+}
+
+.music-status strong {
+  font-size: 18px;
+  letter-spacing: .05em;
+}
+
+
+.music-control-group {
+  margin: 18px 0;
+}
+
+.music-volume-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  letter-spacing: .12em;
+}
+
+.music-volume-label strong {
+  font-size: 11px;
+}
+
+
+#musicVolume {
+  width: 100%;
+  cursor: pointer;
+}
+
+
+.music-scenes,
+.music-manual {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+
+.music-scenes-title,
+.music-manual > span {
+  font-size: 10px;
+  letter-spacing: .16em;
+  opacity: .55;
+  margin-bottom: 2px;
+}
+
+
+.music-jump {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 7px 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: .08em;
+  opacity: .7;
+  transition: opacity .2s, transform .2s;
+}
+
+.music-jump:hover {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+
+#voiceDuckToggle.active {
+  border-color: rgba(180,40,40,.8);
+  color: #d98a8a;
+}
+
+
+.music-source {
+  display: block;
+  margin-top: 20px;
+  line-height: 1.6;
+  opacity: .5;
+}
