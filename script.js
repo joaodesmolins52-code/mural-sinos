@@ -34,9 +34,7 @@
   }
 
   function clone(value) {
-    return JSON.parse(
-      JSON.stringify(value)
-    );
+    return JSON.parse(JSON.stringify(value));
   }
 
   function safeJSON(value, fallback) {
@@ -218,7 +216,7 @@
 
 
   /* ============================================================
-     OBJETOS
+     OBJETOS INICIAIS
      ============================================================ */
 
   const seedObjects = [
@@ -263,6 +261,387 @@
 
 
   /* ============================================================
+     LOCAIS
+     ============================================================ */
+
+  const locations = {
+
+    praca: {
+
+      type:
+        "LOCAL 01 — SANTA CECÍLIA",
+
+      title:
+        "Praça Santa Cecília",
+
+      html: `
+
+        <div class="paper">
+
+          <p>
+            <strong>HORÁRIO:</strong>
+            02:12
+          </p>
+
+          <p>
+            <strong>ESTADO:</strong>
+            Concluído
+          </p>
+
+          <hr>
+
+          <p>
+            Primeiro ponto registrado da investigação.
+            O sangue foi encontrado antes de qualquer
+            explicação para a origem do som.
+          </p>
+
+          <p>
+            Cinco marcas circulares foram encontradas
+            próximas ao local.
+          </p>
+
+          <p class="hand">
+            O sino tocou antes de encontrarmos a origem.
+          </p>
+
+        </div>
+
+      `
+    },
+
+
+    apartamento: {
+
+      type:
+        "LOCAL 02 — APARTAMENTO 18",
+
+      title:
+        "Apartamento 18",
+
+      html: `
+
+        <div class="paper">
+
+          <p>
+            <strong>HORÁRIO:</strong>
+            02:40
+          </p>
+
+          <p>
+            <strong>ELEMENTO:</strong>
+            MEDO
+          </p>
+
+          <p>
+            <strong>ESTADO:</strong>
+            Concluído
+          </p>
+
+          <hr>
+
+          <p>
+            O segundo ponto apresenta relatos de
+            presença e alterações na percepção.
+          </p>
+
+          <p>
+            O sino voltou a ser ouvido antes que
+            qualquer manifestação fosse identificada.
+          </p>
+
+          <p class="hand">
+            Tocou antes de acontecer.
+          </p>
+
+        </div>
+
+      `
+    },
+
+
+    tunel: {
+
+      type:
+        "LOCAL 03 — TÚNEL FERROVIÁRIO",
+
+      title:
+        "Túnel ferroviário",
+
+      html: `
+
+        <div class="paper">
+
+          <p>
+            <strong>HORÁRIO:</strong>
+            03:05
+          </p>
+
+          <p>
+            <strong>ELEMENTO:</strong>
+            VIOLÊNCIA
+          </p>
+
+          <p>
+            <strong>ESTADO:</strong>
+            Interrompido
+          </p>
+
+          <hr>
+
+          <p>
+            O terceiro ponto apresenta sinais de
+            violência e preparação interrompida.
+          </p>
+
+          <p>
+            A sequência parece estar avançando
+            independentemente da investigação.
+          </p>
+
+          <p class="hand">
+            Ainda não era para tocar.
+          </p>
+
+        </div>
+
+      `
+    },
+
+
+    escola: {
+
+      type:
+        "LOCAL 04 — ESCOLA MUNICIPAL",
+
+      title:
+        "Escola municipal",
+
+      html: `
+
+        <div class="paper">
+
+          <p>
+            <strong>HORÁRIO:</strong>
+            03:30
+          </p>
+
+          <p>
+            <strong>ELEMENTO:</strong>
+            SILÊNCIO
+          </p>
+
+          <p>
+            <strong>ESTADO:</strong>
+            Preparação
+          </p>
+
+          <hr>
+
+          <p>
+            A escola concentra uma das conexões
+            mais importantes da investigação.
+          </p>
+
+          <p>
+            Desenhos encontrados no local repetem
+            formas circulares associadas à ocorrência.
+          </p>
+
+          <p class="hand">
+            Eles descobriram o padrão.
+          </p>
+
+        </div>
+
+      `
+    },
+
+
+    torre: {
+
+      type:
+        "LOCAL 05 — TORRE SEM NOME",
+
+      title:
+        "Torre sem nome",
+
+      html: `
+
+        <div class="paper">
+
+          <p>
+            <strong>HORÁRIO:</strong>
+            03:55
+          </p>
+
+          <p>
+            <strong>ELEMENTO:</strong>
+            SINO
+          </p>
+
+          <p>
+            <strong>ESTADO:</strong>
+            Desconhecido
+          </p>
+
+          <hr>
+
+          <p>
+            Torre sem identificação conhecida.
+            Nenhum sino é visível no local.
+          </p>
+
+          <p>
+            Mesmo assim, quanto mais próximos os
+            investigadores chegam, mais definido
+            fica o som.
+          </p>
+
+          <p class="hand">
+            O quinto não é convocado.<br>
+            O quinto convoca.
+          </p>
+
+        </div>
+
+      `
+    }
+
+  };
+
+
+  /* ============================================================
+     DOCUMENTOS
+     ============================================================ */
+
+  const documents = {
+
+    report: {
+
+      type:
+        "DOCUMENTO 17 — EXTRATO",
+
+      title:
+        "Relatório encontrado",
+
+      html: `
+
+        <div class="paper">
+
+          <p>
+            <strong>02:12</strong>
+            — registro acústico identificado.
+          </p>
+
+          <p>
+            <strong>02:16</strong>
+            — preparação do estímulo.
+          </p>
+
+          <p>
+            <strong>02:17</strong>
+            — presença de sangue.
+          </p>
+
+          <p>
+            <strong>02:20</strong>
+            — manifestação.
+          </p>
+
+          <hr>
+
+          <p>
+            <strong>OBSERVAÇÃO:</strong>
+            o som foi registrado antes da
+            preparação do estímulo.
+          </p>
+
+          <p>
+            <strong>OBSERVAÇÃO COMPLEMENTAR:</strong>
+            não repetir o procedimento sem autorização.
+          </p>
+
+          <p class="hand">
+            Quem autorizou?
+          </p>
+
+        </div>
+
+      `
+    },
+
+
+    fifth: {
+
+      type:
+        "ANOTAÇÃO MANUSCRITA",
+
+      title:
+        "A frase do quinto",
+
+      html: `
+
+        <div class="paper">
+
+          <p class="hand">
+            “Não é o quinto que abre.<br>
+            É o quinto que chama.<br>
+            Não faça o quinto tocar.”
+          </p>
+
+        </div>
+
+      `
+    },
+
+
+    box: {
+
+      type:
+        "CAIXA DE PROVAS",
+
+      title:
+        "Mapa + recibos",
+
+      html: `
+
+        <div class="paper">
+
+          <p>
+            <strong>LOCAIS:</strong>
+            Praça Santa Cecília,
+            Apartamento 18,
+            Túnel ferroviário,
+            Escola municipal,
+            Torre sem nome.
+          </p>
+
+          <p>
+            <strong>HORÁRIOS:</strong>
+            02:12 • 02:40 • 03:05 •
+            03:30 • 03:55
+          </p>
+
+          <p>
+            <strong>OBJETOS:</strong>
+            rádio, fragmento e chave.
+          </p>
+
+          <p class="hand">
+            O quinto não é convocado.<br>
+            O quinto convoca.
+          </p>
+
+        </div>
+
+      `
+    }
+
+  };
+
+
+  /* ============================================================
      SOM DE INTERFACE
      ============================================================ */
 
@@ -277,6 +656,7 @@
     C5: 523.25,
     D5: 587.33
   };
+
 
   function getAudioContext() {
 
@@ -297,13 +677,16 @@
       audioContext.state ===
       "suspended"
     ) {
+
       audioContext
         .resume()
         .catch(() => {});
+
     }
 
     return audioContext;
   }
+
 
   function playTone(
     note,
@@ -338,7 +721,9 @@
       type;
 
     oscillator.frequency.value =
-      frequencies[note] || note;
+      frequencies[note] ||
+      Number(note) ||
+      440;
 
     gain.gain.setValueAtTime(
       0.0001,
@@ -359,7 +744,9 @@
       .connect(gain)
       .connect(context.destination);
 
-    oscillator.start(start);
+    oscillator.start(
+      start
+    );
 
     oscillator.stop(
       start +
@@ -367,6 +754,7 @@
       0.02
     );
   }
+
 
   function playSound(
     type = "click"
@@ -612,10 +1000,13 @@
 
     toastTimer =
       setTimeout(
-        () =>
+        () => {
+
           element.classList.remove(
             "show"
-          ),
+          );
+
+        },
         2400
       );
   }
@@ -649,6 +1040,7 @@
     return raw;
   }
 
+
   function hasSupabaseConfig() {
 
     const url =
@@ -665,6 +1057,7 @@
       /^https?:\/\//i.test(url)
     );
   }
+
 
   function setSync(
     text,
@@ -683,12 +1076,15 @@
     }
 
     if (footer) {
+
       footer.textContent =
         connected
           ? "MESA COMPARTILHADA"
           : "MODO LOCAL";
+
     }
   }
+
 
   async function initSupabase() {
 
@@ -797,6 +1193,7 @@
     }
   }
 
+
   async function enterMainCampaign() {
 
     if (
@@ -847,47 +1244,74 @@
   function loadLocalData() {
 
     const savedCards =
-      localStorage.getItem(
-        storageKeys.cards
+      safeJSON(
+        localStorage.getItem(
+          storageKeys.cards
+        ) || "null",
+        null
       );
 
     const savedObjects =
-      localStorage.getItem(
-        storageKeys.objects
+      safeJSON(
+        localStorage.getItem(
+          storageKeys.objects
+        ) || "null",
+        null
       );
 
     const savedConnections =
-      localStorage.getItem(
-        storageKeys.connections
+      safeJSON(
+        localStorage.getItem(
+          storageKeys.connections
+        ) || "null",
+        null
       );
 
+
+    /*
+      IMPORTANTE:
+      Se o localStorage tiver [] vazio, não usamos esse
+      array vazio como se fossem os dados reais.
+      Voltamos para as pistas/objetos iniciais.
+    */
+
     cards =
-      savedCards
-        ? safeJSON(
-            savedCards,
-            clone(seedCards)
-          )
-        : clone(seedCards);
+      Array.isArray(savedCards) &&
+      savedCards.length > 0
+
+        ? savedCards
+
+        : clone(
+            seedCards
+          );
+
 
     objects =
-      savedObjects
-        ? safeJSON(
-            savedObjects,
-            clone(seedObjects)
-          )
-        : clone(seedObjects);
+      Array.isArray(savedObjects) &&
+      savedObjects.length > 0
+
+        ? savedObjects
+
+        : clone(
+            seedObjects
+          );
+
 
     connections =
-      savedConnections
-        ? safeJSON(
-            savedConnections,
-            []
-          )
+      Array.isArray(
+        savedConnections
+      )
+
+        ? savedConnections
+
         : [];
+
 
     applyLocalNotes();
 
     renderAll();
+
+    saveLocal();
 
     setSync(
       "modo local",
@@ -895,23 +1319,31 @@
     );
   }
 
+
   function saveLocal() {
 
     localStorage.setItem(
       storageKeys.cards,
-      JSON.stringify(cards)
+      JSON.stringify(
+        cards
+      )
     );
 
     localStorage.setItem(
       storageKeys.objects,
-      JSON.stringify(objects)
+      JSON.stringify(
+        objects
+      )
     );
 
     localStorage.setItem(
       storageKeys.connections,
-      JSON.stringify(connections)
+      JSON.stringify(
+        connections
+      )
     );
   }
+
 
   function applyLocalNotes() {
 
@@ -919,8 +1351,7 @@
       safeJSON(
         localStorage.getItem(
           storageKeys.notes
-        ) ||
-        "{}",
+        ) || "{}",
         {}
       );
 
@@ -956,6 +1387,7 @@
               "Jogador",
 
             text
+
           };
         }
       );
@@ -974,6 +1406,7 @@
     ) {
 
       loadLocalData();
+
       return;
     }
 
@@ -1024,6 +1457,7 @@
 
       ]);
 
+
     if (
       cluesResult.error
     ) {
@@ -1045,19 +1479,42 @@
       throw connectionsResult.error;
     }
 
+
     cards =
-      cluesResult.data?.length
+      Array.isArray(
+        cluesResult.data
+      ) &&
+      cluesResult.data.length > 0
+
         ? cluesResult.data
-        : clone(seedCards);
+
+        : clone(
+            seedCards
+          );
+
 
     objects =
-      objectsResult.data?.length
+      Array.isArray(
+        objectsResult.data
+      ) &&
+      objectsResult.data.length > 0
+
         ? objectsResult.data
-        : clone(seedObjects);
+
+        : clone(
+            seedObjects
+          );
+
 
     connections =
-      connectionsResult.data ||
-      [];
+      Array.isArray(
+        connectionsResult.data
+      )
+
+        ? connectionsResult.data
+
+        : [];
+
 
     await loadEntityNotes();
 
@@ -1069,6 +1526,7 @@
     );
   }
 
+
   async function loadEntityNotes() {
 
     if (
@@ -1077,12 +1535,15 @@
     ) {
 
       applyLocalNotes();
+
       return;
     }
 
     const result =
       await supabase
-        .from("entity_notes")
+        .from(
+          "entity_notes"
+        )
         .select("*")
         .eq(
           "campaign_id",
@@ -1103,7 +1564,7 @@
 
 
   /* ============================================================
-     RENDERIZAÇÃO
+     RENDERIZAÇÃO GERAL
      ============================================================ */
 
   function renderAll() {
@@ -1117,6 +1578,93 @@
     renderEntityNotes();
 
     filterCards();
+  }
+
+
+  /* ============================================================
+     FILTRO DO QUADRO
+     ============================================================ */
+
+  function filterCards() {
+
+    const input =
+      $("#boardSearch");
+
+    const query =
+      input?.value
+        ?.trim()
+        ?.toLowerCase() ||
+      "";
+
+    const canvas =
+      $("#boardCanvas");
+
+    if (!canvas) {
+      return;
+    }
+
+    const cardsElements =
+      $$(".evidence-card", canvas);
+
+    cardsElements.forEach(
+      element => {
+
+        if (!query) {
+
+          element.classList.remove(
+            "dimmed"
+          );
+
+          return;
+        }
+
+        const id =
+          String(
+            element.dataset.id
+          );
+
+        const card =
+          cards.find(
+            item =>
+              String(
+                item.id
+              ) ===
+              id
+          );
+
+        if (!card) {
+
+          element.classList.add(
+            "dimmed"
+          );
+
+          return;
+        }
+
+        const content =
+          [
+
+            card.title,
+            card.clue_type,
+            card.context,
+            card.notes
+
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+        const match =
+          content.includes(
+            query
+          );
+
+        element.classList.toggle(
+          "dimmed",
+          !match
+        );
+      }
+    );
   }
 
 
@@ -1137,6 +1685,7 @@
     );
   }
 
+
   function renderCards() {
 
     const canvas =
@@ -1154,6 +1703,7 @@
         card =>
           card.remove()
       );
+
 
     cards.forEach(
       (
@@ -1193,6 +1743,7 @@
             0
           )}deg`
         );
+
 
         element.innerHTML = `
 
@@ -1252,18 +1803,23 @@
             isSeedCard(
               card.id
             )
+
               ? ""
+
               : `
+
                 <button
                   class="mini-delete"
                   type="button"
                 >
                   ×
                 </button>
+
               `
           }
 
         `;
+
 
         const textarea =
           $(".card-notes", element);
@@ -1290,6 +1846,7 @@
             }
           );
 
+
           textarea.addEventListener(
             "input",
             () =>
@@ -1299,6 +1856,7 @@
               )
           );
         }
+
 
         canvas.appendChild(
           element
@@ -1313,7 +1871,7 @@
 
 
   /* ============================================================
-     INTERAÇÃO COM CARDS
+     INTERAÇÃO DOS CARDS
      ============================================================ */
 
   function wireCard(
@@ -1329,6 +1887,7 @@
         )
     );
 
+
     card.addEventListener(
       "pointermove",
       event =>
@@ -1338,6 +1897,7 @@
         )
     );
 
+
     card.addEventListener(
       "pointerup",
       () =>
@@ -1345,6 +1905,7 @@
           card
         )
     );
+
 
     card.addEventListener(
       "pointercancel",
@@ -1354,19 +1915,19 @@
         )
     );
 
+
     card.addEventListener(
       "click",
       event => {
 
-        if (
-          dragMoved
-        ) {
+        if (dragMoved) {
 
           dragMoved =
             false;
 
           return;
         }
+
 
         if (
           event.target.closest(
@@ -1376,6 +1937,7 @@
 
           return;
         }
+
 
         if (
           connectingMode
@@ -1407,18 +1969,18 @@
           return;
         }
 
+
         selectCard(
           card
         );
       }
     );
 
+
     const editButton =
       $(".mini-edit", card);
 
-    if (
-      editButton
-    ) {
+    if (editButton) {
 
       editButton.addEventListener(
         "click",
@@ -1437,12 +1999,11 @@
       );
     }
 
+
     const deleteButton =
       $(".mini-delete", card);
 
-    if (
-      deleteButton
-    ) {
+    if (deleteButton) {
 
       deleteButton.addEventListener(
         "click",
@@ -1462,6 +2023,7 @@
     }
   }
 
+
   function beginDrag(
     card,
     event
@@ -1476,6 +2038,7 @@
       return;
     }
 
+
     draggingCard =
       card;
 
@@ -1486,6 +2049,7 @@
       "dragging"
     );
 
+
     try {
 
       card.setPointerCapture(
@@ -1494,8 +2058,10 @@
 
     } catch {}
 
+
     const rect =
       card.getBoundingClientRect();
+
 
     card.dataset.offsetX =
       String(
@@ -1506,6 +2072,7 @@
         zoom
       );
 
+
     card.dataset.offsetY =
       String(
         (
@@ -1515,6 +2082,7 @@
         zoom
       );
   }
+
 
   function moveDrag(
     card,
@@ -1532,11 +2100,13 @@
     dragMoved =
       true;
 
+
     const board =
       $("#evidenceBoard");
 
     const canvas =
       $("#boardCanvas");
+
 
     if (
       !board ||
@@ -1546,8 +2116,10 @@
       return;
     }
 
+
     const rect =
       board.getBoundingClientRect();
+
 
     const offsetX =
       Number(
@@ -1555,11 +2127,13 @@
         0
       );
 
+
     const offsetY =
       Number(
         card.dataset.offsetY ||
         0
       );
+
 
     const x =
       (
@@ -1570,6 +2144,7 @@
       zoom -
       offsetX;
 
+
     const y =
       (
         event.clientY -
@@ -1579,6 +2154,7 @@
       zoom -
       offsetY;
 
+
     const maxX =
       Math.max(
         0,
@@ -1586,12 +2162,14 @@
         card.offsetWidth
       );
 
+
     const maxY =
       Math.max(
         0,
         canvas.clientHeight -
         card.offsetHeight
       );
+
 
     const finalX =
       Math.max(
@@ -1602,6 +2180,7 @@
         )
       );
 
+
     const finalY =
       Math.max(
         0,
@@ -1611,27 +2190,34 @@
         )
       );
 
+
     card.style.left =
       `${
         canvas.clientWidth
+
           ? (
               finalX /
               canvas.clientWidth
             ) *
             100
+
           : 0
       }%`;
+
 
     card.style.top =
       `${
         canvas.clientHeight
+
           ? (
               finalY /
               canvas.clientHeight
             ) *
             100
+
           : 0
       }%`;
+
 
     const model =
       cards.find(
@@ -1644,9 +2230,8 @@
           )
       );
 
-    if (
-      model
-    ) {
+
+    if (model) {
 
       model.x =
         parseFloat(
@@ -1659,8 +2244,10 @@
         );
     }
 
+
     renderConnections();
   }
+
 
   async function endDrag(
     card
@@ -1674,6 +2261,7 @@
       return;
     }
 
+
     draggingCard =
       null;
 
@@ -1681,12 +2269,11 @@
       "dragging"
     );
 
-    if (
-      !dragMoved
-    ) {
 
+    if (!dragMoved) {
       return;
     }
+
 
     const model =
       cards.find(
@@ -1699,9 +2286,8 @@
           )
       );
 
-    if (
-      model
-    ) {
+
+    if (model) {
 
       await saveCardPosition(
         model
@@ -1709,30 +2295,30 @@
     }
   }
 
+
   function selectCard(
     card
   ) {
 
-    if (
-      selectedCard
-    ) {
+    if (selectedCard) {
 
       selectedCard.classList.remove(
         "selected"
       );
     }
 
+
     selectedCard =
       card;
 
-    if (
-      selectedCard
-    ) {
+
+    if (selectedCard) {
 
       selectedCard.classList.add(
         "selected"
       );
     }
+
 
     renderConnections();
   }
@@ -1754,6 +2340,7 @@
       connection?.clue_b ??
       connection?.[1];
 
+
     if (
       a == null ||
       b == null
@@ -1762,11 +2349,13 @@
       return null;
     }
 
+
     return [
       String(a),
       String(b)
     ].sort();
   }
+
 
   async function toggleConnection(
     firstId,
@@ -1778,6 +2367,7 @@
         String(firstId),
         String(secondId)
       ].sort();
+
 
     const index =
       connections.findIndex(
@@ -1795,8 +2385,10 @@
             existing[1] ===
               pair[1]
           );
+
         }
       );
+
 
     if (
       appMode ===
@@ -1805,13 +2397,11 @@
 
       try {
 
-        if (
-          index >=
-          0
-        ) {
+        if (index >= 0) {
 
           const existing =
             connections[index];
+
 
           if (
             existing.id
@@ -1827,6 +2417,7 @@
                   "id",
                   existing.id
                 );
+
 
             if (
               result.error
@@ -1860,6 +2451,7 @@
 
               });
 
+
           if (
             result.error
           ) {
@@ -1867,6 +2459,7 @@
             throw result.error;
           }
         }
+
 
         await loadCampaignData();
 
@@ -1884,6 +2477,7 @@
         );
       }
 
+
       playSound(
         "connect"
       );
@@ -1891,10 +2485,8 @@
       return;
     }
 
-    if (
-      index >=
-      0
-    ) {
+
+    if (index >= 0) {
 
       connections.splice(
         index,
@@ -1908,6 +2500,7 @@
       );
     }
 
+
     saveLocal();
 
     renderConnections();
@@ -1917,6 +2510,7 @@
     );
   }
 
+
   function renderConnections() {
 
     const svg =
@@ -1924,6 +2518,7 @@
 
     const canvas =
       $("#boardCanvas");
+
 
     if (
       !svg ||
@@ -1933,8 +2528,10 @@
       return;
     }
 
+
     svg.innerHTML =
       "";
+
 
     connections.forEach(
       connection => {
@@ -1944,26 +2541,37 @@
             connection
           );
 
-        if (
-          !pair
-        ) {
+
+        if (!pair) {
+          return;
+        }
+
+
+        let a;
+        let b;
+
+
+        try {
+
+          a =
+            canvas.querySelector(
+              `[data-id="${CSS.escape(
+                pair[0]
+              )}"]`
+            );
+
+          b =
+            canvas.querySelector(
+              `[data-id="${CSS.escape(
+                pair[1]
+              )}"]`
+            );
+
+        } catch {
 
           return;
         }
 
-        const a =
-          canvas.querySelector(
-            `[data-id="${CSS.escape(
-              pair[0]
-            )}"]`
-          );
-
-        const b =
-          canvas.querySelector(
-            `[data-id="${CSS.escape(
-              pair[1]
-            )}"]`
-          );
 
         if (
           !a ||
@@ -1973,11 +2581,13 @@
           return;
         }
 
+
         const line =
           document.createElementNS(
             "http://www.w3.org/2000/svg",
             "line"
           );
+
 
         line.setAttribute(
           "x1",
@@ -1986,12 +2596,14 @@
           2
         );
 
+
         line.setAttribute(
           "y1",
           a.offsetTop +
           a.offsetHeight /
           2
         );
+
 
         line.setAttribute(
           "x2",
@@ -2000,6 +2612,7 @@
           2
         );
 
+
         line.setAttribute(
           "y2",
           b.offsetTop +
@@ -2007,9 +2620,11 @@
           2
         );
 
+
         line.classList.add(
           "connection-line"
         );
+
 
         if (
           selectedCard &&
@@ -2024,11 +2639,13 @@
           );
         }
 
+
         svg.appendChild(
           line
         );
       }
     );
+
 
     const cardCount =
       $("#cardCount");
@@ -2036,22 +2653,21 @@
     const connectionCount =
       $("#connectionCount");
 
-    if (
-      cardCount
-    ) {
+
+    if (cardCount) {
 
       cardCount.textContent =
         cards.length;
     }
 
-    if (
-      connectionCount
-    ) {
+
+    if (connectionCount) {
 
       connectionCount.textContent =
         connections.length;
     }
   }
+
 
   async function saveCardPosition(
     card
@@ -2063,8 +2679,10 @@
     ) {
 
       saveLocal();
+
       return;
     }
+
 
     try {
 
@@ -2089,6 +2707,7 @@
             card.id
           );
 
+
       if (
         result.error
       ) {
@@ -2107,6 +2726,7 @@
     }
   }
 
+
   function saveCardNotes(
     id,
     text
@@ -2123,17 +2743,18 @@
           )
       );
 
-    if (
-      card
-    ) {
+
+    if (card) {
 
       card.notes =
         text;
     }
 
+
     clearTimeout(
       noteTimer
     );
+
 
     noteTimer =
       setTimeout(
@@ -2158,12 +2779,13 @@
                     id
                   );
 
-                if (
-                  result.error
-                ) {
 
-                  throw result.error;
-                }
+              if (
+                result.error
+              ) {
+
+                throw result.error;
+              }
 
             } catch (
               error
@@ -2196,41 +2818,43 @@
     const modal =
       $("#newCardModal");
 
-    if (
-      !modal
-    ) {
 
+    if (!modal) {
       return;
     }
+
 
     modal.classList.add(
       "open"
     );
+
 
     modal.setAttribute(
       "aria-hidden",
       "false"
     );
 
+
     $("#newCardTitle")
       ?.focus();
   }
+
 
   function closeNewCard() {
 
     const modal =
       $("#newCardModal");
 
-    if (
-      !modal
-    ) {
 
+    if (!modal) {
       return;
     }
+
 
     modal.classList.remove(
       "open"
     );
+
 
     modal.setAttribute(
       "aria-hidden",
@@ -2238,159 +2862,177 @@
     );
   }
 
-async function createCard() {
 
-  const titleInput =
-    $("#newCardTitle");
+  async function createCard() {
 
-  const typeInput =
-    $("#newCardType");
+    const titleInput =
+      $("#newCardTitle");
 
-  const contextInput =
-    $("#newCardContext");
+    const typeInput =
+      $("#newCardType");
 
-  const title =
-    titleInput?.value.trim() || "";
+    const contextInput =
+      $("#newCardContext");
 
-  const type =
-    typeInput?.value.trim() ||
-    "PISTA";
 
-  const context =
-    contextInput?.value.trim() ||
-    "";
+    const title =
+      titleInput?.value.trim() ||
+      "";
 
-  if (!title) {
 
-    toast(
-      "Dê um título à pista."
-    );
+    const type =
+      typeInput?.value.trim() ||
+      "PISTA";
 
-    titleInput?.focus();
 
-    return;
-  }
+    const context =
+      contextInput?.value.trim() ||
+      "";
 
-  const newCard = {
 
-    title,
-
-    clue_type:
-      type,
-
-    context,
-
-    notes:
-      "",
-
-    x:
-      25 +
-      Math.random() * 50,
-
-    y:
-      20 +
-      Math.random() * 55,
-
-    rotation:
-      Math.random() * 4 - 2
-
-  };
-
-  if (
-    appMode ===
-    "supabase"
-  ) {
-
-    try {
-
-      const result =
-        await supabase
-          .from("clues")
-          .insert({
-
-            ...newCard,
-
-            campaign_id:
-              campaignId,
-
-            created_by:
-              currentUser?.id ||
-              null
-
-          })
-          .select()
-          .single();
-
-      if (
-        result.error
-      ) {
-
-        throw result.error;
-      }
-
-      cards.push(
-        result.data
-      );
-
-    } catch (
-      error
-    ) {
-
-      console.error(
-        "Criar pista:",
-        error
-      );
+    if (!title) {
 
       toast(
-        "Não foi possível criar a pista."
+        "Dê um título à pista."
       );
+
+      titleInput?.focus();
 
       return;
     }
 
-  } else {
 
-    newCard.id =
-      crypto.randomUUID();
+    const newCard = {
 
-    cards.push(
-      newCard
+      title,
+
+      clue_type:
+        type,
+
+      context,
+
+      notes:
+        "",
+
+      x:
+        25 +
+        Math.random() *
+        50,
+
+      y:
+        20 +
+        Math.random() *
+        55,
+
+      rotation:
+        Math.random() *
+        4 -
+        2
+
+    };
+
+
+    if (
+      appMode ===
+      "supabase"
+    ) {
+
+      try {
+
+        const result =
+          await supabase
+            .from("clues")
+            .insert({
+
+              ...newCard,
+
+              campaign_id:
+                campaignId,
+
+              created_by:
+                currentUser?.id ||
+                null
+
+            })
+            .select()
+            .single();
+
+
+        if (
+          result.error
+        ) {
+
+          throw result.error;
+        }
+
+
+        cards.push(
+          result.data
+        );
+
+      } catch (
+        error
+      ) {
+
+        console.error(
+          "Criar pista:",
+          error
+        );
+
+        toast(
+          "Não foi possível criar a pista."
+        );
+
+        return;
+      }
+
+    } else {
+
+      newCard.id =
+        crypto.randomUUID();
+
+      cards.push(
+        newCard
+      );
+
+      saveLocal();
+    }
+
+
+    renderCards();
+
+    renderConnections();
+
+    filterCards();
+
+    closeNewCard();
+
+
+    if (titleInput) {
+      titleInput.value = "";
+    }
+
+    if (typeInput) {
+      typeInput.value = "";
+    }
+
+    if (contextInput) {
+      contextInput.value = "";
+    }
+
+
+    toast(
+      "Nova pista adicionada."
     );
 
-    saveLocal();
+    playSound(
+      "save"
+    );
   }
 
-  renderCards();
-
-  renderConnections();
-
-  filterCards();
-
-  closeNewCard();
-
-  if (titleInput) {
-    titleInput.value = "";
-  }
-
-  if (typeInput) {
-    typeInput.value = "";
-  }
-
-  if (contextInput) {
-    contextInput.value = "";
-  }
-
-  toast(
-    "Nova pista adicionada."
-  );
-
-  playSound(
-    "save"
-  );
-}
 
   /* ============================================================
-     EDITOR
+     EDITOR DE CARD
      ============================================================ */
 
   function openCardEditor(
@@ -2408,12 +3050,11 @@ async function createCard() {
           )
       );
 
-    if (
-      !card
-    ) {
 
+    if (!card) {
       return;
     }
+
 
     editingNote = {
 
@@ -2425,36 +3066,35 @@ async function createCard() {
 
     };
 
+
     const title =
       $("#editorTitle");
 
     const text =
       $("#editorText");
 
-    if (
-      title
-    ) {
+
+    if (title) {
 
       title.textContent =
         card.title ||
         "ANOTAÇÃO";
     }
 
-    if (
-      text
-    ) {
+
+    if (text) {
 
       text.value =
         card.notes ||
         "";
     }
 
+
     const modal =
       $("#editorModal");
 
-    if (
-      modal
-    ) {
+
+    if (modal) {
 
       modal.classList.add(
         "open"
@@ -2467,45 +3107,47 @@ async function createCard() {
     }
   }
 
+
   function closeEditor() {
 
     const modal =
       $("#editorModal");
 
-    if (
-      !modal
-    ) {
 
+    if (!modal) {
       return;
     }
+
 
     modal.classList.remove(
       "open"
     );
+
 
     modal.setAttribute(
       "aria-hidden",
       "true"
     );
 
+
     editingNote =
       null;
   }
 
+
   async function saveEditor() {
 
-    if (
-      !editingNote
-    ) {
-
+    if (!editingNote) {
       return;
     }
+
 
     const text =
       $("#editorText")
         ?.value
-        .trim() ||
+        ?.trim() ||
       "";
+
 
     if (
       editingNote.kind ===
@@ -2526,6 +3168,7 @@ async function createCard() {
       );
     }
 
+
     closeEditor();
 
     renderCards();
@@ -2536,6 +3179,7 @@ async function createCard() {
       "save"
     );
   }
+
 
   async function deleteCard(
     id
@@ -2549,6 +3193,7 @@ async function createCard() {
 
       return;
     }
+
 
     if (
       appMode ===
@@ -2565,6 +3210,7 @@ async function createCard() {
               "id",
               id
             );
+
 
         if (
           result.error
@@ -2590,6 +3236,7 @@ async function createCard() {
       }
     }
 
+
     cards =
       cards.filter(
         card =>
@@ -2601,6 +3248,7 @@ async function createCard() {
           )
       );
 
+
     connections =
       connections.filter(
         connection => {
@@ -2609,6 +3257,7 @@ async function createCard() {
             connectionPair(
               connection
             );
+
 
           return (
             !pair ||
@@ -2622,6 +3271,7 @@ async function createCard() {
         }
       );
 
+
     if (
       appMode !==
       "supabase"
@@ -2630,7 +3280,9 @@ async function createCard() {
       saveLocal();
     }
 
+
     renderAll();
+
 
     toast(
       "Pista excluída."
@@ -2656,6 +3308,7 @@ async function createCard() {
 
     };
 
+
     const existing =
       (
         window._entityNotes ||
@@ -2676,35 +3329,34 @@ async function createCard() {
           )
       );
 
+
     const title =
       $("#editorTitle");
 
     const text =
       $("#editorText");
 
-    if (
-      title
-    ) {
+
+    if (title) {
 
       title.textContent =
         "ANOTAÇÃO";
     }
 
-    if (
-      text
-    ) {
+
+    if (text) {
 
       text.value =
         existing?.text ||
         "";
     }
 
+
     const modal =
       $("#editorModal");
 
-    if (
-      modal
-    ) {
+
+    if (modal) {
 
       modal.classList.add(
         "open"
@@ -2716,6 +3368,7 @@ async function createCard() {
       );
     }
   }
+
 
   async function saveEntityNote(
     kind,
@@ -2769,12 +3422,14 @@ async function createCard() {
             .select()
             .single();
 
+
         if (
           result.error
         ) {
 
           throw result.error;
         }
+
 
         const remaining =
           (
@@ -2785,17 +3440,24 @@ async function createCard() {
               !(
                 note.entity_kind ===
                   kind &&
+
                 note.entity_key ===
                   key &&
+
                 note.user_id ===
                   currentUser.id
               )
           );
 
+
         window._entityNotes = [
+
           ...remaining,
+
           result.data
+
         ];
+
 
       } catch (
         error
@@ -2819,15 +3481,16 @@ async function createCard() {
         safeJSON(
           localStorage.getItem(
             storageKeys.notes
-          ) ||
-          "{}",
+          ) || "{}",
           {}
         );
+
 
       saved[
         `${kind}:${key}`
       ] =
         text;
+
 
       localStorage.setItem(
         storageKeys.notes,
@@ -2836,17 +3499,21 @@ async function createCard() {
         )
       );
 
+
       applyLocalNotes();
     }
 
+
     renderEntityNotes();
   }
+
 
   function renderEntityNotes() {
 
     const notes =
       window._entityNotes ||
       [];
+
 
     $$(".shared-notes")
       .forEach(
@@ -2858,8 +3525,10 @@ async function createCard() {
           const key =
             box.dataset.noteKey;
 
+
           box.innerHTML =
             "";
+
 
           notes
             .filter(
@@ -2884,8 +3553,10 @@ async function createCard() {
                     "div"
                   );
 
+
                 line.className =
                   "note-line";
+
 
                 line.innerHTML =
                   `<strong>${escapeHtml(
@@ -2894,6 +3565,7 @@ async function createCard() {
                   )}</strong> ${escapeHtml(
                     note.text
                   )}`;
+
 
                 box.appendChild(
                   line
@@ -2906,7 +3578,7 @@ async function createCard() {
 
 
   /* ============================================================
-     OBJETOS
+     OBJETOS / EVIDÊNCIAS DO CASO
      ============================================================ */
 
   function renderObjects() {
@@ -2917,39 +3589,39 @@ async function createCard() {
     const layer =
       $("#boardObjectLayer");
 
-    if (
-      grid
-    ) {
+
+    if (grid) {
 
       grid.innerHTML =
         "";
     }
 
-    if (
-      layer
-    ) {
+
+    if (layer) {
 
       layer.innerHTML =
         "";
     }
 
+
     objects.forEach(
       object => {
 
-        if (
-          grid
-        ) {
+        if (grid) {
 
           const tile =
             document.createElement(
               "button"
             );
 
+
           tile.type =
             "button";
 
+
           tile.className =
             "object-tile";
+
 
           tile.innerHTML = `
 
@@ -2962,7 +3634,8 @@ async function createCard() {
 
             <strong>
               ${escapeHtml(
-                object.name
+                object.name ||
+                "EVIDÊNCIA"
               )}
             </strong>
 
@@ -2971,6 +3644,7 @@ async function createCard() {
             </small>
 
           `;
+
 
           tile.addEventListener(
             "click",
@@ -2986,25 +3660,28 @@ async function createCard() {
             }
           );
 
+
           grid.appendChild(
             tile
           );
         }
 
-        if (
-          layer
-        ) {
+
+        if (layer) {
 
           const item =
             document.createElement(
               "button"
             );
 
+
           item.type =
             "button";
 
+
           item.className =
             "board-object";
+
 
           item.style.left =
             `${Number(
@@ -3012,18 +3689,21 @@ async function createCard() {
               50
             )}%`;
 
+
           item.style.top =
             `${Number(
               object.y ??
               50
             )}%`;
 
+
           item.innerHTML = `
 
             <span>
 
               ${escapeHtml(
-                object.name
+                object.name ||
+                "OBJETO"
               )}
 
               <small>
@@ -3036,6 +3716,7 @@ async function createCard() {
             </span>
 
           `;
+
 
           item.addEventListener(
             "click",
@@ -3053,6 +3734,7 @@ async function createCard() {
             }
           );
 
+
           layer.appendChild(
             item
           );
@@ -3061,6 +3743,7 @@ async function createCard() {
     );
   }
 
+
   function openObject(
     object
   ) {
@@ -3068,20 +3751,21 @@ async function createCard() {
     const modal =
       $("#documentModal");
 
-    if (
-      !modal
-    ) {
 
+    if (!modal) {
       return;
     }
+
 
     $("#modalType").textContent =
       object.object_type ||
       "OBJETO";
 
+
     $("#modalTitle").textContent =
       object.name ||
       "OBJETO";
+
 
     $("#modalContent").innerHTML = `
 
@@ -3111,9 +3795,11 @@ async function createCard() {
 
     `;
 
+
     modal.classList.add(
       "open"
     );
+
 
     modal.setAttribute(
       "aria-hidden",
@@ -3123,469 +3809,61 @@ async function createCard() {
 
 
   /* ============================================================
-     DOCUMENTOS
+     LOCAIS
      ============================================================ */
 
-  const documents = {
-
-    report: {
-
-      type:
-        "DOCUMENTO 17 — EXTRATO",
-
-      title:
-        "Relatório encontrado",
-
-      html: `
-
-        <div class="paper">
-
-          <p>
-            <strong>02:12</strong>
-            — registro acústico identificado.
-          </p>
-
-          <p>
-            <strong>02:16</strong>
-            — preparação do estímulo.
-          </p>
-
-          <p>
-            <strong>02:17</strong>
-            — presença de sangue.
-          </p>
-
-          <p>
-            <strong>02:20</strong>
-            — manifestação.
-          </p>
-
-          <hr>
-
-          <p>
-
-            <strong>OBSERVAÇÃO:</strong>
-
-            o som foi registrado antes da
-            preparação do estímulo.
-
-          </p>
-
-          <p>
-
-            <strong>OBSERVAÇÃO COMPLEMENTAR:</strong>
-
-            não repetir o procedimento sem autorização.
-
-          </p>
-
-          <p class="hand">
-            Quem autorizou?
-          </p>
-
-        </div>
-
-      `
-    },
-
-    fifth: {
-
-      type:
-        "ANOTAÇÃO MANUSCRITA",
-
-      title:
-        "A frase do quinto",
-
-      html: `
-
-        <div class="paper">
-
-          <p class="hand">
-
-            “Não é o quinto que abre.<br>
-            É o quinto que chama.<br>
-            Não faça o quinto tocar.”
-
-          </p>
-
-        </div>
-
-      `
-    },
-
-    box: {
-
-      type:
-        "CAIXA DE PROVAS",
-
-      title:
-        "Mapa + recibos",
-
-      html: `
-
-        <div class="paper">
-
-          <p>
-
-            <strong>LOCAIS:</strong>
-
-            Praça Santa Cecília,
-            Apartamento 18,
-            Túnel ferroviário,
-            Escola municipal,
-            Torre sem nome.
-
-          </p>
-
-          <p>
-
-            <strong>HORÁRIOS:</strong>
-
-            02:12 • 02:40 • 03:05 •
-            03:30 • 03:55
-
-          </p>
-
-          <p>
-
-            <strong>OBJETOS:</strong>
-
-            recibos de metal e velas,
-            lista de horários e uma
-            chave de ferro escuro.
-
-          </p>
-
-          <p class="hand">
-
-            O quinto não é convocado.<br>
-            O quinto convoca.
-
-          </p>
-
-        </div>
-
-      `
-    }
-
-  };
-
-  /* ============================================================
-   LOCAIS DA INVESTIGAÇÃO
-   ============================================================ */
-
-const locations = {
-
-  praca: {
-
-    type:
-      "LOCAL 01 — SANTA CECÍLIA",
-
-    title:
-      "Praça Santa Cecília",
-
-    html: `
-
-      <div class="paper">
-
-        <p>
-          <strong>HORÁRIO:</strong>
-          02:12
-        </p>
-
-        <p>
-          <strong>ESTADO:</strong>
-          Concluído
-        </p>
-
-        <hr>
-
-        <p>
-          Praça residencial cercada por árvores,
-          postes de luz e prédios antigos.
-        </p>
-
-        <p>
-          Foi aqui que o primeiro sangue foi
-          encontrado sem qualquer corpo associado.
-        </p>
-
-        <p>
-          Cinco marcas circulares cercavam a mancha.
-          Uma pequena lasca metálica foi encontrada
-          presa ao solo.
-        </p>
-
-        <p class="hand">
-          “O sino tocou antes de encontrarmos
-          qualquer explicação.”
-        </p>
-
-      </div>
-
-    `
-  },
-
-
-  apartamento: {
-
-    type:
-      "LOCAL 02 — APARTAMENTO 18",
-
-    title:
-      "Apartamento 18",
-
-    html: `
-
-      <div class="paper">
-
-        <p>
-          <strong>HORÁRIO:</strong>
-          02:40
-        </p>
-
-        <p>
-          <strong>ELEMENTO:</strong>
-          Medo
-        </p>
-
-        <p>
-          <strong>ESTADO:</strong>
-          Concluído
-        </p>
-
-        <hr>
-
-        <p>
-          O apartamento está associado a uma
-          das manifestações registradas durante
-          a sequência de ocorrências.
-        </p>
-
-        <p>
-          Testemunhas descrevem sensação de
-          presença, alterações na percepção e
-          a repetição do sino antes dos eventos.
-        </p>
-
-        <p class="hand">
-          “Tocou antes de acontecer.”
-        </p>
-
-      </div>
-
-    `
-  },
-
-
-  tunel: {
-
-    type:
-      "LOCAL 03 — TÚNEL FERROVIÁRIO",
-
-    title:
-      "Túnel ferroviário",
-
-    html: `
-
-      <div class="paper">
-
-        <p>
-          <strong>HORÁRIO:</strong>
-          03:05
-        </p>
-
-        <p>
-          <strong>ELEMENTO:</strong>
-          Violência
-        </p>
-
-        <p>
-          <strong>ESTADO:</strong>
-          Interrompido
-        </p>
-
-        <hr>
-
-        <p>
-          O terceiro ponto da sequência apresenta
-          sinais de violência e de preparação
-          interrompida.
-        </p>
-
-        <p>
-          A ocorrência sugere que o ciclo estava
-          avançando antes que os investigadores
-          compreendessem sua ordem.
-        </p>
-
-        <p class="hand">
-          “Ainda não era para tocar.”
-        </p>
-
-      </div>
-
-    `
-  },
-
-
-  escola: {
-
-    type:
-      "LOCAL 04 — ESCOLA MUNICIPAL",
-
-    title:
-      "Escola municipal",
-
-    html: `
-
-      <div class="paper">
-
-        <p>
-          <strong>HORÁRIO:</strong>
-          03:30
-        </p>
-
-        <p>
-          <strong>ELEMENTO:</strong>
-          Silêncio
-        </p>
-
-        <p>
-          <strong>ESTADO:</strong>
-          Preparação
-        </p>
-
-        <hr>
-
-        <p>
-          A escola guarda uma das pistas mais
-          importantes da investigação.
-        </p>
-
-        <p>
-          Crianças desenharam repetidamente
-          um mesmo círculo em diferentes
-          contextos: sol, relógio, roda, lua
-          e sino.
-        </p>
-
-        <p>
-          Alguns desenhos são anteriores às
-          manifestações conhecidas pelo
-          Círculo da Vigília.
-        </p>
-
-        <p class="hand">
-          “Eles descobriram o padrão.
-          Não criaram o padrão.”
-        </p>
-
-      </div>
-
-    `
-  },
-
-
-  torre: {
-
-    type:
-      "LOCAL 05 — TORRE SEM NOME",
-
-    title:
-      "Torre sem nome",
-
-    html: `
-
-      <div class="paper">
-
-        <p>
-          <strong>HORÁRIO:</strong>
-          03:55
-        </p>
-
-        <p>
-          <strong>ELEMENTO:</strong>
-          Sino
-        </p>
-
-        <p>
-          <strong>ESTADO:</strong>
-          Desconhecido
-        </p>
-
-        <hr>
-
-        <p>
-          Uma torre esquecida, sem placa,
-          sem identificação e sem um sino
-          visível.
-        </p>
-
-        <p>
-          Quanto mais os investigadores sobem,
-          mais definido fica o som.
-        </p>
-
-        <p>
-          No topo existe uma sala circular
-          vazia com um espaço que parece ter
-          sido reservado para algo muito maior.
-        </p>
-
-        <p class="hand">
-          “O quinto não é convocado.
-          O quinto convoca.”
-        </p>
-
-      </div>
-
-    `
-  }
-
-};
-
-
-function openLocation(
-  key
-) {
-
-  const location =
-    locations[key];
-
-  const modal =
-    $("#documentModal");
-
-  if (
-    !location ||
-    !modal
+  function openLocation(
+    key
   ) {
 
-    return;
+    const location =
+      locations[key];
+
+    const modal =
+      $("#documentModal");
+
+
+    if (
+      !location ||
+      !modal
+    ) {
+
+      return;
+    }
+
+
+    $("#modalType").textContent =
+      location.type;
+
+
+    $("#modalTitle").textContent =
+      location.title;
+
+
+    $("#modalContent").innerHTML =
+      location.html;
+
+
+    modal.classList.add(
+      "open"
+    );
+
+
+    modal.setAttribute(
+      "aria-hidden",
+      "false"
+    );
+
+
+    playSound(
+      "document"
+    );
   }
 
-  $("#modalType").textContent =
-    location.type;
 
-  $("#modalTitle").textContent =
-    location.title;
-
-  $("#modalContent").innerHTML =
-    location.html;
-
-  modal.classList.add(
-    "open"
-  );
-
-  modal.setAttribute(
-    "aria-hidden",
-    "false"
-  );
-
-  playSound(
-    "document"
-  );
-}
+  /* ============================================================
+     DOCUMENTOS
+     ============================================================ */
 
   function openDocument(
     key
@@ -3597,6 +3875,7 @@ function openLocation(
     const modal =
       $("#documentModal");
 
+
     if (
       !data ||
       !modal
@@ -3605,18 +3884,23 @@ function openLocation(
       return;
     }
 
+
     $("#modalType").textContent =
       data.type;
+
 
     $("#modalTitle").textContent =
       data.title;
 
+
     $("#modalContent").innerHTML =
       data.html;
+
 
     modal.classList.add(
       "open"
     );
+
 
     modal.setAttribute(
       "aria-hidden",
@@ -3624,21 +3908,22 @@ function openLocation(
     );
   }
 
+
   function closeDocument() {
 
     const modal =
       $("#documentModal");
 
-    if (
-      !modal
-    ) {
 
+    if (!modal) {
       return;
     }
+
 
     modal.classList.remove(
       "open"
     );
+
 
     modal.setAttribute(
       "aria-hidden",
@@ -3658,14 +3943,14 @@ function openLocation(
     const element =
       $("#musicTrack");
 
-    if (
-      element
-    ) {
+
+    if (element) {
 
       element.textContent =
         name;
     }
   }
+
 
   function setMusicVolume(
     value
@@ -3680,6 +3965,7 @@ function openLocation(
         )
       );
 
+
     localStorage.setItem(
       storageKeys.musicVolume,
       String(
@@ -3687,31 +3973,33 @@ function openLocation(
       )
     );
 
+
     const slider =
       $("#musicVolume");
 
     const label =
       $("#musicVolumeLabel");
 
-    if (
-      slider
-    ) {
+
+    if (slider) {
 
       slider.value =
         musicVolume;
     }
 
-    if (
-      label
-    ) {
+
+    if (label) {
 
       label.textContent =
         `${musicVolume}%`;
     }
 
+
     if (
       youtubeReady &&
-      youtubePlayer
+      youtubePlayer &&
+      typeof youtubePlayer.setVolume ===
+        "function"
     ) {
 
       youtubePlayer.setVolume(
@@ -3726,6 +4014,7 @@ function openLocation(
     const container =
       $("#youtubePlayer");
 
+
     if (
       !container ||
       !window.YT ||
@@ -3736,6 +4025,7 @@ function openLocation(
       return;
     }
 
+
     youtubePlayer =
       new YT.Player(
         "youtubePlayer",
@@ -3744,17 +4034,31 @@ function openLocation(
           videoId:
             HEXATOMBE_VIDEO_ID,
 
-      playerVars: {
+          playerVars: {
 
-  autoplay: 0,
-  controls: 1,
-  rel: 0,
-  playsinline: 1,
-  modestbranding: 1,
-  enablejsapi: 1,
-  origin: window.location.origin
+            autoplay:
+              0,
 
-},
+            controls:
+              1,
+
+            rel:
+              0,
+
+            playsinline:
+              1,
+
+            modestbranding:
+              1,
+
+            enablejsapi:
+              1,
+
+            origin:
+              window.location.origin
+
+          },
+
 
           events: {
 
@@ -3764,9 +4068,11 @@ function openLocation(
                 youtubeReady =
                   true;
 
+
                 event.target.setVolume(
                   musicVolume
                 );
+
 
                 updateMusicTrack(
                   "PARADO"
@@ -3774,18 +4080,18 @@ function openLocation(
 
               },
 
+
             onStateChange:
               event => {
 
                 const button =
                   $("#musicPlayPause");
 
-                if (
-                  !button
-                ) {
 
+                if (!button) {
                   return;
                 }
+
 
                 if (
                   event.data ===
@@ -3794,6 +4100,7 @@ function openLocation(
 
                   button.textContent =
                     "Ⅱ PAUSAR";
+
 
                 } else if (
                   event.data ===
@@ -3807,8 +4114,8 @@ function openLocation(
                     "▶ TOCAR";
 
                 }
-
               },
+
 
             onError:
               error => {
@@ -3818,9 +4125,11 @@ function openLocation(
                   error
                 );
 
+
                 updateMusicTrack(
                   "ERRO NO PLAYER"
                 );
+
 
                 toast(
                   "A trilha não pôde ser reproduzida."
@@ -3849,6 +4158,9 @@ function openLocation(
       !youtubePlayer
     ) {
 
+      createYoutubePlayer();
+
+
       toast(
         "A trilha ainda está carregando."
       );
@@ -3856,8 +4168,10 @@ function openLocation(
       return;
     }
 
+
     const state =
       youtubePlayer.getPlayerState();
+
 
     if (
       state ===
@@ -3888,6 +4202,9 @@ function openLocation(
       !youtubePlayer
     ) {
 
+      createYoutubePlayer();
+
+
       toast(
         "A trilha ainda está carregando."
       );
@@ -3895,8 +4212,10 @@ function openLocation(
       return;
     }
 
+
     const position =
       Number(seconds);
+
 
     if (
       !Number.isFinite(
@@ -3907,16 +4226,20 @@ function openLocation(
       return;
     }
 
+
     youtubePlayer.seekTo(
       position,
       true
     );
 
+
     youtubePlayer.setVolume(
       musicVolume
     );
 
+
     youtubePlayer.playVideo();
+
 
     updateMusicTrack(
       trackName ||
@@ -3926,7 +4249,7 @@ function openLocation(
 
 
   /* ============================================================
-     DUCKING
+     DUCKING DO MICROFONE
      ============================================================ */
 
   async function toggleVoiceDucking() {
@@ -3940,6 +4263,7 @@ function openLocation(
       return;
     }
 
+
     if (
       !navigator.mediaDevices?.getUserMedia
     ) {
@@ -3951,6 +4275,7 @@ function openLocation(
       return;
     }
 
+
     try {
 
       microphoneStream =
@@ -3961,21 +4286,23 @@ function openLocation(
           }
         );
 
+
       const AudioContextClass =
         window.AudioContext ||
         window.webkitAudioContext;
 
-      if (
-        !AudioContextClass
-      ) {
+
+      if (!AudioContextClass) {
 
         throw new Error(
           "AudioContext não suportado."
         );
       }
 
+
       microphoneContext =
         new AudioContextClass();
+
 
       if (
         microphoneContext.state ===
@@ -3985,19 +4312,24 @@ function openLocation(
         await microphoneContext.resume();
       }
 
+
       microphoneAnalyser =
         microphoneContext.createAnalyser();
+
 
       microphoneAnalyser.fftSize =
         512;
 
+
       microphoneAnalyser.smoothingTimeConstant =
         0.65;
+
 
       microphoneData =
         new Uint8Array(
           microphoneAnalyser.fftSize
         );
+
 
       const source =
         microphoneContext
@@ -4005,19 +4337,21 @@ function openLocation(
             microphoneStream
           );
 
+
       source.connect(
         microphoneAnalyser
       );
 
+
       voiceDucking =
         true;
+
 
       const button =
         $("#voiceDuckToggle");
 
-      if (
-        button
-      ) {
+
+      if (button) {
 
         button.textContent =
           "🎙 ABAIXAR QUANDO EU FALO: ON";
@@ -4027,7 +4361,9 @@ function openLocation(
         );
       }
 
+
       startVoiceDucking();
+
 
       toast(
         "Controle automático da voz ativado."
@@ -4040,7 +4376,9 @@ function openLocation(
         error
       );
 
+
       disableVoiceDucking();
+
 
       toast(
         "Não foi possível acessar o microfone."
@@ -4054,6 +4392,7 @@ function openLocation(
     clearInterval(
       duckingTimer
     );
+
 
     duckingTimer =
       setInterval(
@@ -4070,18 +4409,20 @@ function openLocation(
             return;
           }
 
+
           microphoneAnalyser
             .getByteTimeDomainData(
               microphoneData
             );
 
+
           let sum =
             0;
 
+
           for (
             let i = 0;
-            i <
-            microphoneData.length;
+            i < microphoneData.length;
             i++
           ) {
 
@@ -4092,16 +4433,19 @@ function openLocation(
               ) /
               128;
 
+
             sum +=
               normalized *
               normalized;
           }
+
 
           const rms =
             Math.sqrt(
               sum /
               microphoneData.length
             );
+
 
           youtubePlayer.setVolume(
 
@@ -4128,12 +4472,15 @@ function openLocation(
     voiceDucking =
       false;
 
+
     clearInterval(
       duckingTimer
     );
 
+
     duckingTimer =
       null;
+
 
     if (
       microphoneStream
@@ -4146,9 +4493,11 @@ function openLocation(
             track.stop()
         );
 
+
       microphoneStream =
         null;
     }
+
 
     if (
       microphoneContext
@@ -4160,15 +4509,18 @@ function openLocation(
           () => {}
         );
 
+
       microphoneContext =
         null;
     }
+
 
     microphoneAnalyser =
       null;
 
     microphoneData =
       null;
+
 
     if (
       youtubeReady &&
@@ -4180,12 +4532,12 @@ function openLocation(
       );
     }
 
+
     const button =
       $("#voiceDuckToggle");
 
-    if (
-      button
-    ) {
+
+    if (button) {
 
       button.textContent =
         "🎙 ABAIXAR QUANDO EU FALO: OFF";
@@ -4198,7 +4550,7 @@ function openLocation(
 
 
   /* ============================================================
-     PAINEL DE SOM
+     PAINEL DE AMBIENTE
      ============================================================ */
 
   function toggleSoundPanel() {
@@ -4206,22 +4558,23 @@ function openLocation(
     const panel =
       $("#soundPanel");
 
-    if (
-      !panel
-    ) {
 
+    if (!panel) {
       return;
     }
+
 
     const willOpen =
       !panel.classList.contains(
         "open"
       );
 
+
     panel.classList.toggle(
       "open",
       willOpen
     );
+
 
     panel.setAttribute(
       "aria-hidden",
@@ -4230,21 +4583,22 @@ function openLocation(
       )
     );
 
-    if (
-      willOpen
-    ) {
+
+    if (willOpen) {
 
       if (
-        window.YT?.Player
+        window.YT?.Player &&
+        !youtubePlayer
       ) {
 
         createYoutubePlayer();
-
       }
+
 
       panel.scrollTop =
         0;
     }
+
 
     playSound(
       "panel"
@@ -4271,23 +4625,23 @@ function openLocation(
         )
       );
 
+
     const canvas =
       $("#boardCanvas");
 
-    if (
-      canvas
-    ) {
+
+    if (canvas) {
 
       canvas.style.transform =
         `scale(${zoom})`;
     }
 
+
     const label =
       $("#zoomLabel");
 
-    if (
-      label
-    ) {
+
+    if (label) {
 
       label.textContent =
         `${Math.round(
@@ -4295,6 +4649,7 @@ function openLocation(
           100
         )}%`;
     }
+
 
     renderConnections();
   }
@@ -4309,19 +4664,20 @@ function openLocation(
     const board =
       $("#boardSection");
 
-    if (
-      !board
-    ) {
 
+    if (!board) {
       return;
     }
 
+
     board.scrollIntoView({
+
       behavior:
         "smooth",
 
       block:
         "start"
+
     });
   }
 
@@ -4341,20 +4697,21 @@ function openLocation(
       return;
     }
 
-    if (
-      realtimeChannel
-    ) {
+
+    if (realtimeChannel) {
 
       supabase.removeChannel(
         realtimeChannel
       );
     }
 
+
     realtimeChannel =
       supabase
         .channel(
           `campaign-${campaignId}`
         )
+
 
         .on(
 
@@ -4375,6 +4732,7 @@ function openLocation(
               `campaign_id=eq.${campaignId}`
 
           },
+
 
           payload => {
 
@@ -4397,6 +4755,7 @@ function openLocation(
               }
             }
 
+
             if (
               payload.eventType ===
               "UPDATE"
@@ -4409,17 +4768,19 @@ function openLocation(
                     payload.new.id
                 );
 
-              if (
-                index >=
-                0
-              ) {
+
+              if (index >= 0) {
 
                 cards[index] = {
+
                   ...cards[index],
+
                   ...payload.new
+
                 };
               }
             }
+
 
             if (
               payload.eventType ===
@@ -4434,13 +4795,17 @@ function openLocation(
                 );
             }
 
+
             renderCards();
 
             renderConnections();
 
             filterCards();
+
           }
+
         )
+
 
         .on(
 
@@ -4461,6 +4826,7 @@ function openLocation(
               `campaign_id=eq.${campaignId}`
 
           },
+
 
           payload => {
 
@@ -4483,6 +4849,7 @@ function openLocation(
               }
             }
 
+
             if (
               payload.eventType ===
               "UPDATE"
@@ -4495,15 +4862,14 @@ function openLocation(
                     payload.new.id
                 );
 
-              if (
-                index >=
-                0
-              ) {
+
+              if (index >= 0) {
 
                 connections[index] =
                   payload.new;
               }
             }
+
 
             if (
               payload.eventType ===
@@ -4518,9 +4884,13 @@ function openLocation(
                 );
             }
 
+
             renderConnections();
+
           }
+
         )
+
 
         .on(
 
@@ -4542,11 +4912,13 @@ function openLocation(
 
           },
 
+
           payload => {
 
             window._entityNotes =
               window._entityNotes ||
               [];
+
 
             if (
               payload.eventType ===
@@ -4567,6 +4939,7 @@ function openLocation(
               }
             }
 
+
             if (
               payload.eventType ===
               "UPDATE"
@@ -4579,15 +4952,14 @@ function openLocation(
                     payload.new.id
                 );
 
-              if (
-                index >=
-                0
-              ) {
+
+              if (index >= 0) {
 
                 window._entityNotes[index] =
                   payload.new;
               }
             }
+
 
             if (
               payload.eventType ===
@@ -4602,9 +4974,13 @@ function openLocation(
                 );
             }
 
+
             renderEntityNotes();
+
           }
+
         )
+
 
         .subscribe(
           status => {
@@ -4641,6 +5017,7 @@ function openLocation(
       return;
     }
 
+
     const observer =
       new IntersectionObserver(
 
@@ -4656,6 +5033,7 @@ function openLocation(
                 return;
               }
 
+
               $$(".main-nav a")
                 .forEach(
                   link => {
@@ -4670,11 +5048,15 @@ function openLocation(
                       `#${entry.target.id}`
 
                     );
+
                   }
                 );
+
             }
           );
+
         },
+
 
         {
 
@@ -4682,17 +5064,19 @@ function openLocation(
             "-35% 0px -55% 0px"
 
         }
+
       );
+
 
     $$(
       "main section[id]"
     )
-    .forEach(
-      section =>
-        observer.observe(
-          section
-        )
-    );
+      .forEach(
+        section =>
+          observer.observe(
+            section
+          )
+      );
   }
 
 
@@ -4701,6 +5085,10 @@ function openLocation(
      ============================================================ */
 
   function bindEvents() {
+
+    /* ----------------------------------------------------------
+       PAINEL DE AMBIENTE
+       ---------------------------------------------------------- */
 
     on(
       "#soundToggle",
@@ -4712,6 +5100,10 @@ function openLocation(
       }
     );
 
+
+    /* ----------------------------------------------------------
+       MÚSICA
+       ---------------------------------------------------------- */
 
     on(
       "#musicPlayPause",
@@ -4747,42 +5139,79 @@ function openLocation(
       }
     );
 
-$$(
-  ".location-item"
-)
-.forEach(
-  location => {
 
-    location.addEventListener(
-      "click",
-      event => {
+    $$(
+      ".music-scene, .music-jump"
+    )
+      .forEach(
+        button => {
 
-        if (
-          event.target.closest(
-            ".shared-notes"
-          )
-        ) {
+          button.addEventListener(
+            "click",
+            () => {
 
-          return;
+              playMusicAt(
+                button.dataset.time,
+                button.dataset.track
+              );
+
+            }
+          );
+
         }
+      );
 
-        const key =
-          location.dataset.noteKey;
 
-        if (!key) {
-          return;
+    /* ----------------------------------------------------------
+       LOCAIS
+       ---------------------------------------------------------- */
+
+    $$(".location-item")
+      .forEach(
+        location => {
+
+          location.style.cursor =
+            "pointer";
+
+
+          location.addEventListener(
+            "click",
+            event => {
+
+              if (
+                event.target.closest(
+                  ".shared-notes"
+                )
+              ) {
+
+                return;
+              }
+
+
+              const key =
+                location.dataset.noteKey;
+
+
+              if (!key) {
+                return;
+              }
+
+
+              openLocation(
+                key
+              );
+
+            }
+          );
+
         }
+      );
 
-        openLocation(
-          key
-        );
-      }
-    );
 
-    location.style.cursor =
-      "pointer";
-  }
-);
+    /* ----------------------------------------------------------
+       ABRIR QUADRO
+       ---------------------------------------------------------- */
+
     on(
       "#enterBoard",
       "click",
@@ -4797,6 +5226,10 @@ $$(
       }
     );
 
+
+    /* ----------------------------------------------------------
+       NOVA PISTA
+       ---------------------------------------------------------- */
 
     on(
       "#addCardBtn",
@@ -4818,15 +5251,15 @@ $$(
       "click",
       () => {
 
-        playSound(
-          "save"
-        );
-
         createCard();
 
       }
     );
 
+
+    /* ----------------------------------------------------------
+       CONECTAR
+       ---------------------------------------------------------- */
 
     on(
       "#connectionMode",
@@ -4836,15 +5269,16 @@ $$(
         connectingMode =
           !connectingMode;
 
+
         const button =
           $("#connectionMode");
+
 
         const hint =
           $("#connectionHint");
 
-        if (
-          button
-        ) {
+
+        if (button) {
 
           button.classList.toggle(
             "active",
@@ -4852,9 +5286,8 @@ $$(
           );
         }
 
-        if (
-          hint
-        ) {
+
+        if (hint) {
 
           hint.textContent =
 
@@ -4866,9 +5299,11 @@ $$(
 
         }
 
+
         selectCard(
           null
         );
+
 
         playSound(
           "connect"
@@ -4876,6 +5311,10 @@ $$(
       }
     );
 
+
+    /* ----------------------------------------------------------
+       REPOSICIONAR
+       ---------------------------------------------------------- */
 
     on(
       "#resetBoard",
@@ -4900,12 +5339,11 @@ $$(
                   original.title
               );
 
-            if (
-              !card
-            ) {
 
+            if (!card) {
               return;
             }
+
 
             card.x =
               original.x;
@@ -4916,18 +5354,26 @@ $$(
             card.rotation =
               original.rotation;
 
-            const element =
-              $(
-                `#boardCanvas [data-id="${CSS.escape(
-                  String(
-                    card.id
-                  )
-                )}"]`
-              );
 
-            if (
-              element
-            ) {
+            let element =
+              null;
+
+
+            try {
+
+              element =
+                $(
+                  `#boardCanvas [data-id="${CSS.escape(
+                    String(
+                      card.id
+                    )
+                  )}"]`
+                );
+
+            } catch {}
+
+
+            if (element) {
 
               element.style.left =
                 `${original.x}%`;
@@ -4941,17 +5387,21 @@ $$(
               );
             }
 
+
             saveCardPosition(
               card
             );
           }
         );
 
+
         renderConnections();
+
 
         toast(
           "Posições reposicionadas."
         );
+
 
         playSound(
           "save"
@@ -4959,6 +5409,10 @@ $$(
       }
     );
 
+
+    /* ----------------------------------------------------------
+       BUSCA
+       ---------------------------------------------------------- */
 
     on(
       "#boardSearch",
@@ -4971,6 +5425,10 @@ $$(
     );
 
 
+    /* ----------------------------------------------------------
+       ZOOM
+       ---------------------------------------------------------- */
+
     on(
       "#zoomIn",
       "click",
@@ -4980,6 +5438,7 @@ $$(
           zoom +
           0.1
         );
+
 
         playSound(
           "document"
@@ -4998,12 +5457,17 @@ $$(
           0.1
         );
 
+
         playSound(
           "document"
         );
       }
     );
 
+
+    /* ----------------------------------------------------------
+       EDITOR
+       ---------------------------------------------------------- */
 
     on(
       "#cancelEditor",
@@ -5030,125 +5494,146 @@ $$(
     $$(
       "[data-close-editor]"
     )
-    .forEach(
-      element => {
+      .forEach(
+        element => {
 
-        element.addEventListener(
-          "click",
-          () =>
-            closeEditor()
-        );
+          element.addEventListener(
+            "click",
+            () =>
+              closeEditor()
+          );
 
-      }
-    );
+        }
+      );
 
+
+    /* ----------------------------------------------------------
+       MODAL DE DOCUMENTO / OBJETO / LOCAL
+       ---------------------------------------------------------- */
 
     $$(
       "[data-close-modal]"
     )
-    .forEach(
-      element => {
+      .forEach(
+        element => {
 
-        element.addEventListener(
-          "click",
-          () =>
-            closeDocument()
-        );
+          element.addEventListener(
+            "click",
+            () =>
+              closeDocument()
+          );
 
-      }
-    );
+        }
+      );
 
+
+    /* ----------------------------------------------------------
+       MODAL DE NOVA PISTA
+       ---------------------------------------------------------- */
 
     $$(
       "[data-close-new-card]"
     )
-    .forEach(
-      element => {
+      .forEach(
+        element => {
 
-        element.addEventListener(
-          "click",
-          () =>
-            closeNewCard()
-        );
+          element.addEventListener(
+            "click",
+            () =>
+              closeNewCard()
+          );
 
-      }
-    );
+        }
+      );
 
+
+    /* ----------------------------------------------------------
+       ANOTAÇÕES DE PERSONAGENS / LOCAIS / EVENTOS
+       ---------------------------------------------------------- */
 
     $$(
       ".entity-note-btn"
     )
-    .forEach(
-      button => {
+      .forEach(
+        button => {
 
-        button.addEventListener(
-          "click",
-          () => {
+          button.addEventListener(
+            "click",
+            event => {
 
-            playSound(
-              "edit"
-            );
+              event.stopPropagation();
 
-            openEntityEditor(
-              button
-            );
+              playSound(
+                "edit"
+              );
 
-          }
-        );
+              openEntityEditor(
+                button
+              );
 
-      }
-    );
+            }
+          );
 
+        }
+      );
+
+
+    /* ----------------------------------------------------------
+       DOCUMENTOS
+       ---------------------------------------------------------- */
 
     $$(
       ".document-card"
     )
-    .forEach(
-      button => {
+      .forEach(
+        button => {
 
-        button.addEventListener(
-          "click",
-          () => {
+          button.addEventListener(
+            "click",
+            () => {
 
-            playSound(
-              "document"
-            );
+              playSound(
+                "document"
+              );
 
-            openDocument(
-              button.dataset.document
-            );
+              openDocument(
+                button.dataset.document
+              );
 
-          }
-        );
+            }
+          );
 
-      }
-    );
+        }
+      );
 
+
+    /* ----------------------------------------------------------
+       NAVEGAÇÃO
+       ---------------------------------------------------------- */
 
     $$(
       ".main-nav a"
     )
-    .forEach(
-      link => {
+      .forEach(
+        link => {
 
-        link.addEventListener(
-          "click",
-          () =>
-            playSound(
-              "nav"
-            )
-        );
+          link.addEventListener(
+            "click",
+            () =>
+              playSound(
+                "nav"
+              )
+          );
 
-      }
-    );
+        }
+      );
 
 
     const brand =
       $(".brand");
 
-    if (
-      brand
-    ) {
+
+    if (brand) {
 
       brand.addEventListener(
         "click",
@@ -5159,6 +5644,10 @@ $$(
       );
     }
 
+
+    /* ----------------------------------------------------------
+       ESC
+       ---------------------------------------------------------- */
 
     document.addEventListener(
       "keydown",
@@ -5172,22 +5661,24 @@ $$(
           return;
         }
 
+
         closeDocument();
 
         closeEditor();
 
         closeNewCard();
 
+
         const panel =
           $("#soundPanel");
 
-        if (
-          panel
-        ) {
+
+        if (panel) {
 
           panel.classList.remove(
             "open"
           );
+
 
           panel.setAttribute(
             "aria-hidden",
@@ -5197,6 +5688,10 @@ $$(
       }
     );
 
+
+    /* ----------------------------------------------------------
+       REDIMENSIONAMENTO
+       ---------------------------------------------------------- */
 
     window.addEventListener(
       "resize",
@@ -5209,300 +5704,53 @@ $$(
   /* ============================================================
      INICIALIZAÇÃO
      ============================================================ */
- const locations = {
 
-  praca: {
-
-    type:
-      "LOCAL 01 — SANTA CECÍLIA",
-
-    title:
-      "Praça Santa Cecília",
-
-    html: `
-
-      <div class="paper">
-
-        <p>
-          <strong>HORÁRIO:</strong>
-          02:12
-        </p>
-
-        <p>
-          <strong>ESTADO:</strong>
-          Concluído
-        </p>
-
-        <hr>
-
-        <p>
-          Primeiro ponto registrado da investigação.
-          O sangue foi encontrado antes de qualquer
-          explicação para a origem do som.
-        </p>
-
-        <p>
-          Cinco marcas circulares foram encontradas
-          próximas ao local.
-        </p>
-
-        <p class="hand">
-          O sino tocou antes de encontrarmos a origem.
-        </p>
-
-      </div>
-    `
-  },
-
-
-  apartamento: {
-
-    type:
-      "LOCAL 02 — APARTAMENTO 18",
-
-    title:
-      "Apartamento 18",
-
-    html: `
-
-      <div class="paper">
-
-        <p>
-          <strong>HORÁRIO:</strong>
-          02:40
-        </p>
-
-        <p>
-          <strong>ELEMENTO:</strong>
-          MEDO
-        </p>
-
-        <hr>
-
-        <p>
-          O segundo ponto apresenta relatos de
-          presença e alterações na percepção.
-        </p>
-
-        <p>
-          O sino voltou a ser ouvido antes que
-          qualquer manifestação fosse identificada.
-        </p>
-
-        <p class="hand">
-          Tocou antes de acontecer.
-        </p>
-
-      </div>
-    `
-  },
-
-
-  tunel: {
-
-    type:
-      "LOCAL 03 — TÚNEL FERROVIÁRIO",
-
-    title:
-      "Túnel ferroviário",
-
-    html: `
-
-      <div class="paper">
-
-        <p>
-          <strong>HORÁRIO:</strong>
-          03:05
-        </p>
-
-        <p>
-          <strong>ELEMENTO:</strong>
-          VIOLÊNCIA
-        </p>
-
-        <hr>
-
-        <p>
-          O terceiro ponto apresenta sinais de
-          violência e preparação interrompida.
-        </p>
-
-        <p>
-          A sequência parece estar avançando
-          independentemente da investigação.
-        </p>
-
-        <p class="hand">
-          Ainda não era para tocar.
-        </p>
-
-      </div>
-    `
-  },
-
-
-  escola: {
-
-    type:
-      "LOCAL 04 — ESCOLA MUNICIPAL",
-
-    title:
-      "Escola municipal",
-
-    html: `
-
-      <div class="paper">
-
-        <p>
-          <strong>HORÁRIO:</strong>
-          03:30
-        </p>
-
-        <p>
-          <strong>ELEMENTO:</strong>
-          SILÊNCIO
-        </p>
-
-        <hr>
-
-        <p>
-          A escola concentra uma das conexões
-          mais importantes da investigação.
-        </p>
-
-        <p>
-          Desenhos encontrados no local repetem
-          formas circulares associadas à ocorrência.
-        </p>
-
-        <p class="hand">
-          Eles descobriram o padrão.
-        </p>
-
-      </div>
-    `
-  },
-
-
-  torre: {
-
-    type:
-      "LOCAL 05 — TORRE SEM NOME",
-
-    title:
-      "Torre sem nome",
-
-    html: `
-
-      <div class="paper">
-
-        <p>
-          <strong>HORÁRIO:</strong>
-          03:55
-        </p>
-
-        <p>
-          <strong>ELEMENTO:</strong>
-          SINO
-        </p>
-
-        <hr>
-
-        <p>
-          Torre sem identificação conhecida.
-          Nenhum sino é visível no local.
-        </p>
-
-        <p>
-          Mesmo assim, quanto mais próximos os
-          investigadores chegam, mais definido
-          fica o som.
-        </p>
-
-        <p class="hand">
-          O quinto não é convocado.<br>
-          O quinto convoca.
-        </p>
-
-      </div>
-    `
-  }
-
-};
-
-
-function openLocation(
-  key
-) {
-
-  const location =
-    locations[key];
-
-  const modal =
-    $("#documentModal");
-
-  if (
-    !location ||
-    !modal
-  ) {
-
-    return;
-  }
-
-  $("#modalType").textContent =
-    location.type;
-
-  $("#modalTitle").textContent =
-    location.title;
-
-  $("#modalContent").innerHTML =
-    location.html;
-
-  modal.classList.add(
-    "open"
-  );
-
-  modal.setAttribute(
-    "aria-hidden",
-    "false"
-  );
-
-  playSound(
-    "document"
-  );
-}
-  
   async function start() {
+
+    /*
+      Primeiro registramos TODOS os eventos.
+      Assim o site já responde mesmo se o Supabase
+      ou o YouTube demorarem para carregar.
+    */
 
     bindEvents();
 
+
     initNavigationObserver();
+
 
     setMusicVolume(
       musicVolume
     );
 
+
+    /*
+      Carregamento inicial local.
+      Isso também garante que o mural e as evidências
+      não desapareçam quando localStorage estiver vazio.
+    */
+
     loadLocalData();
 
-    setMusicVolume(
-  musicVolume
-);
 
-if (
-  window.YT?.Player
-) {
-  createYoutubePlayer();
-}
-    
+    /*
+      Tentativa de conectar ao Supabase.
+    */
+
     const connected =
       await initSupabase();
 
-    if (
-      !connected
-    ) {
+
+    if (!connected) {
+
+      /*
+        Mesmo sem Supabase, o site permanece funcional
+        localmente.
+      */
 
       return;
     }
+
 
     try {
 
@@ -5521,25 +5769,51 @@ if (
         error
       );
 
+
       appMode =
         "local";
+
 
       campaignId =
         "local";
 
+
       campaignCode =
         "LOCAL";
 
+
+      /*
+        Se o banco falhar, voltamos para os dados locais.
+      */
+
       loadLocalData();
+
 
       setSync(
         "modo local",
         false
       );
 
+
       toast(
         "Banco indisponível. O mural continua funcionando neste navegador."
       );
+    }
+
+
+    /*
+      Se o YouTube API já tiver chegado,
+      criamos o player imediatamente.
+      Caso ainda não tenha chegado,
+      onYouTubeIframeAPIReady() fará isso.
+    */
+
+    if (
+      window.YT?.Player &&
+      !youtubePlayer
+    ) {
+
+      createYoutubePlayer();
     }
   }
 
@@ -5569,79 +5843,3 @@ if (
   }
 
 })();
-function filterCards() {
-
-  const input =
-    $("#boardSearch");
-
-  const query =
-    input?.value
-      .trim()
-      .toLowerCase() ||
-    "";
-
-  const canvas =
-    $("#boardCanvas");
-
-  if (!canvas) {
-    return;
-  }
-
-  const cardsElements =
-    $$(".evidence-card", canvas);
-
-  cardsElements.forEach(
-    element => {
-
-      if (!query) {
-
-        element.classList.remove(
-          "dimmed"
-        );
-
-        return;
-      }
-
-      const id =
-        String(
-          element.dataset.id
-        );
-
-      const card =
-        cards.find(
-          item =>
-            String(
-              item.id
-            ) ===
-            id
-        );
-
-      if (!card) {
-        return;
-      }
-
-      const content =
-        [
-
-          card.title,
-          card.clue_type,
-          card.context,
-          card.notes
-
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-      const match =
-        content.includes(
-          query
-        );
-
-      element.classList.toggle(
-        "dimmed",
-        !match
-      );
-    }
-  );
-}
