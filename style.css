@@ -1647,3 +1647,68 @@ footer span:last-child {
   line-height: 1.6;
   opacity: .5;
 }
+/* ============================================================
+   CORREÇÃO DEFINITIVA — CAMADAS DOS PERSONAGENS
+   ============================================================ */
+
+.character-card {
+  position: relative;
+  isolation: isolate;
+}
+
+.character-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: #151518;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+.character-bg.image-slot {
+  background-image:
+    linear-gradient(
+      125deg,
+      #1b181b,
+      #111114 50%,
+      #55181d
+    );
+}
+
+.character-bg.asset-loaded {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.character-bg.asset-loaded img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.character-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      transparent 5%,
+      rgba(7, 7, 8, .08) 35%,
+      rgba(7, 7, 8, .97) 100%
+    );
+}
+
+.character-info {
+  position: relative;
+  z-index: 2;
+}
