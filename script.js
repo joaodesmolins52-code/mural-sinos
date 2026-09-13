@@ -1,43 +1,91 @@
-/* ============================================================
-   O SOM QUE NÃO DEVERIA EXISTIR
-   MURAL VIRTUAL — MESA ÚNICA / INTERFACE ROBUSTA
-   ============================================================ */
-
 (() => {
   "use strict";
+
 
   /* ============================================================
      UTILIDADES
      ============================================================ */
 
-  const $ = (selector, root = document) =>
-    root.querySelector(selector);
+  const $ = (
+    selector,
+    root = document
+  ) =>
+    root.querySelector(
+      selector
+    );
 
-  const $$ = (selector, root = document) =>
-    [...root.querySelectorAll(selector)];
+
+  const $$ = (
+    selector,
+    root = document
+  ) =>
+    [
+      ...root.querySelectorAll(
+        selector
+      )
+    ];
 
 
-  function on(selector, event, callback) {
-    const element = $(selector);
+  function on(
+    selector,
+    event,
+    handler
+  ) {
+
+    const element =
+      $(selector);
+
 
     if (element) {
-      element.addEventListener(event, callback);
+
+      element.addEventListener(
+        event,
+        handler
+      );
+
     }
+
   }
 
 
-  function escapeHtml(value) {
-    return String(value ?? "").replace(
+  function escapeHtml(
+    value
+  ) {
+
+    return String(
+      value ?? ""
+    ).replace(
       /[&<>'"]/g,
-      char =>
+      character =>
         ({
           "&": "&amp;",
           "<": "&lt;",
           ">": "&gt;",
           "'": "&#39;",
           '"': "&quot;"
-        })[char]
+        })[character]
     );
+
+  }
+
+
+  function safeJSON(
+    value,
+    fallback
+  ) {
+
+    try {
+
+      return JSON.parse(
+        value
+      );
+
+    } catch {
+
+      return fallback;
+
+    }
+
   }
 
 
@@ -46,294 +94,589 @@
      ============================================================ */
 
   const config =
-    window.SUPABASE_CONFIG || {};
+    window.SUPABASE_CONFIG ||
+    {};
 
-  const localKeys = {
-    cards: "sinosLocalCards",
-    connections: "sinosConnections",
-    objects: "sinosObjects",
-    notes: "sinosNotes",
-    sounds: "sinosUISounds"
+
+  const storageKeys = {
+
+    cards:
+      "sinosLocalCards",
+
+    objects:
+      "sinosLocalObjects",
+
+    connections:
+      "sinosLocalConnections",
+
+    notes:
+      "sinosLocalNotes",
+
+    sounds:
+      "sinosUISounds"
+
   };
 
 
-  let supabase = null;
-  let supabaseReady = false;
-  let realtimeChannel = null;
-
-  let appMode = "local";
-
-  let campaignId = null;
-  let campaignCode = "LOCAL";
-
-  let currentUser = null;
+  let supabase =
+    null;
 
 
-  let cards = [];
-  let objects = [];
-  let connections = [];
+  let supabaseReady =
+    false;
 
-  let selectedCard = null;
-  let draggingCard = null;
-  let dragMoved = false;
 
-  let connectingMode = false;
-  let zoom = 1;
+  let realtimeChannel =
+    null;
 
-  let editingNote = null;
 
-  let toastTimer = null;
-  let noteTimer = null;
+  let appMode =
+    "local";
+
+
+  let campaignId =
+    "local";
+
+
+  let campaignCode =
+    "LOCAL";
+
+
+  let currentUser =
+    null;
+
+
+  let cards =
+    [];
+
+
+  let objects =
+    [];
+
+
+  let connections =
+    [];
+
+
+  let selectedCard =
+    null;
+
+
+  let draggingCard =
+    null;
+
+
+  let dragMoved =
+    false;
+
+
+  let connectingMode =
+    false;
+
+
+  let zoom =
+    1;
+
+
+  let editingNote =
+    null;
+
+
+  let toastTimer =
+    null;
+
+
+  let noteTimer =
+    null;
+
+
+  let audioObjectUrl =
+    null;
+
+
+  let audioContext =
+    null;
 
 
   /* ============================================================
-     SEMENTE LOCAL
+     PISTAS INICIAIS
      ============================================================ */
 
   const seedCards = [
-    {
-      id: "sangue",
-      title: "SANGUE",
-      clue_type: "PISTA",
-      context: "Praça / condição do ritual",
-      notes: "",
-      x: 6,
-      y: 13,
-      rotation: 0
-    },
 
     {
-      id: "medo",
-      title: "MEDO",
-      clue_type: "PISTA",
-      context: "Atenção / amplificação",
-      notes: "",
-      x: 39,
-      y: 8,
-      rotation: 0
+      id:
+        "sangue",
+
+      title:
+        "SANGUE",
+
+      clue_type:
+        "PISTA",
+
+      context:
+        "Praça / condição do ritual",
+
+      notes:
+        "",
+
+      x:
+        6,
+
+      y:
+        13,
+
+      rotation:
+        -3
     },
 
-    {
-      id: "grupo",
-      title: "GRUPO",
-      clue_type: "PISTA",
-      context: "Pessoas coordenadas",
-      notes: "",
-      x: 70,
-      y: 16,
-      rotation: 0
-    },
 
     {
-      id: "fragmentos",
-      title: "FRAGMENTOS",
-      clue_type: "PISTA",
-      context: "Metal / ressonância",
-      notes: "",
-      x: 13,
-      y: 59,
-      rotation: 0
+      id:
+        "medo",
+
+      title:
+        "MEDO",
+
+      clue_type:
+        "PISTA",
+
+      context:
+        "Atenção / amplificação",
+
+      notes:
+        "",
+
+      x:
+        39,
+
+      y:
+        8,
+
+      rotation:
+        2
     },
 
-    {
-      id: "sino",
-      title: "SINO ANTECIPADO",
-      clue_type: "ANOMALIA",
-      context: "Registro acústico",
-      notes: "",
-      x: 45,
-      y: 49,
-      rotation: 0
-    },
 
     {
-      id: "quinto",
-      title: "QUINTO CÍRCULO",
-      clue_type: "PISTA",
-      context: "Símbolos / ritual",
-      notes: "",
-      x: 72,
-      y: 58,
-      rotation: 0
+      id:
+        "grupo",
+
+      title:
+        "GRUPO",
+
+      clue_type:
+        "PISTA",
+
+      context:
+        "Pessoas coordenadas",
+
+      notes:
+        "",
+
+      x:
+        70,
+
+      y:
+        16,
+
+      rotation:
+        -1
     },
 
+
     {
-      id: "sombra",
-      title: "SOMBRA SEM OBJETO",
-      clue_type: "MANIFESTAÇÃO",
-      context: "Presença visual",
-      notes: "",
-      x: 37,
-      y: 78,
-      rotation: 0
+      id:
+        "fragmentos",
+
+      title:
+        "FRAGMENTOS",
+
+      clue_type:
+        "PISTA",
+
+      context:
+        "Metal / ressonância",
+
+      notes:
+        "",
+
+      x:
+        13,
+
+      y:
+        59,
+
+      rotation:
+        3
+    },
+
+
+    {
+      id:
+        "sino",
+
+      title:
+        "SINO ANTECIPADO",
+
+      clue_type:
+        "ANOMALIA",
+
+      context:
+        "Registro acústico",
+
+      notes:
+        "",
+
+      x:
+        45,
+
+      y:
+        49,
+
+      rotation:
+        -2
+    },
+
+
+    {
+      id:
+        "quinto",
+
+      title:
+        "QUINTO CÍRCULO",
+
+      clue_type:
+        "PISTA",
+
+      context:
+        "Símbolos / ritual",
+
+      notes:
+        "",
+
+      x:
+        72,
+
+      y:
+        58,
+
+      rotation:
+        2
+    },
+
+
+    {
+      id:
+        "sombra",
+
+      title:
+        "SOMBRA SEM OBJETO",
+
+      clue_type:
+        "MANIFESTAÇÃO",
+
+      context:
+        "Presença visual",
+
+      notes:
+        "",
+
+      x:
+        37,
+
+      y:
+        78,
+
+      rotation:
+        1
     }
+
   ];
 
-
-  const seedObjects = [
-    {
-      id: "radio",
-      name: "RÁDIO",
-      object_type: "ÁUDIO",
-      description:
-        "Um rádio que perdeu sinal por um segundo.",
-      content:
-        "O aparelho registra um ruído impossível de localizar.",
-      x: 8,
-      y: 7
-    },
-
-    {
-      id: "fragmento-obj",
-      name: "FRAGMENTO",
-      object_type: "EVIDÊNCIA",
-      description:
-        "Peça de metal escuro sem ferrugem.",
-      content:
-        "Reage ao sangue e vibra perto de outro fragmento.",
-      x: 91,
-      y: 15
-    },
-
-    {
-      id: "chave",
-      name: "CHAVE",
-      object_type: "OBJETO",
-      description:
-        "Chave de ferro escuro.",
-      content:
-        "Há indícios de que abre uma porta associada à escola municipal.",
-      x: 87,
-      y: 80
-    }
-  ];
 
   /* ============================================================
-     SOM
+     OBJETOS
      ============================================================ */
 
-  let audioContext = null;
+  const seedObjects = [
 
-  let uiSoundsEnabled =
-    localStorage.getItem(
-      localKeys.sounds
-    ) !== "false";
+    {
+      id:
+        "radio",
 
+      name:
+        "RÁDIO",
+
+      object_type:
+        "ÁUDIO",
+
+      description:
+        "Um rádio que perdeu sinal por um segundo.",
+
+      content:
+        "O aparelho registra um ruído impossível de localizar.",
+
+      x:
+        8,
+
+      y:
+        7
+    },
+
+
+    {
+      id:
+        "fragmento-obj",
+
+      name:
+        "FRAGMENTO",
+
+      object_type:
+        "EVIDÊNCIA",
+
+      description:
+        "Peça de metal escuro sem ferrugem.",
+
+      content:
+        "Reage ao sangue e vibra perto de outro fragmento.",
+
+      x:
+        91,
+
+      y:
+        15
+    },
+
+
+    {
+      id:
+        "chave",
+
+      name:
+        "CHAVE",
+
+      object_type:
+        "OBJETO",
+
+      description:
+        "Chave de ferro escuro.",
+
+      content:
+        "Há indícios de que abre uma porta associada à escola municipal.",
+
+      x:
+        87,
+
+      y:
+        80
+    }
+
+  ];
+
+
+  /* ============================================================
+     SOM DE INTERFACE
+     ============================================================ */
 
   const frequencies = {
-    D3: 146.83,
-    F3: 174.61,
-    A3: 220,
-    C4: 261.63,
-    D4: 293.66,
-    F4: 349.23,
-    A4: 440,
-    C5: 523.25,
-    D5: 587.33
+
+    D3:
+      146.83,
+
+    F3:
+      174.61,
+
+    A3:
+      220,
+
+    C4:
+      261.63,
+
+    D4:
+      293.66,
+
+    F4:
+      349.23,
+
+    A4:
+      440,
+
+    C5:
+      523.25,
+
+    D5:
+      587.33
+
   };
 
 
+  let uiSoundsEnabled =
+    localStorage.getItem(
+      storageKeys.sounds
+    ) !==
+    "false";
+
+
   function getAudioContext() {
+
+    const AudioContextClass =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+
+    if (!AudioContextClass) {
+
+      return null;
+
+    }
+
+
     if (!audioContext) {
 
-      const AudioCtx =
-        window.AudioContext ||
-        window.webkitAudioContext;
-
-      if (!AudioCtx) {
-        return null;
-      }
-
       audioContext =
-        new AudioCtx();
+        new AudioContextClass();
+
     }
+
 
     if (
       audioContext.state ===
       "suspended"
     ) {
-      audioContext.resume().catch(() => {});
+
+      audioContext
+        .resume()
+        .catch(
+          () => {}
+        );
+
     }
 
+
     return audioContext;
+
   }
 
 
-  function tone(
+  function playTone(
+
     note,
-    duration = 0.07,
-    delay = 0,
-    type = "sine",
-    volume = 0.025
+
+    duration =
+      0.06,
+
+    delay =
+      0,
+
+    type =
+      "sine",
+
+    volume =
+      0.02
+
   ) {
 
     if (!uiSoundsEnabled) {
+
       return;
+
     }
 
-    const ctx =
+
+    const context =
       getAudioContext();
 
-    if (!ctx) {
+
+    if (!context) {
+
       return;
+
     }
 
+
     const oscillator =
-      ctx.createOscillator();
+      context.createOscillator();
+
 
     const gain =
-      ctx.createGain();
+      context.createGain();
+
 
     const now =
-      ctx.currentTime + delay;
+      context.currentTime +
+      delay;
+
 
     oscillator.type =
       type;
 
+
     oscillator.frequency.value =
-      frequencies[note] || note;
+      frequencies[note] ||
+      note;
+
 
     gain.gain.setValueAtTime(
       0.0001,
       now
     );
 
+
     gain.gain.exponentialRampToValueAtTime(
       volume,
-      now + 0.008
+      now +
+      0.008
     );
+
 
     gain.gain.exponentialRampToValueAtTime(
       0.0001,
-      now + duration
+      now +
+      duration
     );
+
 
     oscillator
       .connect(gain)
-      .connect(ctx.destination);
+      .connect(
+        context.destination
+      );
 
-    oscillator.start(now);
+
+    oscillator.start(
+      now
+    );
+
 
     oscillator.stop(
       now +
       duration +
       0.02
     );
+
   }
 
 
   function playSound(
-    type = "click"
+    type =
+      "click"
   ) {
 
-    if (!uiSoundsEnabled) {
+    if (
+      !uiSoundsEnabled
+    ) {
+
       return;
+
     }
+
 
     switch (type) {
 
       case "nav":
-        tone(
+
+        playTone(
           "D4",
           0.05,
           0,
@@ -341,18 +684,20 @@
           0.022
         );
 
-        tone(
+        playTone(
           "A4",
           0.09,
           0.035,
           "sine",
           0.014
         );
+
         break;
 
 
       case "panel":
-        tone(
+
+        playTone(
           "F4",
           0.06,
           0,
@@ -360,18 +705,20 @@
           0.022
         );
 
-        tone(
+        playTone(
           "A4",
           0.08,
           0.04,
           "sine",
           0.014
         );
+
         break;
 
 
       case "document":
-        tone(
+
+        playTone(
           "A3",
           0.08,
           0,
@@ -379,18 +726,20 @@
           0.022
         );
 
-        tone(
+        playTone(
           "D4",
           0.11,
           0.05,
           "sine",
           0.014
         );
+
         break;
 
 
       case "edit":
-        tone(
+
+        playTone(
           "A4",
           0.05,
           0,
@@ -398,18 +747,20 @@
           0.022
         );
 
-        tone(
+        playTone(
           "C5",
           0.08,
           0.035,
           "sine",
           0.014
         );
+
         break;
 
 
       case "save":
-        tone(
+
+        playTone(
           "D4",
           0.06,
           0,
@@ -417,7 +768,7 @@
           0.022
         );
 
-        tone(
+        playTone(
           "F4",
           0.06,
           0.05,
@@ -425,18 +776,20 @@
           0.018
         );
 
-        tone(
+        playTone(
           "A4",
           0.1,
           0.1,
           "sine",
           0.013
         );
+
         break;
 
 
       case "enter":
-        tone(
+
+        playTone(
           "D3",
           0.11,
           0,
@@ -444,7 +797,7 @@
           0.025
         );
 
-        tone(
+        playTone(
           "A3",
           0.14,
           0.08,
@@ -452,18 +805,20 @@
           0.02
         );
 
-        tone(
+        playTone(
           "D4",
           0.18,
           0.18,
           "triangle",
           0.012
         );
+
         break;
 
 
       case "connect":
-        tone(
+
+        playTone(
           "D4",
           0.07,
           0,
@@ -471,7 +826,7 @@
           0.025
         );
 
-        tone(
+        playTone(
           "A4",
           0.09,
           0.07,
@@ -479,18 +834,20 @@
           0.02
         );
 
-        tone(
-          "D4",
+        playTone(
+          "D5",
           0.12,
           0.14,
           "sine",
           0.014
         );
+
         break;
 
 
       case "danger":
-        tone(
+
+        playTone(
           "F4",
           0.05,
           0,
@@ -498,47 +855,94 @@
           0.02
         );
 
-        tone(
+        playTone(
           "D4",
           0.09,
           0.05,
           "sine",
           0.014
         );
+
         break;
 
 
-      default:
-        tone(
-          "D4",
+      case "tool":
+
+        playTone(
+          "F4",
           0.06,
           0,
           "triangle",
           0.022
         );
+
+        break;
+
+
+      case "card":
+
+        playTone(
+          "D4",
+          0.06,
+          0,
+          "triangle",
+          0.025
+        );
+
+        playTone(
+          "F4",
+          0.08,
+          0.04,
+          "sine",
+          0.015
+        );
+
+        break;
+
+
+      default:
+
+        playTone(
+          "D4",
+          0.05,
+          0,
+          "triangle",
+          0.02
+        );
+
     }
+
   }
 
 
-  function toast(message) {
+  function toast(
+    message
+  ) {
 
     const element =
       $("#toast");
 
+
     if (!element) {
+
       return;
+
     }
+
 
     element.textContent =
       message;
+
 
     element.classList.add(
       "show"
     );
 
+
     clearTimeout(
       toastTimer
     );
+
 
     toastTimer =
       setTimeout(
@@ -548,6 +952,7 @@
           ),
         2400
       );
+
   }
 
 
@@ -557,23 +962,36 @@
 
   function getSupabaseUrl() {
 
-    if (!config.url) {
+    const raw =
+      String(
+        config.url ||
+        ""
+      ).trim();
+
+
+    if (!raw) {
+
       return "";
+
     }
 
-    const raw =
-      String(config.url).trim();
 
     if (
-      raw.startsWith("//")
+      raw.startsWith(
+        "//"
+      )
     ) {
+
       return (
         window.location.protocol +
         raw
       );
+
     }
 
+
     return raw;
+
   }
 
 
@@ -582,37 +1000,57 @@
     const url =
       getSupabaseUrl();
 
+
     const key =
       String(
-        config.anonKey || ""
+        config.anonKey ||
+        ""
       ).trim();
 
+
     return Boolean(
+
       url &&
+
       key &&
+
       (
-        url.startsWith("http://") ||
-        url.startsWith("https://")
+        url.startsWith(
+          "http://"
+        ) ||
+
+        url.startsWith(
+          "https://"
+        )
+
       )
+
     );
+
   }
 
 
   function setSync(
     text,
-    connected = false
+    connected =
+      false
   ) {
 
     const sync =
       $("#syncStatus");
 
-    if (sync) {
-      sync.textContent =
-        text;
-    }
 
     const footer =
       $("#footerState");
+
+
+    if (sync) {
+
+      sync.textContent =
+        text;
+
+    }
+
 
     if (footer) {
 
@@ -620,7 +1058,9 @@
         connected
           ? "MESA COMPARTILHADA"
           : "MODO LOCAL";
+
     }
+
   }
 
 
@@ -634,12 +1074,15 @@
       appMode =
         "local";
 
+
       setSync(
         "modo local",
         false
       );
 
+
       return false;
+
     }
 
 
@@ -659,7 +1102,9 @@
       if (
         sessionResult.error
       ) {
+
         throw sessionResult.error;
+
       }
 
 
@@ -680,25 +1125,32 @@
         if (
           authResult.error
         ) {
+
           throw authResult.error;
+
         }
 
 
         currentUser =
-          authResult.data?.user ||
+          authResult.data
+            ?.user ||
           null;
+
       }
 
 
       if (!currentUser) {
+
         throw new Error(
           "USUARIO_ANONIMO_NAO_CRIADO"
         );
+
       }
 
 
       supabaseReady =
         true;
+
 
       appMode =
         "supabase";
@@ -715,7 +1167,7 @@
     } catch (error) {
 
       console.error(
-        "Supabase:",
+        "Erro Supabase:",
         error
       );
 
@@ -723,8 +1175,10 @@
       supabase =
         null;
 
+
       supabaseReady =
         false;
+
 
       appMode =
         "local";
@@ -737,12 +1191,14 @@
 
 
       return false;
+
     }
+
   }
 
 
   /* ============================================================
-     MESA ÚNICA
+     ENTRADA AUTOMÁTICA NA MESA
      ============================================================ */
 
   async function enterMainCampaign() {
@@ -751,15 +1207,11 @@
       !supabaseReady ||
       !supabase
     ) {
+
       return false;
+
     }
 
-
-    /*
-      O banco precisa possuir esta RPC.
-      Caso ela ainda não exista, o erro é capturado
-      pelo bootstrap e o site continua funcionando localmente.
-    */
 
     const result =
       await supabase.rpc(
@@ -767,8 +1219,12 @@
       );
 
 
-    if (result.error) {
+    if (
+      result.error
+    ) {
+
       throw result.error;
+
     }
 
 
@@ -777,9 +1233,11 @@
 
 
     if (!row) {
+
       throw new Error(
         "MESA_PRINCIPAL_NAO_ENCONTRADA"
       );
+
     }
 
 
@@ -793,6 +1251,7 @@
 
 
     return true;
+
   }
 
 
@@ -804,47 +1263,51 @@
 
     const savedCards =
       localStorage.getItem(
-        localKeys.cards
+        storageKeys.cards
+      );
+
+
+    const savedObjects =
+      localStorage.getItem(
+        storageKeys.objects
+      );
+
+
+    const savedConnections =
+      localStorage.getItem(
+        storageKeys.connections
       );
 
 
     cards =
       savedCards
-        ? safeJson(
+        ? safeJSON(
             savedCards,
-            structuredClone(seedCards)
+            structuredClone(
+              seedCards
+            )
           )
         : structuredClone(
             seedCards
           );
 
 
-    const savedObjects =
-      localStorage.getItem(
-        localKeys.objects
-      );
-
-
     objects =
       savedObjects
-        ? safeJson(
+        ? safeJSON(
             savedObjects,
-            structuredClone(seedObjects)
+            structuredClone(
+              seedObjects
+            )
           )
         : structuredClone(
             seedObjects
           );
 
 
-    const savedConnections =
-      localStorage.getItem(
-        localKeys.connections
-      );
-
-
     connections =
       savedConnections
-        ? safeJson(
+        ? safeJSON(
             savedConnections,
             []
           )
@@ -861,45 +1324,91 @@
       "modo local",
       false
     );
-  }
 
-
-  function safeJson(
-    value,
-    fallback
-  ) {
-
-    try {
-      return JSON.parse(
-        value
-      );
-    } catch {
-      return fallback;
-    }
   }
 
 
   function saveLocal() {
 
     localStorage.setItem(
-      localKeys.cards,
-      JSON.stringify(cards)
+      storageKeys.cards,
+      JSON.stringify(
+        cards
+      )
     );
 
-    localStorage.setItem(
-      localKeys.objects,
-      JSON.stringify(objects)
-    );
 
     localStorage.setItem(
-      localKeys.connections,
-      JSON.stringify(connections)
+      storageKeys.objects,
+      JSON.stringify(
+        objects
+      )
     );
+
+
+    localStorage.setItem(
+      storageKeys.connections,
+      JSON.stringify(
+        connections
+      )
+    );
+
+  }
+
+
+  function applyLocalNotes() {
+
+    const saved =
+      safeJSON(
+        localStorage.getItem(
+          storageKeys.notes
+        ) ||
+        "{}",
+        {}
+      );
+
+
+    window._entityNotes =
+      Object.entries(
+        saved
+      ).map(
+        ([compoundKey, text]) => {
+
+          const separator =
+            compoundKey.indexOf(
+              ":"
+            );
+
+
+          return {
+
+            entity_kind:
+              compoundKey.slice(
+                0,
+                separator
+              ),
+
+            entity_key:
+              compoundKey.slice(
+                separator +
+                1
+              ),
+
+            author_name:
+              "Jogador",
+
+            text
+
+          };
+
+        }
+      );
+
   }
 
 
   /* ============================================================
-     DADOS DO SUPABASE
+     DADOS SUPABASE
      ============================================================ */
 
   async function loadCampaignData() {
@@ -908,8 +1417,11 @@
       appMode !==
       "supabase"
     ) {
+
       loadLocalData();
+
       return;
+
     }
 
 
@@ -924,13 +1436,18 @@
         .order(
           "created_at",
           {
-            ascending: true
+            ascending:
+              true
           }
         );
 
 
-    if (cluesResult.error) {
+    if (
+      cluesResult.error
+    ) {
+
       throw cluesResult.error;
+
     }
 
 
@@ -945,7 +1462,8 @@
         .order(
           "created_at",
           {
-            ascending: true
+            ascending:
+              true
           }
         );
 
@@ -953,16 +1471,16 @@
     if (
       objectsResult.error
     ) {
+
       throw objectsResult.error;
+
     }
 
 
     const connectionsResult =
       await supabase
         .from("connections")
-        .select(
-          "id,campaign_id,clue_a,clue_b"
-        )
+        .select("*")
         .eq(
           "campaign_id",
           campaignId
@@ -972,20 +1490,25 @@
     if (
       connectionsResult.error
     ) {
+
       throw connectionsResult.error;
+
     }
 
 
     cards =
-      cluesResult.data || [];
+      cluesResult.data ||
+      [];
 
 
     objects =
-      objectsResult.data || [];
+      objectsResult.data ||
+      [];
 
 
     connections =
-      connectionsResult.data || [];
+      connectionsResult.data ||
+      [];
 
 
     await loadEntityNotes();
@@ -998,6 +1521,7 @@
       "sincronizado",
       true
     );
+
   }
 
 
@@ -1011,6 +1535,7 @@
       applyLocalNotes();
 
       return;
+
     }
 
 
@@ -1024,78 +1549,60 @@
         );
 
 
-    if (result.error) {
+    if (
+      result.error
+    ) {
+
       throw result.error;
+
     }
 
 
     window._entityNotes =
-      result.data || [];
+      result.data ||
+      [];
 
-
-    renderEntityNotes();
-  }
-
-
-  function applyLocalNotes() {
-
-    const saved =
-      safeJson(
-        localStorage.getItem(
-          localKeys.notes
-        ) || "{}",
-        {}
-      );
-
-
-    window._entityNotes =
-      Object.entries(
-        saved
-      ).map(
-        ([key, text]) => {
-
-          const separator =
-            key.indexOf(":");
-
-          return {
-
-            entity_kind:
-              key.slice(
-                0,
-                separator
-              ),
-
-            entity_key:
-              key.slice(
-                separator + 1
-              ),
-
-            author_name:
-              "Jogador",
-
-            text
-
-          };
-        }
-      );
-
-
-    renderEntityNotes();
   }
 
 
   /* ============================================================
-     RENDERIZAÇÃO
+     RENDER GERAL
      ============================================================ */
 
   function renderAll() {
 
     renderCards();
+
     renderObjects();
+
     renderConnections();
+
     renderEntityNotes();
+
     applyImageAssets();
+
     filterCards();
+
+  }
+
+
+  /* ============================================================
+     CARDS DO MURAL
+     ============================================================ */
+
+  function isSeedCard(
+    id
+  ) {
+
+    return seedCards.some(
+      card =>
+        String(
+          card.id
+        ) ===
+        String(
+          id
+        )
+    );
 
   }
 
@@ -1105,8 +1612,11 @@
     const canvas =
       $("#boardCanvas");
 
+
     if (!canvas) {
+
       return;
+
     }
 
 
@@ -1115,13 +1625,16 @@
         ".evidence-card"
       )
       .forEach(
-        card =>
-          card.remove()
+        element =>
+          element.remove()
       );
 
 
     cards.forEach(
-      (card, index) => {
+      (
+        card,
+        index
+      ) => {
 
         const element =
           document.createElement(
@@ -1134,58 +1647,63 @@
 
 
         element.dataset.id =
-          String(card.id);
-
-
-        element.dataset.title =
-          card.title ||
-          "";
-
-
-        element.dataset.type =
-          card.clue_type ||
-          "";
-
-
-        element.dataset.context =
-          card.context ||
-          "";
+          String(
+            card.id
+          );
 
 
         element.style.left =
           `${Number(
-            card.x ?? 10
+            card.x ??
+            10
           )}%`;
 
 
         element.style.top =
           `${Number(
-            card.y ?? 10
+            card.y ??
+            10
           )}%`;
 
 
         element.style.setProperty(
           "--rotation",
           `${Number(
-            card.rotation || 0
+            card.rotation ??
+            0
           )}deg`
         );
 
 
         element.innerHTML = `
 
-          <div class="card-pin"></div>
+          <div
+            class="card-pin"
+          ></div>
 
-          <span class="card-number">
-            ${String(index + 1).padStart(2,"0")}
+
+          <span
+            class="card-number"
+          >
+            ${String(
+              index +
+              1
+            ).padStart(
+              2,
+              "0"
+            )}
           </span>
 
-          <span class="card-type">
+
+          <span
+            class="card-type"
+          >
             ${escapeHtml(
               card.clue_type ||
               "PISTA"
             )}
           </span>
+
 
           <h3>
             ${escapeHtml(
@@ -1194,18 +1712,27 @@
             )}
           </h3>
 
-          <p class="card-context">
+
+          <p
+            class="card-context"
+          >
             ${escapeHtml(
               card.context ||
               ""
             )}
           </p>
 
-          <div class="card-notes-wrap">
 
-            <span class="card-notes-label">
+          <div
+            class="card-notes-wrap"
+          >
+
+            <span
+              class="card-notes-label"
+            >
               ANOTAÇÕES DA EQUIPE
             </span>
+
 
             <textarea
               class="card-notes"
@@ -1215,6 +1742,7 @@
 
           </div>
 
+
           <button
             class="mini-edit"
             type="button"
@@ -1223,9 +1751,15 @@
             EDITAR
           </button>
 
+
           ${
-            isCreatedCard(card)
-              ? `
+            isSeedCard(
+              card.id
+            )
+
+              ? ""
+
+              : `
                 <button
                   class="mini-delete"
                   type="button"
@@ -1234,15 +1768,9 @@
                   ×
                 </button>
               `
-              : ""
           }
 
         `;
-
-
-        canvas.appendChild(
-          element
-        );
 
 
         const textarea =
@@ -1252,32 +1780,41 @@
           );
 
 
-        textarea.value =
-          card.notes ||
-          "";
+        if (textarea) {
+
+          textarea.value =
+            card.notes ||
+            "";
 
 
-        textarea.addEventListener(
-          "pointerdown",
-          event =>
-            event.stopPropagation()
-        );
+          textarea.addEventListener(
+            "pointerdown",
+            event =>
+              event.stopPropagation()
+          );
 
 
-        textarea.addEventListener(
-          "click",
-          event =>
-            event.stopPropagation()
-        );
+          textarea.addEventListener(
+            "click",
+            event =>
+              event.stopPropagation()
+          );
 
 
-        textarea.addEventListener(
-          "input",
-          () =>
-            saveCardNotes(
-              card.id,
-              textarea.value
-            )
+          textarea.addEventListener(
+            "input",
+            () =>
+              saveCardNotes(
+                card.id,
+                textarea.value
+              )
+          );
+
+        }
+
+
+        canvas.appendChild(
+          element
         );
 
 
@@ -1287,757 +1824,9 @@
 
       }
     );
+
   }
 
-
-  function isCreatedCard(
-    card
-  ) {
-
-    return ![
-      "sangue",
-      "medo",
-      "grupo",
-      "fragmentos",
-      "sino",
-      "quinto",
-      "sombra"
-    ].includes(
-      String(card.id)
-    );
-  }
-
-
-  function renderObjects() {
-
-    const layer =
-      $("#boardObjectLayer");
-
-    const grid =
-      $("#objectGrid");
-
-
-    if (!layer || !grid) {
-      return;
-    }
-
-
-    layer.innerHTML =
-      "";
-
-    grid.innerHTML =
-      "";
-
-
-    objects.forEach(
-      object => {
-
-        const boardObject =
-          document.createElement(
-            "button"
-          );
-
-
-        boardObject.type =
-          "button";
-
-        boardObject.className =
-          "board-object";
-
-
-        boardObject.style.left =
-          `${Number(
-            object.x ?? 50
-          )}%`;
-
-
-        boardObject.style.top =
-          `${Number(
-            object.y ?? 50
-          )}%`;
-
-
-        boardObject.innerHTML = `
-
-          <span>
-
-            ${escapeHtml(
-              object.name
-            )}
-
-            <small>
-              ${escapeHtml(
-                object.object_type ||
-                "OBJETO"
-              )}
-            </small>
-
-          </span>
-
-        `;
-
-
-        boardObject.addEventListener(
-          "click",
-          event => {
-
-            event.stopPropagation();
-
-            openObject(
-              object
-            );
-
-          }
-        );
-
-
-        layer.appendChild(
-          boardObject
-        );
-
-
-        const tile =
-          document.createElement(
-            "button"
-          );
-
-
-        tile.type =
-          "button";
-
-        tile.className =
-          "object-tile";
-
-
-        tile.dataset.sound =
-          "document";
-
-
-        tile.innerHTML = `
-
-          <span>
-            ${escapeHtml(
-              object.object_type ||
-              "OBJETO"
-            )}
-          </span>
-
-          <strong>
-            ${escapeHtml(
-              object.name
-            )}
-          </strong>
-
-          <small>
-            ABRIR ↗
-          </small>
-
-        `;
-
-
-        tile.addEventListener(
-          "click",
-          () =>
-            openObject(
-              object
-            )
-        );
-
-
-        grid.appendChild(
-          tile
-        );
-
-      }
-    );
-  }
-
-
-  function renderConnections() {
-
-    const svg =
-      $("#connections");
-
-    const canvas =
-      $("#boardCanvas");
-
-
-    if (!svg || !canvas) {
-      return;
-    }
-
-
-    svg.innerHTML =
-      "";
-
-
-    connections.forEach(
-      connection => {
-
-        const aId =
-          connection.clue_a ||
-          connection[0];
-
-        const bId =
-          connection.clue_b ||
-          connection[1];
-
-
-        const a =
-          canvas.querySelector(
-            `[data-id="${CSS.escape(String(aId))}"]`
-          );
-
-
-        const b =
-          canvas.querySelector(
-            `[data-id="${CSS.escape(String(bId))}"]`
-          );
-
-
-        if (!a || !b) {
-          return;
-        }
-
-
-        const p1 =
-          cardCenter(a);
-
-        const p2 =
-          cardCenter(b);
-
-
-        const line =
-          document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "line"
-          );
-
-
-        line.setAttribute(
-          "x1",
-          p1.x
-        );
-
-
-        line.setAttribute(
-          "y1",
-          p1.y
-        );
-
-
-        line.setAttribute(
-          "x2",
-          p2.x
-        );
-
-
-        line.setAttribute(
-          "y2",
-          p2.y
-        );
-
-
-        line.classList.add(
-          "connection-line"
-        );
-
-
-        if (
-          selectedCard === a ||
-          selectedCard === b
-        ) {
-
-          line.classList.add(
-            "highlight"
-          );
-        }
-
-
-        svg.appendChild(
-          line
-        );
-
-      }
-    );
-
-
-    const cardCount =
-      $("#cardCount");
-
-    const connectionCount =
-      $("#connectionCount");
-
-
-    if (cardCount) {
-      cardCount.textContent =
-        cards.length;
-    }
-
-
-    if (connectionCount) {
-      connectionCount.textContent =
-        connections.length;
-    }
-  }
-
-
-  function renderEntityNotes() {
-
-    const allNotes =
-      window._entityNotes ||
-      [];
-
-
-    $$(".shared-notes")
-      .forEach(
-        box => {
-
-          const kind =
-            box.dataset.noteKind;
-
-          const key =
-            box.dataset.noteKey;
-
-
-          box.innerHTML =
-            "";
-
-
-          allNotes
-            .filter(
-              note =>
-                note.entity_kind ===
-                  kind &&
-                note.entity_key ===
-                  key &&
-                note.text?.trim()
-            )
-            .slice(-4)
-            .forEach(
-              note => {
-
-                const line =
-                  document.createElement(
-                    "div"
-                  );
-
-
-                line.className =
-                  "note-line";
-
-
-                line.innerHTML = `
-
-                  <strong>
-                    ${escapeHtml(
-                      note.author_name ||
-                      "Jogador"
-                    )}
-                  </strong>
-
-                  ${escapeHtml(
-                    note.text
-                  )}
-
-                `;
-
-
-                box.appendChild(
-                  line
-                );
-
-              }
-            );
-
-        }
-      );
-  }
-
-
-async function applyImageAssets() {
-
-  const slots =
-    $$(".image-slot[data-asset]");
-
-  if (!slots.length) {
-    return;
-  }
-
-  const repo =
-    "joaodesmolins52-code/mural-sinos";
-
-  const branch =
-    "main";
-
-  const directories = [
-    "characters",
-    "locations",
-    "objects",
-    "documents"
-  ];
-
-  const filesByDirectory = {};
-
-
-  /*
-    Busca o conteúdo real das pastas do GitHub.
-    Assim não dependemos da extensão do arquivo.
-  */
-
-  await Promise.all(
-    directories.map(
-      async directory => {
-
-        try {
-
-          const response =
-            await fetch(
-              `https://api.github.com/repos/${repo}/contents/assets/${directory}?ref=${branch}`,
-              {
-                cache: "no-store"
-              }
-            );
-
-
-          if (!response.ok) {
-            throw new Error(
-              `GitHub ${response.status}`
-            );
-          }
-
-
-          const files =
-            await response.json();
-
-
-          filesByDirectory[directory] =
-            Array.isArray(files)
-              ? files.filter(
-                  file =>
-                    file.type === "file"
-                )
-              : [];
-
-
-        } catch(error) {
-
-          console.error(
-            `Não foi possível listar assets/${directory}:`,
-            error
-          );
-
-
-          filesByDirectory[directory] =
-            [];
-        }
-
-      }
-    )
-  );
-
-
-  slots.forEach(
-    element => {
-
-      const requestedPath =
-        element.dataset.asset ||
-        "";
-
-
-      /*
-        Exemplo:
-        assets/characters/marcados.webp
-
-        vira:
-        directory = characters
-        base = marcados
-      */
-
-      const normalized =
-        requestedPath
-          .replace(/\\/g, "/");
-
-
-      const parts =
-        normalized.split("/");
-
-
-      const fileName =
-        parts.pop() || "";
-
-
-      const directory =
-        parts.pop() || "";
-
-
-      const requestedBase =
-        fileName
-          .replace(
-            /\.(webp|png|jpg|jpeg|gif)$/i,
-            ""
-          )
-          .toLowerCase()
-          .trim();
-
-
-      const available =
-        filesByDirectory[
-          directory
-        ] || [];
-
-
-      /*
-        Primeiro tenta correspondência exata.
-      */
-
-      let match =
-        available.find(
-          file => {
-
-            const base =
-              file.name
-                .replace(
-                  /\.(webp|png|jpg|jpeg|gif)$/i,
-                  ""
-                )
-                .toLowerCase()
-                .trim();
-
-            return (
-              base ===
-              requestedBase
-            );
-          }
-        );
-
-
-      /*
-        Se não encontrar, tenta arquivo cujo
-        nome contenha o nome desejado.
-
-        Exemplo:
-        marcados-final.png
-        marcados_01.png
-        marcados (1).png
-      */
-
-      if (!match) {
-
-        match =
-          available.find(
-            file => {
-
-              const base =
-                file.name
-                  .replace(
-                    /\.(webp|png|jpg|jpeg|gif)$/i,
-                    ""
-                  )
-                  .toLowerCase()
-                  .trim();
-
-              return (
-                base.includes(
-                  requestedBase
-                ) ||
-                requestedBase.includes(
-                  base
-                )
-              );
-
-            }
-          );
-
-      }
-
-
-      if (!match) {
-
-        console.warn(
-          `Nenhuma imagem encontrada para "${requestedBase}" em assets/${directory}`
-        );
-
-        return;
-      }
-
-
-      const imageUrl =
-        match.download_url ||
-        `https://raw.githubusercontent.com/${repo}/${branch}/assets/${directory}/${encodeURIComponent(match.name)}`;
-
-
-      /*
-        PERSONAGENS:
-        usamos <img> real para preservar
-        corretamente transparência PNG/WebP.
-      */
-
-      if (
-        element.classList.contains(
-          "character-bg"
-        )
-      ) {
-
-        element.innerHTML = "";
-
-
-        const image =
-          document.createElement(
-            "img"
-          );
-
-
-        image.src =
-          imageUrl;
-
-
-        image.alt =
-          requestedBase;
-
-
-        image.loading =
-          "lazy";
-
-
-        image.decoding =
-          "async";
-
-
-        image.draggable =
-          false;
-
-
-        image.onload =
-          () => {
-
-            element.classList.add(
-              "asset-loaded"
-            );
-
-            console.log(
-              `Imagem carregada: ${match.name}`
-            );
-
-          };
-
-
-        image.onerror =
-          () => {
-
-            console.error(
-              `Falha ao carregar: ${imageUrl}`
-            );
-
-          };
-
-
-        element.appendChild(
-          image
-        );
-
-
-        return;
-      }
-
-
-      /*
-        LOCAIS:
-        continuam funcionando como background.
-      */
-
-      element.style.setProperty(
-        "--location-image",
-        `url("${imageUrl}")`
-      );
-
-
-      element.style.backgroundImage =
-        `url("${imageUrl}")`;
-
-
-      element.classList.add(
-        "has-image"
-      );
-
-    }
-  );
-}
-  function filterCards() {
-
-    const input =
-      $("#boardSearch");
-
-    if (!input) {
-      return;
-    }
-
-
-    const query =
-      input.value
-        .trim()
-        .toLowerCase();
-
-
-    cards.forEach(
-      card => {
-
-        const element =
-          $(
-            `#boardCanvas [data-id="${CSS.escape(String(card.id))}"]`
-          );
-
-
-        if (!element) {
-          return;
-        }
-
-
-        const text =
-          [
-            card.title,
-            card.context,
-            card.clue_type,
-            card.notes
-          ]
-          .join(" ")
-          .toLowerCase();
-
-
-        element.classList.toggle(
-          "dimmed",
-          Boolean(
-            query &&
-            !text.includes(query)
-          )
-        );
-
-      }
-    );
-  }
-
-
-  function cardCenter(
-    element
-  ) {
-
-    return {
-
-      x:
-        element.offsetLeft +
-        element.offsetWidth / 2,
-
-      y:
-        element.offsetTop +
-        element.offsetHeight / 2
-
-    };
-  }
-
-
-  /* ============================================================
-     INTERAÇÃO DAS PISTAS
-     ============================================================ */
 
   function wireCard(
     card
@@ -2085,12 +1874,15 @@ async function applyImageAssets() {
       "click",
       event => {
 
-        if (dragMoved) {
+        if (
+          dragMoved
+        ) {
 
           dragMoved =
             false;
 
           return;
+
         }
 
 
@@ -2101,25 +1893,32 @@ async function applyImageAssets() {
         ) {
 
           return;
+
         }
 
 
-        if (connectingMode) {
+        if (
+          connectingMode
+        ) {
 
-          if (!selectedCard) {
+          if (
+            !selectedCard
+          ) {
 
             selectCard(
               card
             );
 
           } else if (
-            selectedCard !== card
+            selectedCard !==
+            card
           ) {
 
             toggleConnection(
               selectedCard.dataset.id,
               card.dataset.id
             );
+
 
             selectCard(
               null
@@ -2129,21 +1928,25 @@ async function applyImageAssets() {
 
 
           return;
+
         }
 
 
         selectCard(
           card
         );
+
       }
     );
 
 
     const editButton =
-      $(".mini-edit", card);
+      $(".mini-edit",card);
 
 
-    if (editButton) {
+    if (
+      editButton
+    ) {
 
       editButton.addEventListener(
         "click",
@@ -2151,19 +1954,27 @@ async function applyImageAssets() {
 
           event.stopPropagation();
 
+          playSound(
+            "edit"
+          );
+
           openCardEditor(
             card.dataset.id
           );
+
         }
       );
+
     }
 
 
     const deleteButton =
-      $(".mini-delete", card);
+      $(".mini-delete",card);
 
 
-    if (deleteButton) {
+    if (
+      deleteButton
+    ) {
 
       deleteButton.addEventListener(
         "click",
@@ -2171,14 +1982,25 @@ async function applyImageAssets() {
 
           event.stopPropagation();
 
+          playSound(
+            "danger"
+          );
+
           deleteCard(
             card.dataset.id
           );
+
         }
       );
+
     }
+
   }
 
+
+  /* ============================================================
+     ARRASTAR CARD
+     ============================================================ */
 
   function beginDrag(
     card,
@@ -2190,12 +2012,15 @@ async function applyImageAssets() {
         "textarea,button"
       )
     ) {
+
       return;
+
     }
 
 
     draggingCard =
       card;
+
 
     dragMoved =
       false;
@@ -2206,50 +2031,38 @@ async function applyImageAssets() {
     );
 
 
-    if (
-      card.setPointerCapture
-    ) {
+    try {
 
-      try {
+      card.setPointerCapture(
+        event.pointerId
+      );
 
-        card.setPointerCapture(
-          event.pointerId
-        );
-
-      } catch {}
-    }
+    } catch {}
 
 
     const rect =
       card.getBoundingClientRect();
 
 
-    const board =
-      $("#evidenceBoard")
-        .getBoundingClientRect();
-
-
     card.dataset.offsetX =
-      (
-        event.clientX -
-        rect.left
-      ) /
-      zoom;
+      String(
+        (
+          event.clientX -
+          rect.left
+        ) /
+        zoom
+      );
 
 
     card.dataset.offsetY =
-      (
-        event.clientY -
-        rect.top
-      ) /
-      zoom;
+      String(
+        (
+          event.clientY -
+          rect.top
+        ) /
+        zoom
+      );
 
-
-    card.dataset.boardLeft =
-      board.left;
-
-    card.dataset.boardTop =
-      board.top;
   }
 
 
@@ -2262,7 +2075,9 @@ async function applyImageAssets() {
       draggingCard !==
       card
     ) {
+
       return;
+
     }
 
 
@@ -2270,7 +2085,7 @@ async function applyImageAssets() {
       true;
 
 
-    const boardElement =
+    const board =
       $("#evidenceBoard");
 
 
@@ -2279,39 +2094,49 @@ async function applyImageAssets() {
 
 
     if (
-      !boardElement ||
+      !board ||
       !canvas
     ) {
+
       return;
+
     }
 
 
-    const boardRect =
-      boardElement.getBoundingClientRect();
+    const rect =
+      board.getBoundingClientRect();
 
 
-    const x =
-      (
-        event.clientX -
-        boardRect.left +
-        boardElement.scrollLeft
-      ) /
-      zoom -
+    const offsetX =
       Number(
         card.dataset.offsetX
       );
 
 
-    const y =
-      (
-        event.clientY -
-        boardRect.top +
-        boardElement.scrollTop
-      ) /
-      zoom -
+    const offsetY =
       Number(
         card.dataset.offsetY
       );
+
+
+    const x =
+      (
+        event.clientX -
+        rect.left +
+        board.scrollLeft
+      ) /
+      zoom -
+      offsetX;
+
+
+    const y =
+      (
+        event.clientY -
+        rect.top +
+        board.scrollTop
+      ) /
+      zoom -
+      offsetY;
 
 
     const maxX =
@@ -2352,16 +2177,20 @@ async function applyImageAssets() {
 
     card.style.left =
       `${
-        finalX /
-        canvas.clientWidth *
+        (
+          finalX /
+          canvas.clientWidth
+        ) *
         100
       }%`;
 
 
     card.style.top =
       `${
-        finalY /
-        canvas.clientHeight *
+        (
+          finalY /
+          canvas.clientHeight
+        ) *
         100
       }%`;
 
@@ -2369,8 +2198,12 @@ async function applyImageAssets() {
     const model =
       cards.find(
         item =>
-          String(item.id) ===
-          String(card.dataset.id)
+          String(
+            item.id
+          ) ===
+          String(
+            card.dataset.id
+          )
       );
 
 
@@ -2381,14 +2214,17 @@ async function applyImageAssets() {
           card.style.left
         );
 
+
       model.y =
         parseFloat(
           card.style.top
         );
+
     }
 
 
     renderConnections();
+
   }
 
 
@@ -2400,7 +2236,9 @@ async function applyImageAssets() {
       draggingCard !==
       card
     ) {
+
       return;
+
     }
 
 
@@ -2413,39 +2251,56 @@ async function applyImageAssets() {
     );
 
 
-    if (!dragMoved) {
+    if (
+      !dragMoved
+    ) {
+
       return;
+
     }
 
 
     const model =
       cards.find(
         item =>
-          String(item.id) ===
-          String(card.dataset.id)
+          String(
+            item.id
+          ) ===
+          String(
+            card.dataset.id
+          )
       );
 
 
-    if (!model) {
-      return;
+    if (
+      model
+    ) {
+
+      await saveCardPosition(
+        model
+      );
+
     }
 
-
-    await saveCardPosition(
-      model
-    );
   }
 
+
+  /* ============================================================
+     SELEÇÃO
+     ============================================================ */
 
   function selectCard(
     card
   ) {
 
-    if (selectedCard) {
+    if (
+      selectedCard
+    ) {
 
       selectedCard.classList.remove(
         "selected"
       );
+
     }
 
 
@@ -2453,15 +2308,19 @@ async function applyImageAssets() {
       card;
 
 
-    if (selectedCard) {
+    if (
+      selectedCard
+    ) {
 
       selectedCard.classList.add(
         "selected"
       );
+
     }
 
 
     renderConnections();
+
   }
 
 
@@ -2495,22 +2354,30 @@ async function applyImageAssets() {
         const existing =
           connections.find(
             connection =>
+
               String(
-                connection.clue_a ||
+                connection.clue_a ??
                 connection[0]
-              ) === a &&
+              ) ===
+              a &&
+
               String(
-                connection.clue_b ||
+                connection.clue_b ??
                 connection[1]
-              ) === b
+              ) ===
+              b
           );
 
 
-        if (existing) {
+        if (
+          existing
+        ) {
 
           const result =
             await supabase
-              .from("connections")
+              .from(
+                "connections"
+              )
               .delete()
               .eq(
                 "id",
@@ -2518,15 +2385,21 @@ async function applyImageAssets() {
               );
 
 
-          if (result.error) {
+          if (
+            result.error
+          ) {
+
             throw result.error;
+
           }
 
         } else {
 
           const result =
             await supabase
-              .from("connections")
+              .from(
+                "connections"
+              )
               .insert({
 
                 campaign_id:
@@ -2545,27 +2418,40 @@ async function applyImageAssets() {
               });
 
 
-          if (result.error) {
+          if (
+            result.error
+          ) {
+
             throw result.error;
+
           }
+
         }
 
-
-        return;
-
-      } catch (error) {
+      } catch (
+        error
+      ) {
 
         console.error(
           "Conexão:",
           error
         );
 
+
         toast(
-          "A conexão não pôde ser sincronizada."
+          "Não foi possível sincronizar a conexão."
         );
 
-        return;
       }
+
+
+      playSound(
+        "connect"
+      );
+
+
+      return;
+
     }
 
 
@@ -2573,17 +2459,23 @@ async function applyImageAssets() {
       connections.findIndex(
         connection =>
           String(
-            connection.clue_a ||
+            connection.clue_a ??
             connection[0]
-          ) === a &&
+          ) ===
+          a &&
+
           String(
-            connection.clue_b ||
+            connection.clue_b ??
             connection[1]
-          ) === b
+          ) ===
+          b
       );
 
 
-    if (index >= 0) {
+    if (
+      index >=
+      0
+    ) {
 
       connections.splice(
         index,
@@ -2592,25 +2484,210 @@ async function applyImageAssets() {
 
     } else {
 
-      connections.push([
-        a,
-        b
-      ]);
+      connections.push(
+        [
+          a,
+          b
+        ]
+      );
+
     }
 
 
     saveLocal();
 
+
     renderConnections();
+
 
     playSound(
       "connect"
     );
+
+  }
+
+
+  function renderConnections() {
+
+    const svg =
+      $("#connections");
+
+
+    const canvas =
+      $("#boardCanvas");
+
+
+    if (
+      !svg ||
+      !canvas
+    ) {
+
+      return;
+
+    }
+
+
+    svg.innerHTML =
+      "";
+
+
+    connections.forEach(
+      connection => {
+
+        const aId =
+          connection.clue_a ??
+          connection[0];
+
+
+        const bId =
+          connection.clue_b ??
+          connection[1];
+
+
+        const a =
+          canvas.querySelector(
+            `[data-id="${CSS.escape(
+              String(aId)
+            )}"]`
+          );
+
+
+        const b =
+          canvas.querySelector(
+            `[data-id="${CSS.escape(
+              String(bId)
+            )}"]`
+          );
+
+
+        if (
+          !a ||
+          !b
+        ) {
+
+          return;
+
+        }
+
+
+        const p1 = {
+
+          x:
+            a.offsetLeft +
+            a.offsetWidth /
+            2,
+
+          y:
+            a.offsetTop +
+            a.offsetHeight /
+            2
+
+        };
+
+
+        const p2 = {
+
+          x:
+            b.offsetLeft +
+            b.offsetWidth /
+            2,
+
+          y:
+            b.offsetTop +
+            b.offsetHeight /
+            2
+
+        };
+
+
+        const line =
+          document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+
+
+        line.setAttribute(
+          "x1",
+          p1.x
+        );
+
+
+        line.setAttribute(
+          "y1",
+          p1.y
+        );
+
+
+        line.setAttribute(
+          "x2",
+          p2.x
+        );
+
+
+        line.setAttribute(
+          "y2",
+          p2.y
+        );
+
+
+        line.classList.add(
+          "connection-line"
+        );
+
+
+        if (
+          selectedCard === a ||
+          selectedCard === b
+        ) {
+
+          line.classList.add(
+            "highlight"
+          );
+
+        }
+
+
+        svg.appendChild(
+          line
+        );
+
+      }
+    );
+
+
+    const cardCount =
+      $("#cardCount");
+
+
+    const connectionCount =
+      $("#connectionCount");
+
+
+    if (
+      cardCount
+    ) {
+
+      cardCount.textContent =
+        cards.length;
+
+    }
+
+
+    if (
+      connectionCount
+    ) {
+
+      connectionCount.textContent =
+        connections.length;
+
+    }
+
   }
 
 
   /* ============================================================
-     SALVAMENTO
+     SALVAR POSIÇÃO
      ============================================================ */
 
   async function saveCardPosition(
@@ -2625,34 +2702,55 @@ async function applyImageAssets() {
       saveLocal();
 
       return;
+
     }
 
 
-    const result =
-      await supabase
-        .from("clues")
-        .update({
+    try {
 
-          x:
-            Number(card.x),
+      const result =
+        await supabase
+          .from(
+            "clues"
+          )
+          .update({
 
-          y:
-            Number(card.y)
+            x:
+              Number(
+                card.x
+              ),
 
-        })
-        .eq(
-          "id",
-          card.id
-        );
+            y:
+              Number(
+                card.y
+              )
+
+          })
+          .eq(
+            "id",
+            card.id
+          );
 
 
-    if (result.error) {
+      if (
+        result.error
+      ) {
+
+        throw result.error;
+
+      }
+
+    } catch (
+      error
+    ) {
 
       console.error(
-        result.error
+        "Posição:",
+        error
       );
 
     }
+
   }
 
 
@@ -2664,14 +2762,22 @@ async function applyImageAssets() {
     const card =
       cards.find(
         item =>
-          String(item.id) ===
-          String(id)
+          String(
+            item.id
+          ) ===
+          String(
+            id
+          )
       );
 
 
-    if (card) {
+    if (
+      card
+    ) {
+
       card.notes =
         text;
+
     }
 
 
@@ -2689,39 +2795,52 @@ async function applyImageAssets() {
             "supabase"
           ) {
 
-            const result =
-              await supabase
-                .from("clues")
-                .update({
-                  notes:
-                    text
-                })
-                .eq(
-                  "id",
-                  id
-                );
+            try {
+
+              const result =
+                await supabase
+                  .from(
+                    "clues"
+                  )
+                  .update({
+                    notes:
+                      text
+                  })
+                  .eq(
+                    "id",
+                    id
+                  );
 
 
-            if (
-              result.error
+              if (
+                result.error
+              ) {
+
+                throw result.error;
+
+              }
+
+            } catch (
+              error
             ) {
 
               console.error(
-                result.error
+                "Anotação da pista:",
+                error
               );
+
             }
 
           } else {
 
             saveLocal();
+
           }
 
         },
         250
       );
 
-
-    filterCards();
   }
 
 
@@ -2736,7 +2855,9 @@ async function applyImageAssets() {
 
 
     if (!modal) {
+
       return;
+
     }
 
 
@@ -2751,13 +2872,9 @@ async function applyImageAssets() {
     );
 
 
-    const title =
-      $("#newCardTitle");
+    $("#newCardTitle")
+      ?.focus();
 
-
-    if (title) {
-      title.focus();
-    }
   }
 
 
@@ -2768,7 +2885,9 @@ async function applyImageAssets() {
 
 
     if (!modal) {
+
       return;
+
     }
 
 
@@ -2781,6 +2900,7 @@ async function applyImageAssets() {
       "aria-hidden",
       "true"
     );
+
   }
 
 
@@ -2795,22 +2915,27 @@ async function applyImageAssets() {
     const type =
       $("#newCardType")
         ?.value
-        .trim();
+        .trim() ||
+      "PISTA";
 
 
     const context =
       $("#newCardContext")
         ?.value
-        .trim();
+        .trim() ||
+      "";
 
 
-    if (!title) {
+    if (
+      !title
+    ) {
 
       toast(
         "Dê um título à pista."
       );
 
       return;
+
     }
 
 
@@ -2819,12 +2944,9 @@ async function applyImageAssets() {
       title,
 
       clue_type:
-        type ||
-        "PISTA",
+        type,
 
-      context:
-        context ||
-        "",
+      context,
 
       notes:
         "",
@@ -2841,8 +2963,8 @@ async function applyImageAssets() {
 
       rotation:
         Math.random() *
-        2 -
-        1
+        4 -
+        2
 
     };
 
@@ -2856,7 +2978,9 @@ async function applyImageAssets() {
 
         const result =
           await supabase
-            .from("clues")
+            .from(
+              "clues"
+            )
             .insert({
 
               ...newCard,
@@ -2876,7 +3000,9 @@ async function applyImageAssets() {
         if (
           result.error
         ) {
+
           throw result.error;
+
         }
 
 
@@ -2884,17 +3010,23 @@ async function applyImageAssets() {
           result.data
         );
 
-      } catch (error) {
+      } catch (
+        error
+      ) {
 
         console.error(
+          "Criar pista:",
           error
         );
+
 
         toast(
           "Não foi possível criar a pista."
         );
 
+
         return;
+
       }
 
     } else {
@@ -2909,34 +3041,58 @@ async function applyImageAssets() {
 
 
       saveLocal();
+
     }
 
 
     renderCards();
 
+
     renderConnections();
+
 
     closeNewCard();
 
 
-    $("#newCardTitle").value =
-      "";
+    if (
+      $("#newCardTitle")
+    ) {
 
-    $("#newCardType").value =
-      "";
+      $("#newCardTitle").value =
+        "";
 
-    $("#newCardContext").value =
-      "";
+    }
+
+
+    if (
+      $("#newCardType")
+    ) {
+
+      $("#newCardType").value =
+        "";
+
+    }
+
+
+    if (
+      $("#newCardContext")
+    ) {
+
+      $("#newCardContext").value =
+        "";
+
+    }
 
 
     toast(
       "Nova pista adicionada."
     );
+
   }
 
 
   /* ============================================================
-     EDITAR / EXCLUIR PISTA
+     EDITAR PISTA
      ============================================================ */
 
   function openCardEditor(
@@ -2946,13 +3102,21 @@ async function applyImageAssets() {
     const card =
       cards.find(
         item =>
-          String(item.id) ===
-          String(id)
+          String(
+            item.id
+          ) ===
+          String(
+            id
+          )
       );
 
 
-    if (!card) {
+    if (
+      !card
+    ) {
+
       return;
+
     }
 
 
@@ -2962,9 +3126,7 @@ async function applyImageAssets() {
         "clue",
 
       key:
-        id,
-
-      card
+        id
 
     };
 
@@ -2977,17 +3139,25 @@ async function applyImageAssets() {
       $("#editorText");
 
 
-    if (title) {
+    if (
+      title
+    ) {
+
       title.textContent =
         card.title ||
         "ANOTAÇÃO";
+
     }
 
 
-    if (text) {
+    if (
+      text
+    ) {
+
       text.value =
         card.notes ||
         "";
+
     }
 
 
@@ -2995,7 +3165,9 @@ async function applyImageAssets() {
       $("#editorModal");
 
 
-    if (modal) {
+    if (
+      modal
+    ) {
 
       modal.classList.add(
         "open"
@@ -3008,6 +3180,7 @@ async function applyImageAssets() {
       );
 
     }
+
   }
 
 
@@ -3020,7 +3193,9 @@ async function applyImageAssets() {
         "Excluir esta pista do quadro?"
       )
     ) {
+
       return;
+
     }
 
 
@@ -3029,34 +3204,59 @@ async function applyImageAssets() {
       "supabase"
     ) {
 
-      const result =
-        await supabase
-          .from("clues")
-          .delete()
-          .eq(
-            "id",
-            id
-          );
+      try {
+
+        const result =
+          await supabase
+            .from(
+              "clues"
+            )
+            .delete()
+            .eq(
+              "id",
+              id
+            );
 
 
-      if (
-        result.error
+        if (
+          result.error
+        ) {
+
+          throw result.error;
+
+        }
+
+      } catch (
+        error
       ) {
+
+        console.error(
+          "Excluir pista:",
+          error
+        );
+
 
         toast(
           "Não foi possível excluir a pista."
         );
 
+
         return;
+
       }
+
     }
 
 
     cards =
       cards.filter(
         card =>
-          String(card.id) !==
-          String(id)
+          String(
+            card.id
+          ) !==
+          String(
+            id
+          )
       );
 
 
@@ -3064,13 +3264,20 @@ async function applyImageAssets() {
       connections.filter(
         connection =>
           String(
-            connection.clue_a ||
+            connection.clue_a ??
             connection[0]
-          ) !== String(id) &&
+          ) !==
           String(
-            connection.clue_b ||
+            id
+          ) &&
+
+          String(
+            connection.clue_b ??
             connection[1]
-          ) !== String(id)
+          ) !==
+          String(
+            id
+          )
       );
 
 
@@ -3080,6 +3287,7 @@ async function applyImageAssets() {
     ) {
 
       saveLocal();
+
     }
 
 
@@ -3089,6 +3297,7 @@ async function applyImageAssets() {
     toast(
       "Pista excluída."
     );
+
   }
 
 
@@ -3099,7 +3308,9 @@ async function applyImageAssets() {
 
 
     if (!modal) {
+
       return;
+
     }
 
 
@@ -3116,20 +3327,26 @@ async function applyImageAssets() {
 
     editingNote =
       null;
+
   }
 
 
   async function saveEditor() {
 
-    if (!editingNote) {
+    if (
+      !editingNote
+    ) {
+
       return;
+
     }
 
 
     const text =
       $("#editorText")
         ?.value
-        .trim() || "";
+        .trim() ||
+      "";
 
 
     if (
@@ -3137,26 +3354,10 @@ async function applyImageAssets() {
       "clue"
     ) {
 
-      const card =
-        cards.find(
-          item =>
-            String(item.id) ===
-            String(
-              editingNote.key
-            )
-        );
-
-
-      if (card) {
-
-        card.notes =
-          text;
-
-        await saveCardNotes(
-          editingNote.key,
-          text
-        );
-      }
+      await saveCardNotes(
+        editingNote.key,
+        text
+      );
 
     } else {
 
@@ -3165,24 +3366,28 @@ async function applyImageAssets() {
         editingNote.key,
         text
       );
+
     }
 
 
     closeEditor();
 
-    renderEntityNotes();
 
     renderCards();
+
+
+    renderEntityNotes();
 
 
     playSound(
       "save"
     );
+
   }
 
 
   /* ============================================================
-     ANOTAÇÕES DE PERSONAGENS / LOCAIS / EVENTOS
+     ANOTAÇÕES DE ENTIDADES
      ============================================================ */
 
   function openEntityEditor(
@@ -3206,50 +3411,47 @@ async function applyImageAssets() {
         []
       ).find(
         note =>
+
           note.entity_kind ===
             editingNote.kind &&
+
           note.entity_key ===
             editingNote.key &&
+
           note.user_id ===
             currentUser?.id
       );
 
 
-    const title =
-      $("#editorTitle");
-
-    const text =
-      $("#editorText");
+    $("#editorTitle").textContent =
+      "ANOTAÇÃO";
 
 
-    if (title) {
-      title.textContent =
-        "ANOTAÇÃO";
-    }
-
-
-    if (text) {
-      text.value =
-        existing?.text ||
-        "";
-    }
+    $("#editorText").value =
+      existing?.text ||
+      "";
 
 
     const modal =
       $("#editorModal");
 
 
-    if (modal) {
+    if (
+      modal
+    ) {
 
       modal.classList.add(
         "open"
       );
 
+
       modal.setAttribute(
         "aria-hidden",
         "false"
       );
+
     }
+
   }
 
 
@@ -3268,8 +3470,11 @@ async function applyImageAssets() {
 
         const result =
           await supabase
-            .from("entity_notes")
+            .from(
+              "entity_notes"
+            )
             .upsert(
+
               {
 
                 campaign_id:
@@ -3290,12 +3495,14 @@ async function applyImageAssets() {
                 text
 
               },
+
               {
 
                 onConflict:
                   "campaign_id,entity_kind,entity_key,user_id"
 
               }
+
             )
             .select()
             .single();
@@ -3304,75 +3511,174 @@ async function applyImageAssets() {
         if (
           result.error
         ) {
+
           throw result.error;
+
         }
 
 
-        const current =
-          window._entityNotes ||
-          [];
-
-
-        window._entityNotes = [
-          ...current.filter(
+        const remaining =
+          (
+            window._entityNotes ||
+            []
+          ).filter(
             note =>
               !(
                 note.entity_kind ===
                   kind &&
+
                 note.entity_key ===
                   key &&
+
                 note.user_id ===
                   currentUser.id
               )
-          ),
+          );
+
+
+        window._entityNotes = [
+
+          ...remaining,
 
           result.data
+
         ];
 
 
-        renderEntityNotes();
-
-        return;
-
-      } catch (error) {
+      } catch (
+        error
+      ) {
 
         console.error(
+          "Salvar entidade:",
           error
         );
+
 
         toast(
           "Não foi possível salvar a anotação."
         );
 
+
         return;
+
       }
-    }
+
+    } else {
+
+      const saved =
+        safeJSON(
+          localStorage.getItem(
+            storageKeys.notes
+          ) ||
+          "{}",
+          {}
+        );
 
 
-    const localNotes =
-      safeJson(
-        localStorage.getItem(
-          localKeys.notes
-        ) || "{}",
-        {}
+      saved[
+        `${kind}:${key}`
+      ] =
+        text;
+
+
+      localStorage.setItem(
+        storageKeys.notes,
+        JSON.stringify(
+          saved
+        )
       );
 
 
-    localNotes[
-      `${kind}:${key}`
-    ] =
-      text;
+      applyLocalNotes();
+
+    }
 
 
-    localStorage.setItem(
-      localKeys.notes,
-      JSON.stringify(
-        localNotes
-      )
+    renderEntityNotes();
+
+  }
+
+
+  function renderEntityNotes() {
+
+    const allNotes =
+      window._entityNotes ||
+      [];
+
+
+    $(
+      ".shared-notes"
+    )
+    .forEach(
+      box => {
+
+        const kind =
+          box.dataset.noteKind;
+
+
+        const key =
+          box.dataset.noteKey;
+
+
+        box.innerHTML =
+          "";
+
+
+        allNotes
+          .filter(
+            note =>
+
+              note.entity_kind ===
+                kind &&
+
+              note.entity_key ===
+                key &&
+
+              note.text?.trim()
+          )
+          .slice(
+            -4
+          )
+          .forEach(
+            note => {
+
+              const line =
+                document.createElement(
+                  "div"
+                );
+
+
+              line.className =
+                "note-line";
+
+
+              line.innerHTML = `
+
+                <strong>
+                  ${escapeHtml(
+                    note.author_name ||
+                    "Jogador"
+                  )}
+                </strong>
+
+                ${escapeHtml(
+                  note.text
+                )}
+
+              `;
+
+
+              box.appendChild(
+                line
+              );
+
+            }
+          );
+
+      }
     );
 
-
-    applyLocalNotes();
   }
 
 
@@ -3380,63 +3686,256 @@ async function applyImageAssets() {
      OBJETOS
      ============================================================ */
 
+  function renderObjects() {
+
+    const grid =
+      $("#objectGrid");
+
+
+    const layer =
+      $("#boardObjectLayer");
+
+
+    if (
+      grid
+    ) {
+
+      grid.innerHTML =
+        "";
+
+    }
+
+
+    if (
+      layer
+    ) {
+
+      layer.innerHTML =
+        "";
+
+    }
+
+
+    objects.forEach(
+      object => {
+
+        if (
+          grid
+        ) {
+
+          const tile =
+            document.createElement(
+              "button"
+            );
+
+
+          tile.type =
+            "button";
+
+
+          tile.className =
+            "object-tile";
+
+
+          tile.dataset.sound =
+            "document";
+
+
+          tile.innerHTML = `
+
+            <span>
+              ${escapeHtml(
+                object.object_type ||
+                "OBJETO"
+              )}
+            </span>
+
+            <strong>
+              ${escapeHtml(
+                object.name
+              )}
+            </strong>
+
+            <small>
+              ABRIR ↗
+            </small>
+
+          `;
+
+
+          tile.addEventListener(
+            "click",
+            () =>
+              openObject(
+                object
+              )
+          );
+
+
+          grid.appendChild(
+            tile
+          );
+
+        }
+
+
+        if (
+          layer
+        ) {
+
+          const item =
+            document.createElement(
+              "button"
+            );
+
+
+          item.type =
+            "button";
+
+
+          item.className =
+            "board-object";
+
+
+          item.style.left =
+            `${Number(
+              object.x ??
+              50
+            )}%`;
+
+
+          item.style.top =
+            `${Number(
+              object.y ??
+              50
+            )}%`;
+
+
+          item.innerHTML = `
+
+            <span>
+
+              ${escapeHtml(
+                object.name
+              )}
+
+              <small>
+                ${escapeHtml(
+                  object.object_type ||
+                  "OBJETO"
+                )}
+              </small>
+
+            </span>
+
+          `;
+
+
+          item.addEventListener(
+            "click",
+            event => {
+
+              event.stopPropagation();
+
+
+              openObject(
+                object
+              );
+
+            }
+          );
+
+
+          layer.appendChild(
+            item
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+
   function openObject(
     object
   ) {
-
-    const type =
-      $("#modalType");
-
-    const title =
-      $("#modalTitle");
-
-    const content =
-      $("#modalContent");
 
     const modal =
       $("#documentModal");
 
 
     if (
-      !type ||
-      !title ||
-      !content ||
       !modal
     ) {
+
       return;
+
     }
 
 
-    type.textContent =
-      object.object_type ||
-      "OBJETO";
+    const type =
+      $("#modalType");
 
 
-    title.textContent =
-      object.name;
+    const title =
+      $("#modalTitle");
 
 
-    content.innerHTML = `
+    const content =
+      $("#modalContent");
 
-      <p>
 
-        <strong>
+    if (
+      type
+    ) {
+
+      type.textContent =
+        object.object_type ||
+        "OBJETO";
+
+    }
+
+
+    if (
+      title
+    ) {
+
+      title.textContent =
+        object.name ||
+        "OBJETO";
+
+    }
+
+
+    if (
+      content
+    ) {
+
+      content.innerHTML = `
+
+        <p>
+
+          <strong>
+            ${escapeHtml(
+              object.description ||
+              ""
+            )}
+          </strong>
+
+        </p>
+
+        <p>
           ${escapeHtml(
-            object.description ||
+            object.content ||
             ""
           )}
-        </strong>
+        </p>
 
-      </p>
+      `;
 
-      <p>
-        ${escapeHtml(
-          object.content ||
-          ""
-        )}
-      </p>
-
-    `;
+    }
 
 
     modal.classList.add(
@@ -3448,6 +3947,312 @@ async function applyImageAssets() {
       "aria-hidden",
       "false"
     );
+
+  }
+
+
+  /* ============================================================
+     IMAGENS
+     ============================================================ */
+
+  async function applyImageAssets() {
+
+    const slots =
+      $(
+        ".image-slot[data-asset]"
+      );
+
+
+    for (
+      const element
+      of slots
+    ) {
+
+      const requested =
+        element.dataset.asset;
+
+
+      if (
+        !requested
+      ) {
+
+        continue;
+
+      }
+
+
+      const candidates =
+        buildAssetCandidates(
+          requested
+        );
+
+
+      const imageUrl =
+        await findWorkingImage(
+          candidates
+        );
+
+
+      if (
+        !imageUrl
+      ) {
+
+        continue;
+
+      }
+
+
+      if (
+        element.classList.contains(
+          "character-bg"
+        )
+      ) {
+
+        element.innerHTML =
+          "";
+
+
+        const image =
+          document.createElement(
+            "img"
+          );
+
+
+        image.src =
+          imageUrl;
+
+
+        image.alt =
+          element
+            .closest(
+              "[data-entity]"
+            )
+            ?.dataset.entity ||
+          "";
+
+
+        image.loading =
+          "lazy";
+
+
+        image.decoding =
+          "async";
+
+
+        image.draggable =
+          false;
+
+
+        element.appendChild(
+          image
+        );
+
+
+        element.classList.add(
+          "asset-loaded"
+        );
+
+      } else {
+
+        element.style.backgroundImage =
+          `url("${imageUrl}")`;
+
+
+        element.style.setProperty(
+          "--location-image",
+          `url("${imageUrl}")`
+        );
+
+
+        element.classList.add(
+          "has-image"
+        );
+
+      }
+
+    }
+
+  }
+
+
+  function buildAssetCandidates(
+    path
+  ) {
+
+    const clean =
+      path.replace(
+        /\\/g,
+        "/"
+      );
+
+
+    const base =
+      clean.replace(
+        /\.(webp|png|jpg|jpeg|gif)$/i,
+        ""
+      );
+
+
+    return [
+
+      clean,
+
+      `${base}.webp`,
+
+      `${base}.png`,
+
+      `${base}.jpg`,
+
+      `${base}.jpeg`
+
+    ];
+
+  }
+
+
+  function findWorkingImage(
+    candidates
+  ) {
+
+    return new Promise(
+      resolve => {
+
+        let index =
+          0;
+
+
+        function testNext() {
+
+          if (
+            index >=
+            candidates.length
+          ) {
+
+            resolve(
+              null
+            );
+
+
+            return;
+
+          }
+
+
+          const url =
+            candidates[
+              index
+            ];
+
+
+          index++;
+
+
+          const image =
+            new Image();
+
+
+          image.onload =
+            () =>
+              resolve(
+                url
+              );
+
+
+          image.onerror =
+            () =>
+              testNext();
+
+
+          image.src =
+            url;
+
+        }
+
+
+        testNext();
+
+      }
+    );
+
+  }
+
+
+  /* ============================================================
+     PESQUISA
+     ============================================================ */
+
+  function filterCards() {
+
+    const input =
+      $("#boardSearch");
+
+
+    if (
+      !input
+    ) {
+
+      return;
+
+    }
+
+
+    const query =
+      input.value
+        .trim()
+        .toLowerCase();
+
+
+    cards.forEach(
+      card => {
+
+        const element =
+          $(
+            `#boardCanvas [data-id="${CSS.escape(
+              String(card.id)
+            )}"]`
+          );
+
+
+        if (
+          !element
+        ) {
+
+          return;
+
+        }
+
+
+        const text =
+          [
+
+            card.title,
+
+            card.context,
+
+            card.clue_type,
+
+            card.notes
+
+          ]
+            .join(
+              " "
+            )
+            .toLowerCase();
+
+
+        element.classList.toggle(
+          "dimmed",
+          Boolean(
+            query &&
+            !text.includes(
+              query
+            )
+          )
+        );
+
+      }
+    );
+
   }
 
 
@@ -3474,22 +4279,27 @@ async function applyImageAssets() {
             — registro acústico identificado.
           </p>
 
+
           <p>
             <strong>02:16</strong>
             — preparação do estímulo.
           </p>
+
 
           <p>
             <strong>02:17</strong>
             — presença de sangue.
           </p>
 
+
           <p>
             <strong>02:20</strong>
             — manifestação.
           </p>
 
+
           <hr>
+
 
           <p>
             <strong>OBSERVAÇÃO:</strong>
@@ -3497,10 +4307,12 @@ async function applyImageAssets() {
             preparação do estímulo.
           </p>
 
+
           <p>
             <strong>OBSERVAÇÃO COMPLEMENTAR:</strong>
             não repetir o procedimento sem autorização.
           </p>
+
 
           <p class="hand">
             Quem autorizou?
@@ -3509,6 +4321,7 @@ async function applyImageAssets() {
         </div>
 
       `
+
     },
 
 
@@ -3533,6 +4346,7 @@ async function applyImageAssets() {
         </div>
 
       `
+
     },
 
 
@@ -3549,35 +4363,50 @@ async function applyImageAssets() {
         <div class="paper">
 
           <p>
+
             <strong>LOCAIS:</strong>
+
             Praça Santa Cecília,
             Apartamento 18,
             Túnel ferroviário,
             Escola municipal,
             Torre sem nome.
+
           </p>
 
+
           <p>
+
             <strong>HORÁRIOS:</strong>
-            02:12 • 02:40 • 03:05 • 03:30 • 03:55
+
+            02:12 • 02:40 • 03:05 •
+            03:30 • 03:55
+
           </p>
 
+
           <p>
+
             <strong>OBJETOS:</strong>
-            fotografias,
+
             recibos de metal e velas,
             lista de horários
             e uma chave de ferro escuro.
+
           </p>
 
+
           <p class="hand">
+
             O quinto não é convocado.<br>
             O quinto convoca.
+
           </p>
 
         </div>
 
       `
+
     }
 
   };
@@ -3588,46 +4417,34 @@ async function applyImageAssets() {
   ) {
 
     const documentData =
-      documents[key];
+      documents[
+        key
+      ];
 
-
-    if (!documentData) {
-      return;
-    }
-
-
-    const type =
-      $("#modalType");
-
-    const title =
-      $("#modalTitle");
-
-    const content =
-      $("#modalContent");
 
     const modal =
       $("#documentModal");
 
 
     if (
-      !type ||
-      !title ||
-      !content ||
+      !documentData ||
       !modal
     ) {
+
       return;
+
     }
 
 
-    type.textContent =
+    $("#modalType").textContent =
       documentData.type;
 
 
-    title.textContent =
+    $("#modalTitle").textContent =
       documentData.title;
 
 
-    content.innerHTML =
+    $("#modalContent").innerHTML =
       documentData.html;
 
 
@@ -3640,6 +4457,7 @@ async function applyImageAssets() {
       "aria-hidden",
       "false"
     );
+
   }
 
 
@@ -3649,8 +4467,12 @@ async function applyImageAssets() {
       $("#documentModal");
 
 
-    if (!modal) {
+    if (
+      !modal
+    ) {
+
       return;
+
     }
 
 
@@ -3663,6 +4485,7 @@ async function applyImageAssets() {
       "aria-hidden",
       "true"
     );
+
   }
 
 
@@ -3676,24 +4499,39 @@ async function applyImageAssets() {
       $("#soundPanel");
 
 
-    if (!panel) {
+    if (
+      !panel
+    ) {
+
       return;
+
     }
 
 
+    const willOpen =
+      !panel.classList.contains(
+        "open"
+      );
+
+
     panel.classList.toggle(
-      "open"
+      "open",
+      willOpen
     );
 
 
     panel.setAttribute(
       "aria-hidden",
       String(
-        !panel.classList.contains(
-          "open"
-        )
+        !willOpen
       )
     );
+
+
+    playSound(
+      "panel"
+    );
+
   }
 
 
@@ -3704,34 +4542,41 @@ async function applyImageAssets() {
 
 
     localStorage.setItem(
-      localKeys.sounds,
+      storageKeys.sounds,
       String(
         uiSoundsEnabled
       )
     );
 
 
-    const text =
-      uiSoundsEnabled
-        ? "SONS DE INTERFACE: ON"
-        : "SONS DE INTERFACE: OFF";
-
-
     const button =
       $("#interfaceSoundToggle");
 
 
-    if (button) {
+    if (
+      button
+    ) {
+
       button.textContent =
-        text;
+        `SONS DE INTERFACE: ${
+          uiSoundsEnabled
+            ? "ON"
+            : "OFF"
+        }`;
+
     }
 
 
-    if (uiSoundsEnabled) {
+    if (
+      uiSoundsEnabled
+    ) {
+
       playSound(
         "save"
       );
+
     }
+
   }
 
 
@@ -3743,33 +4588,50 @@ async function applyImageAssets() {
       event.target.files?.[0];
 
 
-    if (!file) {
-      return;
-    }
-
-
     const audio =
       $("#ambientAudio");
 
 
-    if (!audio) {
+    if (
+      !file ||
+      !audio
+    ) {
+
       return;
+
     }
 
 
-    const url =
+    if (
+      audioObjectUrl
+    ) {
+
+      URL.revokeObjectURL(
+        audioObjectUrl
+      );
+
+    }
+
+
+    audioObjectUrl =
       URL.createObjectURL(
         file
       );
 
 
     audio.src =
-      url;
+      audioObjectUrl;
+
+
+    audio.load();
 
 
     audio
       .play()
-      .catch(() => {});
+      .catch(
+        () => {}
+      );
+
   }
 
 
@@ -3782,14 +4644,14 @@ async function applyImageAssets() {
   ) {
 
     zoom =
-      Number(
-        Math.max(
-          0.75,
-          Math.min(
-            1.35,
+      Math.max(
+        0.75,
+        Math.min(
+          1.35,
+          Number(
             value
           )
-        ).toFixed(2)
+        )
       );
 
 
@@ -3797,32 +4659,40 @@ async function applyImageAssets() {
       $("#boardCanvas");
 
 
+    if (
+      canvas
+    ) {
+
+      canvas.style.transform =
+        `scale(${zoom})`;
+
+    }
+
+
     const label =
       $("#zoomLabel");
 
 
-    if (canvas) {
-
-      canvas.style.transform =
-        `scale(${zoom})`;
-    }
-
-
-    if (label) {
+    if (
+      label
+    ) {
 
       label.textContent =
         `${Math.round(
-          zoom * 100
+          zoom *
+          100
         )}%`;
+
     }
 
 
     renderConnections();
+
   }
 
 
   /* ============================================================
-     BOTÃO ABRIR QUADRO
+     ABRIR QUADRO
      ============================================================ */
 
   function openBoard() {
@@ -3831,17 +4701,24 @@ async function applyImageAssets() {
       $("#boardSection");
 
 
-    if (!board) {
+    if (
+      !board
+    ) {
+
       return;
+
     }
 
 
     board.scrollIntoView({
       behavior:
         "smooth",
+
       block:
         "start"
+
     });
+
   }
 
 
@@ -3856,15 +4733,20 @@ async function applyImageAssets() {
       "supabase" ||
       !supabase
     ) {
+
       return;
+
     }
 
 
-    if (realtimeChannel) {
+    if (
+      realtimeChannel
+    ) {
 
       supabase.removeChannel(
         realtimeChannel
       );
+
     }
 
 
@@ -3877,16 +4759,22 @@ async function applyImageAssets() {
 
         .on(
           "postgres_changes",
+
           {
             event:
               "*",
+
             schema:
               "public",
+
             table:
               "clues",
+
             filter:
               `campaign_id=eq.${campaignId}`
+
           },
+
           payload => {
 
             if (
@@ -3905,7 +4793,9 @@ async function applyImageAssets() {
                 cards.push(
                   payload.new
                 );
+
               }
+
             }
 
 
@@ -3922,7 +4812,10 @@ async function applyImageAssets() {
                 );
 
 
-              if (index >= 0) {
+              if (
+                index >=
+                0
+              ) {
 
                 cards[index] = {
 
@@ -3931,7 +4824,9 @@ async function applyImageAssets() {
                   ...payload.new
 
                 };
+
               }
+
             }
 
 
@@ -3946,29 +4841,41 @@ async function applyImageAssets() {
                     card.id !==
                     payload.old.id
                 );
+
             }
 
 
             renderCards();
+
+
             renderConnections();
+
+
             filterCards();
 
           }
+
         )
 
 
         .on(
           "postgres_changes",
+
           {
             event:
               "*",
+
             schema:
               "public",
+
             table:
               "connections",
+
             filter:
               `campaign_id=eq.${campaignId}`
+
           },
+
           payload => {
 
             if (
@@ -3987,7 +4894,9 @@ async function applyImageAssets() {
                 connections.push(
                   payload.new
                 );
+
               }
+
             }
 
 
@@ -4004,11 +4913,16 @@ async function applyImageAssets() {
                 );
 
 
-              if (index >= 0) {
+              if (
+                index >=
+                0
+              ) {
 
                 connections[index] =
                   payload.new;
+
               }
+
             }
 
 
@@ -4023,36 +4937,40 @@ async function applyImageAssets() {
                     connection.id !==
                     payload.old.id
                 );
+
             }
 
 
             renderConnections();
 
           }
+
         )
 
 
         .on(
           "postgres_changes",
+
           {
             event:
               "*",
+
             schema:
               "public",
+
             table:
               "entity_notes",
+
             filter:
               `campaign_id=eq.${campaignId}`
+
           },
+
           payload => {
 
-            if (
-              !window._entityNotes
-            ) {
-
-              window._entityNotes =
-                [];
-            }
+            window._entityNotes =
+              window._entityNotes ||
+              [];
 
 
             if (
@@ -4071,7 +4989,9 @@ async function applyImageAssets() {
                 window._entityNotes.push(
                   payload.new
                 );
+
               }
+
             }
 
 
@@ -4088,11 +5008,18 @@ async function applyImageAssets() {
                 );
 
 
-              if (index >= 0) {
+              if (
+                index >=
+                0
+              ) {
 
-                window._entityNotes[index] =
+                window._entityNotes[
+                  index
+                ] =
                   payload.new;
+
               }
+
             }
 
 
@@ -4107,12 +5034,14 @@ async function applyImageAssets() {
                     note.id !==
                     payload.old.id
                 );
+
             }
 
 
             renderEntityNotes();
 
           }
+
         )
 
 
@@ -4128,10 +5057,12 @@ async function applyImageAssets() {
                 "tempo real",
                 true
               );
+
             }
 
           }
         );
+
   }
 
 
@@ -4142,14 +5073,17 @@ async function applyImageAssets() {
   function initNavigationObserver() {
 
     if (
-      !window.IntersectionObserver
+      !("IntersectionObserver" in window)
     ) {
+
       return;
+
     }
 
 
     const observer =
       new IntersectionObserver(
+
         entries => {
 
           entries.forEach(
@@ -4158,37 +5092,42 @@ async function applyImageAssets() {
               if (
                 !entry.isIntersecting
               ) {
+
                 return;
+
               }
 
 
-              $$(".main-nav a")
-                .forEach(
-                  link => {
+              $(
+                ".main-nav a"
+              )
+              .forEach(
+                link => {
 
-                    const href =
-                      link.getAttribute(
-                        "href"
-                      );
+                  link.classList.toggle(
 
+                    "active",
 
-                    link.classList.toggle(
-                      "active",
-                      href ===
-                      `#${entry.target.id}`
-                    );
+                    link.getAttribute(
+                      "href"
+                    ) ===
+                    `#${entry.target.id}`
 
-                  }
-                );
+                  );
+
+                }
+              );
 
             }
           );
 
         },
+
         {
           rootMargin:
             "-35% 0px -55% 0px"
         }
+
       );
 
 
@@ -4201,609 +5140,487 @@ async function applyImageAssets() {
           section
         )
     );
+
   }
 
 
   /* ============================================================
-     EVENTOS DA INTERFACE
+     EVENTOS
      ============================================================ */
 
-function bindEvents() {
+  function bindEvents() {
 
-/* ==========================================================
-SOM / PAINEL DE AMBIENTE
-========================================================== */
+    on(
+      "#soundToggle",
+      "click",
+      () => {
 
-on(
-"#soundToggle",
-"click",
-() => {
+        toggleSoundPanel();
 
-```
-  toggleSoundPanel();
-
-}
-```
-
-);
-
-on(
-"#musicPlayPause",
-"click",
-() => {
-
-```
-  toggleMusic();
-
-}
-```
-
-);
-
-on(
-"#musicVolume",
-"input",
-event => {
-
-```
-  setMusicVolume(
-    event.target.value
-  );
-
-}
-```
-
-);
-
-on(
-"#voiceDuckToggle",
-"click",
-() => {
-
-```
-  enableVoiceDucking();
-
-}
-```
-
-);
-
-/* ==========================================================
-CENÁRIOS / FAIXAS
-========================================================== */
-
-$(
-".music-scene, .music-jump"
-)
-.forEach(
-button => {
-
-```
-  button.addEventListener(
-    "click",
-    () => {
-
-      playMusicAt(
-        button.dataset.time,
-        button.dataset.track
-      );
-
-    }
-  );
-
-}
-```
-
-);
-
-/* ==========================================================
-ABRIR QUADRO
-========================================================== */
-
-on(
-"#enterBoard",
-"click",
-() => {
-
-```
-  playSound(
-    "enter"
-  );
-
-  openBoard();
-
-}
-```
-
-);
-
-/* ==========================================================
-NOVA PISTA
-========================================================== */
-
-on(
-"#addCardBtn",
-"click",
-() => {
-
-```
-  playSound(
-    "save"
-  );
-
-  openNewCard();
-
-}
-```
-
-);
-
-on(
-"#createCard",
-"click",
-() => {
-
-```
-  playSound(
-    "save"
-  );
-
-  createCard();
-
-}
-```
-
-);
-
-/* ==========================================================
-MODO CONECTAR
-========================================================== */
-
-on(
-"#connectionMode",
-"click",
-() => {
-
-```
-  connectingMode =
-    !connectingMode;
-
-
-  const button =
-    $("#connectionMode");
-
-
-  const hint =
-    $("#connectionHint");
-
-
-  if (button) {
-
-    button.classList.toggle(
-      "active",
-      connectingMode
+      }
     );
 
-  }
 
+    on(
+      "#interfaceSoundToggle",
+      "click",
+      () => {
 
-  if (hint) {
-
-    hint.textContent =
-      connectingMode
-        ? "modo conectar ativo • clique em duas pistas"
-        : "arraste • escreva • conecte • todos veem as mudanças";
-
-  }
-
-
-  selectCard(
-    null
-  );
-
-
-  playSound(
-    "connect"
-  );
-
-}
-```
-
-);
-
-/* ==========================================================
-REPOSICIONAR QUADRO
-========================================================== */
-
-on(
-"#resetBoard",
-"click",
-() => {
-
-```
-  seedCards.forEach(
-    original => {
-
-      const card =
-        cards.find(
-          item =>
-            String(
-              item.title
-            ) ===
-            String(
-              original.title
-            )
-        );
-
-
-      if (!card) {
-        return;
-      }
-
-
-      card.x =
-        original.x;
-
-
-      card.y =
-        original.y;
-
-
-      const element =
-        $(
-          `#boardCanvas [data-id="${CSS.escape(String(card.id))}"]`
-        );
-
-
-      if (element) {
-
-        element.style.left =
-          `${original.x}%`;
-
-
-        element.style.top =
-          `${original.y}%`;
+        toggleInterfaceSounds();
 
       }
+    );
 
 
-      saveCardPosition(
-        card
-      );
+    on(
+      "#audioFile",
+      "change",
+      event => {
 
-    }
-  );
+        handleAudioFile(
+          event
+        );
 
-
-  renderConnections();
-
-
-  toast(
-    "Posições reposicionadas."
-  );
+      }
+    );
 
 
-  playSound(
-    "save"
-  );
-
-}
-```
-
-);
-
-/* ==========================================================
-PESQUISA DO QUADRO
-========================================================== */
-
-on(
-"#boardSearch",
-"input",
-filterCards
-);
-
-/* ==========================================================
-ZOOM
-========================================================== */
-
-on(
-"#zoomIn",
-"click",
-() => {
-
-```
-  setZoom(
-    zoom + 0.1
-  );
-
-
-  playSound(
-    "click"
-  );
-
-}
-```
-
-);
-
-on(
-"#zoomOut",
-"click",
-() => {
-
-```
-  setZoom(
-    zoom - 0.1
-  );
-
-
-  playSound(
-    "click"
-  );
-
-}
-```
-
-);
-
-/* ==========================================================
-EDITOR DE ANOTAÇÃO
-========================================================== */
-
-$(
-"#cancelEditor"
-)?.addEventListener(
-"click",
-closeEditor
-);
-
-$(
-"#saveEditor"
-)?.addEventListener(
-"click",
-saveEditor
-);
-
-$$$(
-  "[data-close-editor]"
-)
-.forEach(
-  element =>
-    element.addEventListener(
-      "click",
-      closeEditor
-    )
-);
-
-
-/* ==========================================================
-   FECHAR DOCUMENTOS
-   ========================================================== */
-
-$$(
-  "[data-close-modal]"
-)
-.forEach(
-  element =>
-    element.addEventListener(
-      "click",
-      closeDocument
-    )
-);
-
-
-/* ==========================================================
-   FECHAR NOVA PISTA
-   ========================================================== */
-
-$$(
-  "[data-close-new-card]"
-)
-.forEach(
-  element =>
-    element.addEventListener(
-      "click",
-      closeNewCard
-    )
-);
-
-
-/* ==========================================================
-   ANOTAÇÕES DE ENTIDADES
-   ========================================================== */
-
-$$(
-  ".entity-note-btn"
-)
-.forEach(
-  button =>
-    button.addEventListener(
+    on(
+      "#enterBoard",
       "click",
       () => {
 
         playSound(
-          "edit"
+          "enter"
         );
 
 
-        openEntityEditor(
+        openBoard();
+
+      }
+    );
+
+
+    on(
+      "#addCardBtn",
+      "click",
+      () => {
+
+        playSound(
+          "tool"
+        );
+
+
+        openNewCard();
+
+      }
+    );
+
+
+    on(
+      "#createCard",
+      "click",
+      () => {
+
+        playSound(
+          "save"
+        );
+
+
+        createCard();
+
+      }
+    );
+
+
+    on(
+      "#connectionMode",
+      "click",
+      () => {
+
+        connectingMode =
+          !connectingMode;
+
+
+        const button =
+          $("#connectionMode");
+
+
+        if (
           button
+        ) {
+
+          button.classList.toggle(
+            "active",
+            connectingMode
+          );
+
+        }
+
+
+        const hint =
+          $("#connectionHint");
+
+
+        if (
+          hint
+        ) {
+
+          hint.textContent =
+            connectingMode
+
+              ? "modo conectar ativo • clique em duas pistas"
+
+              : "arraste • escreva • conecte • todos veem as mudanças";
+
+        }
+
+
+        selectCard(
+          null
+        );
+
+
+        playSound(
+          "connect"
         );
 
       }
-    )
-);
+    );
 
 
-/* ==========================================================
-   DOCUMENTOS
-   ========================================================== */
-
-$$(
-  ".document-card"
-)
-.forEach(
-  button =>
-    button.addEventListener(
+    on(
+      "#resetBoard",
       "click",
       () => {
 
-        playSound(
-          "document"
+        seedCards.forEach(
+          original => {
+
+            const card =
+              cards.find(
+                item =>
+                  String(
+                    item.id
+                  ) ===
+                  String(
+                    original.id
+                  ) ||
+
+                  item.title ===
+                  original.title
+              );
+
+
+            if (
+              !card
+            ) {
+
+              return;
+
+            }
+
+
+            card.x =
+              original.x;
+
+
+            card.y =
+              original.y;
+
+
+            const element =
+              $(
+                `#boardCanvas [data-id="${CSS.escape(
+                  String(
+                    card.id
+                  )
+                )}"]`
+              );
+
+
+            if (
+              element
+            ) {
+
+              element.style.left =
+                `${original.x}%`;
+
+
+              element.style.top =
+                `${original.y}%`;
+
+            }
+
+
+            saveCardPosition(
+              card
+            );
+
+          }
         );
 
 
-        openDocument(
-          button.dataset.document
+        renderConnections();
+
+
+        toast(
+          "Posições reposicionadas."
+        );
+
+
+        playSound(
+          "save"
         );
 
       }
+    );
+
+
+    on(
+      "#boardSearch",
+      "input",
+      () => {
+
+        filterCards();
+
+      }
+    );
+
+
+    on(
+      "#zoomIn",
+      "click",
+      () => {
+
+        setZoom(
+          zoom +
+          0.1
+        );
+
+
+        playSound(
+          "tool"
+        );
+
+      }
+    );
+
+
+    on(
+      "#zoomOut",
+      "click",
+      () => {
+
+        setZoom(
+          zoom -
+          0.1
+        );
+
+
+        playSound(
+          "tool"
+        );
+
+      }
+    );
+
+
+    on(
+      "#cancelEditor",
+      "click",
+      () => {
+
+        closeEditor();
+
+      }
+    );
+
+
+    on(
+      "#saveEditor",
+      "click",
+      () => {
+
+        saveEditor();
+
+      }
+    );
+
+
+    $$(
+      "[data-close-editor]"
     )
-);
+    .forEach(
+      element =>
+        element.addEventListener(
+          "click",
+          () =>
+            closeEditor()
+        )
+    );
 
 
-/* ==========================================================
-   NAVEGAÇÃO PRINCIPAL
-   ========================================================== */
+    $$(
+      "[data-close-modal]"
+    )
+    .forEach(
+      element =>
+        element.addEventListener(
+          "click",
+          () =>
+            closeDocument()
+        )
+    );
 
-$$(".main-nav a")
-  .forEach(
-    link =>
-      link.addEventListener(
+
+    $$(
+      "[data-close-new-card]"
+    )
+    .forEach(
+      element =>
+        element.addEventListener(
+          "click",
+          () =>
+            closeNewCard()
+        )
+    );
+
+
+    $$(
+      ".entity-note-btn"
+    )
+    .forEach(
+      button =>
+        button.addEventListener(
+          "click",
+          () => {
+
+            playSound(
+              "edit"
+            );
+
+
+            openEntityEditor(
+              button
+            );
+
+          }
+        )
+    );
+
+
+    $$(
+      ".document-card"
+    )
+    .forEach(
+      button =>
+        button.addEventListener(
+          "click",
+          () => {
+
+            playSound(
+              "document"
+            );
+
+
+            openDocument(
+              button.dataset.document
+            );
+
+          }
+        )
+    );
+
+
+    $$(
+      ".main-nav a"
+    )
+    .forEach(
+      link =>
+        link.addEventListener(
+          "click",
+          () =>
+            playSound(
+              "nav"
+            )
+        )
+    );
+
+
+    const brand =
+      $(".brand");
+
+
+    if (
+      brand
+    ) {
+
+      brand.addEventListener(
         "click",
         () =>
           playSound(
             "nav"
           )
-      )
-  );
-
-
-const brand =
-  $(".brand");
-
-
-if (brand) {
-
-  brand.addEventListener(
-    "click",
-    () =>
-      playSound(
-        "nav"
-      )
-  );
-
-}
-
-
-/* ==========================================================
-   SOM DOS OUTROS BOTÕES
-   ========================================================== */
-
-document.addEventListener(
-  "click",
-  event => {
-
-    const element =
-      event.target.closest(
-        "button,a"
-      );
-
-
-    if (!element) {
-      return;
-    }
-
-
-    /*
-      Não duplica o som dos elementos
-      que já possuem tratamento próprio.
-    */
-
-    if (
-      element.closest(
-        ".document-card, .main-nav, .brand, #soundToggle, #enterBoard, #musicPlayPause, #voiceDuckToggle, .music-scene, .music-jump"
-      )
-    ) {
-      return;
-    }
-
-
-    const sound =
-      element.dataset.sound;
-
-
-    if (
-      sound
-    ) {
-
-      playSound(
-        sound
       );
 
     }
+
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key !==
+          "Escape"
+        ) {
+
+          return;
+
+        }
+
+
+        closeDocument();
+
+
+        closeEditor();
+
+
+        closeNewCard();
+
+
+        const panel =
+          $("#soundPanel");
+
+
+        if (
+          panel
+        ) {
+
+          panel.classList.remove(
+            "open"
+          );
+
+
+          panel.setAttribute(
+            "aria-hidden",
+            "true"
+          );
+
+        }
+
+      }
+    );
+
+
+    window.addEventListener(
+      "resize",
+      () =>
+        renderConnections()
+    );
 
   }
-);
-
-
-/* ==========================================================
-   TECLA ESC
-   ========================================================== */
-
-document.addEventListener(
-  "keydown",
-  event => {
-
-    if (
-      event.key !==
-      "Escape"
-    ) {
-      return;
-    }
-
-
-    closeDocument();
-
-    closeEditor();
-
-    closeNewCard();
-
-
-    const panel =
-      $("#soundPanel");
-
-
-    if (panel) {
-
-      panel.classList.remove(
-        "open"
-      );
-
-
-      panel.setAttribute(
-        "aria-hidden",
-        "true"
-      );
-
-    }
-
-  }
-);
-
-
-/* ==========================================================
-   REDIMENSIONAMENTO
-   ========================================================== */
-
-window.addEventListener(
-  "resize",
-  () =>
-    renderConnections()
-);
-
-}
-$$$
 
 
   /* ============================================================
@@ -4813,29 +5630,34 @@ $$$
   async function start() {
 
     /*
-      PRIMEIRO:
-      a interface sempre funciona.
+      Primeiro a interface local é carregada.
+      Assim o site nunca fica inutilizado
+      porque o Supabase deu erro.
     */
 
     bindEvents();
 
+
     initNavigationObserver();
+
 
     loadLocalData();
 
 
     /*
-      DEPOIS:
-      tentamos conectar ao Supabase.
-      Se der qualquer erro, nada da interface quebra.
+      Depois tentamos entrar na mesa compartilhada.
     */
 
     const connected =
       await initSupabase();
 
 
-    if (!connected) {
+    if (
+      !connected
+    ) {
+
       return;
+
     }
 
 
@@ -4843,12 +5665,16 @@ $$$
 
       await enterMainCampaign();
 
+
       await loadCampaignData();
+
 
       subscribeRealtime();
 
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.error(
         "Mesa compartilhada:",
@@ -4856,16 +5682,13 @@ $$$
       );
 
 
-      /*
-        Não deixa o erro do banco matar
-        o restante do site.
-      */
-
       appMode =
         "local";
 
+
       campaignId =
         "local";
+
 
       campaignCode =
         "LOCAL";
@@ -4883,7 +5706,9 @@ $$$
       toast(
         "Banco indisponível. O mural continua funcionando neste navegador."
       );
+
     }
+
   }
 
 
@@ -4896,7 +5721,8 @@ $$$
       "DOMContentLoaded",
       start,
       {
-        once: true
+        once:
+          true
       }
     );
 
