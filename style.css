@@ -1839,3 +1839,42 @@ footer span:last-child {
 .master-link:hover {
   color: #fff;
 }
+
+.attachment-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.attach-btn {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #ddd;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.attach-preview {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.attach-chip {
+  background: #222;
+  border: 1px solid #444;
+  color: #ccc;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.attach-remove {
+  cursor: pointer;
+  color: #ff8080;
+  margin-left: 4px;
+}
