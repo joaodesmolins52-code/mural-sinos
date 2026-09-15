@@ -1043,695 +1043,702 @@
   <script src="config.js"></script>
 
 
-  <script>
+<script>
 
-    (() => {
+  (() => {
 
-      "use strict";
-
-
-      const config =
-        window.SUPABASE_CONFIG || {};
+    "use strict";
 
 
-      const getSupabaseUrl = () => {
-
-        const raw =
-          String(config.url || "").trim();
+    const config =
+      window.SUPABASE_CONFIG || {};
 
 
-        if (!raw) {
-          return "";
-        }
+    const getSupabaseUrl = () => {
+
+      const raw =
+        String(config.url || "").trim();
 
 
-        if (raw.startsWith("//")) {
-
-          return (
-            window.location.protocol +
-            raw
-          );
-
-        }
+      if (!raw) {
+        return "";
+      }
 
 
-        return raw;
+      if (raw.startsWith("//")) {
 
-      };
-
-
-      const hasConfig =
-        Boolean(
-          getSupabaseUrl() &&
-          config.anonKey
+        return (
+          window.location.protocol +
+          raw
         );
-
-
-      if (!hasConfig) {
-
-        const status =
-          document.querySelector("#loginStatus");
-
-        if (status) {
-
-          status.textContent =
-            "Configuração do Supabase ausente.";
-
-          status.classList.add(
-            "error"
-          );
-
-        }
-
-        return;
 
       }
 
 
-      const supabase =
-        window.supabase.createClient(
+      return raw;
 
-          getSupabaseUrl(),
+    };
 
-          config.anonKey
 
+    const hasConfig =
+      Boolean(
+        getSupabaseUrl() &&
+        config.anonKey
+      );
+
+
+    if (!hasConfig) {
+
+      const status =
+        document.querySelector("#loginStatus");
+
+      if (status) {
+
+        status.textContent =
+          "Configuração do Supabase ausente.";
+
+        status.classList.add(
+          "error"
         );
 
+      }
 
-      const loginScreen =
-        document.querySelector(
-          "#loginScreen"
-        );
+      return;
 
-
-      const blockedScreen =
-        document.querySelector(
-          "#blockedScreen"
-        );
+    }
 
 
-      const dashboard =
-        document.querySelector(
-          "#dashboard"
-        );
+    const supabase =
+      window.supabase.createClient(
+
+        getSupabaseUrl(),
+
+        config.anonKey
+
+      );
 
 
-      const loginForm =
-        document.querySelector(
-          "#masterLoginForm"
-        );
+    const loginScreen =
+      document.querySelector(
+        "#loginScreen"
+      );
 
 
-      const loginStatus =
-        document.querySelector(
-          "#loginStatus"
-        );
+    const blockedScreen =
+      document.querySelector(
+        "#blockedScreen"
+      );
 
 
-      const analyzeBtn =
-        document.querySelector(
-          "#analyzeBtn"
-        );
+    const dashboard =
+      document.querySelector(
+        "#dashboard"
+      );
 
 
-      const analysisBox =
-        document.querySelector(
-          "#analysisBox"
-        );
+    const loginForm =
+      document.querySelector(
+        "#masterLoginForm"
+      );
 
 
-      function showOnly(
-        screen
+    const loginStatus =
+      document.querySelector(
+        "#loginStatus"
+      );
+
+
+    const analyzeBtn =
+      document.querySelector(
+        "#analyzeBtn"
+      );
+
+
+    function showOnly(
+      screen
+    ) {
+
+      loginScreen.classList.remove(
+        "active"
+      );
+
+      blockedScreen.classList.remove(
+        "active"
+      );
+
+      dashboard.classList.remove(
+        "active"
+      );
+
+
+      screen.classList.add(
+        "active"
+      );
+
+    }
+
+
+    function setLoginStatus(
+      message,
+      type = ""
+    ) {
+
+      loginStatus.textContent =
+        message;
+
+      loginStatus.className =
+        `status ${type}`;
+
+    }
+
+
+    async function checkMaster() {
+
+      const sessionResult =
+        await supabase.auth.getSession();
+
+
+      if (
+        sessionResult.error
       ) {
 
-        loginScreen.classList.remove(
-          "active"
-        );
-
-        blockedScreen.classList.remove(
-          "active"
-        );
-
-        dashboard.classList.remove(
-          "active"
-        );
-
-
-        screen.classList.add(
-          "active"
-        );
+        throw sessionResult.error;
 
       }
 
 
-      function setLoginStatus(
-        message,
-        type = ""
-      ) {
-
-        loginStatus.textContent =
-          message;
-
-        loginStatus.className =
-          `status ${type}`;
-
-      }
+      const session =
+        sessionResult
+          .data
+          ?.session;
 
 
-      async function checkMaster() {
-
-        const sessionResult =
-          await supabase.auth.getSession();
-
-
-        if (
-          sessionResult.error
-        ) {
-
-          throw sessionResult.error;
-
-        }
-
-
-        const session =
-          sessionResult
-            .data
-            ?.session;
-
-
-        if (!session) {
-
-          showOnly(
-            loginScreen
-          );
-
-          return false;
-
-        }
-
-
-        const roleResult =
-          await supabase.rpc(
-            "get_current_player_role"
-          );
-
-
-        if (
-          roleResult.error
-        ) {
-
-          throw roleResult.error;
-
-        }
-
-
-        const role =
-          roleResult.data;
-
-
-        if (
-          role ===
-          "master"
-        ) {
-
-          showOnly(
-            dashboard
-          );
-
-
-          await loadMasterStats();
-
-
-          return true;
-
-        }
-
-
-        await supabase.auth.signOut();
-
+      if (!session) {
 
         showOnly(
-          blockedScreen
+          loginScreen
         );
-
 
         return false;
 
       }
 
 
-      async function loadMasterStats() {
-
-        const [
-          cluesResult,
-          connectionsResult,
-          notesResult
-        ] =
-          await Promise.all([
-
-            supabase
-              .from("clues")
-              .select("id", {
-                count: "exact",
-                head: true
-              }),
-
-            supabase
-              .from("connections")
-              .select("id", {
-                count: "exact",
-                head: true
-              }),
-
-            supabase
-              .from("entity_notes")
-              .select("id", {
-                count: "exact",
-                head: true
-              })
-
-          ]);
+      const roleResult =
+        await supabase.rpc(
+          "get_current_player_role"
+        );
 
 
-        const clues =
-          cluesResult.count ?? 0;
+      if (
+        roleResult.error
+      ) {
 
-        const connections =
-          connectionsResult.count ?? 0;
-
-        const notes =
-          notesResult.count ?? 0;
-
-
-        document.querySelector(
-          "#statClues"
-        ).textContent =
-          clues;
-
-
-        document.querySelector(
-          "#statConnections"
-        ).textContent =
-          connections;
-
-
-        document.querySelector(
-          "#statNotes"
-        ).textContent =
-          notes;
+        throw roleResult.error;
 
       }
 
 
-      loginForm.addEventListener(
-        "submit",
-        async event => {
-
-          event.preventDefault();
+      const role =
+        roleResult.data;
 
 
-          const email =
-            document.querySelector(
-              "#masterEmail"
-            ).value.trim();
+      if (
+        role ===
+        "master"
+      ) {
+
+        showOnly(
+          dashboard
+        );
 
 
-          const password =
-            document.querySelector(
-              "#masterPassword"
-            ).value;
+        await loadMasterStats();
 
 
-          if (
-            !email ||
-            !password
-          ) {
+        return true;
 
-            setLoginStatus(
-              "Preencha e-mail e senha.",
-              "error"
-            );
+      }
 
-            return;
 
-          }
+      await supabase.auth.signOut();
 
+
+      showOnly(
+        blockedScreen
+      );
+
+
+      return false;
+
+    }
+
+
+    async function loadMasterStats() {
+
+      const [
+        cluesResult,
+        connectionsResult,
+        notesResult
+      ] =
+        await Promise.all([
+
+          supabase
+            .from("clues")
+            .select("id", {
+              count: "exact",
+              head: true
+            }),
+
+          supabase
+            .from("connections")
+            .select("id", {
+              count: "exact",
+              head: true
+            }),
+
+          supabase
+            .from("entity_notes")
+            .select("id", {
+              count: "exact",
+              head: true
+            })
+
+        ]);
+
+
+      const clues =
+        cluesResult.count ?? 0;
+
+      const connections =
+        connectionsResult.count ?? 0;
+
+      const notes =
+        notesResult.count ?? 0;
+
+
+      document.querySelector(
+        "#statClues"
+      ).textContent =
+        clues;
+
+
+      document.querySelector(
+        "#statConnections"
+      ).textContent =
+        connections;
+
+
+      document.querySelector(
+        "#statNotes"
+      ).textContent =
+        notes;
+
+    }
+
+
+    loginForm.addEventListener(
+      "submit",
+      async event => {
+
+        event.preventDefault();
+
+
+        const email =
+          document.querySelector(
+            "#masterEmail"
+          ).value.trim();
+
+
+        const password =
+          document.querySelector(
+            "#masterPassword"
+          ).value;
+
+
+        if (
+          !email ||
+          !password
+        ) {
 
           setLoginStatus(
-            "Autenticando..."
+            "Preencha e-mail e senha.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        setLoginStatus(
+          "Autenticando..."
+        );
+
+
+        const result =
+          await supabase.auth
+            .signInWithPassword({
+
+              email,
+              password
+
+            });
+
+
+        if (
+          result.error
+        ) {
+
+          console.error(
+            "Login do Mestre:",
+            result.error
           );
 
 
-          const result =
-            await supabase.auth
-              .signInWithPassword({
+          setLoginStatus(
+            "E-mail ou senha inválidos.",
+            "error"
+          );
 
-                email,
-                password
 
-              });
+          return;
+
+        }
+
+
+        try {
+
+          const isMaster =
+            await checkMaster();
 
 
           if (
-            result.error
+            isMaster
           ) {
 
-            console.error(
-              "Login do Mestre:",
-              result.error
-            );
-
-
             setLoginStatus(
-              "E-mail ou senha inválidos.",
-              "error"
+              ""
             );
-
-
-            return;
 
           }
 
+        } catch (
+          error
+        ) {
+
+          console.error(
+            "Verificação do Mestre:",
+            error
+          );
+
+
+          await supabase.auth.signOut();
+
+
+          setLoginStatus(
+            "Não foi possível validar o acesso.",
+            "error"
+          );
+
+
+          showOnly(
+            loginScreen
+          );
+
+        }
+
+      }
+    );
+
+
+    async function logout() {
+
+      await supabase.auth.signOut();
+
+      showOnly(
+        loginScreen
+      );
+
+      document.querySelector(
+        "#masterPassword"
+      ).value =
+        "";
+
+    }
+
+
+    document.querySelector(
+      "#logoutBtn"
+    ).addEventListener(
+      "click",
+      logout
+    );
+
+
+    document.querySelector(
+      "#blockedLogout"
+    ).addEventListener(
+      "click",
+      logout
+    );
+
+
+    document.querySelector(
+      "#goToBoard"
+    ).addEventListener(
+      "click",
+      () => {
+
+        window.location.href =
+          "index.html#quadro";
+
+      }
+    );
+
+
+    /* ==========================================================
+       CHAT COM A IA + ANEXOS
+       ========================================================== */
+
+    const campaignId = "f1a71d86-6c31-47bb-bd06-655da985b0fa";
+
+    const chatBox = document.getElementById("chatBox");
+    const chatInput = document.getElementById("chatInput");
+    const chatSendBtn = document.getElementById("chatSendBtn");
+
+    const attachInput = document.getElementById("attachInput");
+    const attachBtn = document.getElementById("attachBtn");
+    const attachPreview = document.getElementById("attachPreview");
+
+    let conversation = [];
+    let pendingAttachments = [];
+
+    const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15 MB no total
+
+
+    function renderMessage(role, text) {
+      const bubble = document.createElement("div");
+      bubble.className = `chat-msg chat-msg-${role}`;
+      bubble.textContent = text;
+      chatBox.appendChild(bubble);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+
+    function renderAttachPreview() {
+      attachPreview.innerHTML = "";
+
+      pendingAttachments.forEach((att, index) => {
+        const chip = document.createElement("div");
+        chip.className = "attach-chip";
+        chip.textContent = att.name;
+
+        const remove = document.createElement("span");
+        remove.textContent = " ✕";
+        remove.className = "attach-remove";
+        remove.addEventListener("click", () => {
+          pendingAttachments.splice(index, 1);
+          renderAttachPreview();
+        });
+
+        chip.appendChild(remove);
+        attachPreview.appendChild(chip);
+      });
+    }
+
+
+    attachBtn.addEventListener("click", () => attachInput.click());
+
+
+    attachInput.addEventListener("change", async () => {
+      const files = Array.from(attachInput.files || []);
+
+      const currentTotal = pendingAttachments.reduce((sum, a) => sum + a.size, 0);
+      const newTotal = currentTotal + files.reduce((sum, f) => sum + f.size, 0);
+
+      if (newTotal > MAX_TOTAL_BYTES) {
+        alert("Os arquivos anexados juntos passaram de 15MB. Remova algum antes de continuar.");
+        attachInput.value = "";
+        return;
+      }
+
+      for (const file of files) {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        pendingAttachments.push({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          dataUrl,
+        });
+      }
+
+      attachInput.value = "";
+      renderAttachPreview();
+    });
+
+
+    async function sendToAI(userText) {
+      const attachmentsToSend = pendingAttachments;
+      pendingAttachments = [];
+      renderAttachPreview();
+
+      conversation.push({
+        role: "user",
+        content: userText,
+        attachments: attachmentsToSend,
+      });
+
+      renderMessage(
+        "user",
+        userText + (attachmentsToSend.length
+          ? `\n📎 ${attachmentsToSend.map(a => a.name).join(", ")}`
+          : "")
+      );
+
+      chatSendBtn.disabled = true;
+      analyzeBtn.disabled = true;
+
+      const thinking = document.createElement("div");
+      thinking.className = "chat-msg chat-msg-assistant chat-msg-pending";
+      thinking.textContent = "Analisando...";
+      chatBox.appendChild(thinking);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const { data, error } = await supabase.functions.invoke(
+          "analisar-investigacao",
+          { body: { campaign_id: campaignId, messages: conversation } }
+        );
+
+        thinking.remove();
+
+        if (error) throw error;
+        if (!data?.success) {
+          throw new Error(data?.error || "A IA não retornou uma resposta.");
+        }
+
+        const replyText = data.reply || "A IA não retornou conteúdo.";
+        conversation.push({ role: "assistant", content: replyText });
+        renderMessage("assistant", replyText);
+      } catch (err) {
+        thinking.remove();
+        console.error("Chat da IA:", err);
+        renderMessage("assistant", "ERRO: " + (err?.message || "não foi possível responder."));
+      } finally {
+        chatSendBtn.disabled = false;
+        analyzeBtn.disabled = false;
+      }
+    }
+
+
+    analyzeBtn.addEventListener("click", () => {
+      sendToAI(
+        "Analise o estado atual da investigação e prepare a próxima sessão."
+      );
+    });
+
+
+    chatSendBtn.addEventListener("click", () => {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      chatInput.value = "";
+      sendToAI(text);
+    });
+
+
+    chatInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        chatSendBtn.click();
+      }
+    });
+
+
+    /* ==========================================================
+       SESSÃO / AUTENTICAÇÃO
+       ========================================================== */
+
+    supabase.auth.onAuthStateChange(
+      async (
+        event,
+        session
+      ) => {
+
+        if (
+          event ===
+            "SIGNED_OUT"
+        ) {
+
+          showOnly(
+            loginScreen
+          );
+
+          return;
+
+        }
+
+
+        if (
+          session &&
+          (
+            event ===
+              "SIGNED_IN" ||
+            event ===
+              "INITIAL_SESSION"
+          )
+        ) {
 
           try {
 
-            const isMaster =
-              await checkMaster();
-
-
-            if (
-              isMaster
-            ) {
-
-              setLoginStatus(
-                ""
-              );
-
-            }
+            await checkMaster();
 
           } catch (
             error
           ) {
 
             console.error(
-              "Verificação do Mestre:",
+              "Sessão:",
               error
-            );
-
-
-            await supabase.auth.signOut();
-
-
-            setLoginStatus(
-              "Não foi possível validar o acesso.",
-              "error"
-            );
-
-
-            showOnly(
-              loginScreen
             );
 
           }
 
         }
-      );
-
-
-      async function logout() {
-
-        await supabase.auth.signOut();
-
-        showOnly(
-          loginScreen
-        );
-
-        document.querySelector(
-          "#masterPassword"
-        ).value =
-          "";
 
       }
-
-
-      document.querySelector(
-        "#logoutBtn"
-      ).addEventListener(
-        "click",
-        logout
-      );
-
-
-      document.querySelector(
-        "#blockedLogout"
-      ).addEventListener(
-        "click",
-        logout
-      );
-
-
-      document.querySelector(
-        "#goToBoard"
-      ).addEventListener(
-        "click",
-        () => {
-
-          window.location.href =
-            "index.html#quadro";
-
-        }
-      );
-
-
-const campaignId = "f1a71d86-6c31-47bb-bd06-655da985b0fa";
-const chatBox = document.getElementById("chatBox");
-const chatInput = document.getElementById("chatInput");
-const chatSendBtn = document.getElementById("chatSendBtn");
-
-let conversation = [];
-
-function renderMessage(role, text) {
-  const bubble = document.createElement("div");
-  bubble.className = `chat-msg chat-msg-${role}`;
-  bubble.textContent = text;
-  chatBox.appendChild(bubble);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-async function sendToAI(userText) {
-  const attachmentsToSend = pendingAttachments;
-pendingAttachments = [];
-renderAttachPreview();
-
-conversation.push({
-  role: "user",
-  content: userText,
-  attachments: attachmentsToSend,
-});
-
-renderMessage(
-  "user",
-  userText + (attachmentsToSend.length
-    ? `\n📎 ${attachmentsToSend.map(a => a.name).join(", ")}`
-    : "")
-););
-  renderMessage("user", userText);
-
-  chatSendBtn.disabled = true;
-  analyzeBtn.disabled = true;
-
-  const thinking = document.createElement("div");
-  thinking.className = "chat-msg chat-msg-assistant chat-msg-pending";
-  thinking.textContent = "Analisando...";
-  chatBox.appendChild(thinking);
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  try {
-    const { data, error } = await supabase.functions.invoke(
-      "analisar-investigacao",
-      { body: { campaign_id: campaignId, messages: conversation } }
     );
 
-    thinking.remove();
 
-    if (error) throw error;
-    if (!data?.success) {
-      throw new Error(data?.error || "A IA não retornou uma resposta.");
-    }
+    checkMaster()
+      .catch(
+        error => {
 
-    const replyText = data.reply || "A IA não retornou conteúdo.";
-    conversation.push({ role: "assistant", content: replyText });
-    renderMessage("assistant", replyText);
-  } catch (err) {
-    thinking.remove();
-    console.error("Chat da IA:", err);
-    renderMessage("assistant", "ERRO: " + (err?.message || "não foi possível responder."));
-  } finally {
-    chatSendBtn.disabled = false;
-    analyzeBtn.disabled = false;
-  }
-}
-
-const attachInput = document.getElementById("attachInput");
-const attachBtn = document.getElementById("attachBtn");
-const attachPreview = document.getElementById("attachPreview");
-
-let pendingAttachments = [];
-const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15 MB no total
-
-attachBtn.addEventListener("click", () => attachInput.click());
-
-attachInput.addEventListener("change", async () => {
-  const files = Array.from(attachInput.files || []);
-
-  const currentTotal = pendingAttachments.reduce((sum, a) => sum + a.size, 0);
-  const newTotal = currentTotal + files.reduce((sum, f) => sum + f.size, 0);
-
-  if (newTotal > MAX_TOTAL_BYTES) {
-    alert("Os arquivos anexados juntos passaram de 15MB. Remova algum antes de continuar.");
-    attachInput.value = "";
-    return;
-  }
-
-  for (const file of files) {
-    const dataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-    pendingAttachments.push({
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      dataUrl,
-    });
-  }
-
-  attachInput.value = "";
-  renderAttachPreview();
-});
-
-function renderAttachPreview() {
-  attachPreview.innerHTML = "";
-  pendingAttachments.forEach((att, index) => {
-    const chip = document.createElement("div");
-    chip.className = "attach-chip";
-    chip.textContent = att.name;
-
-    const remove = document.createElement("span");
-    remove.textContent = " ✕";
-    remove.className = "attach-remove";
-    remove.addEventListener("click", () => {
-      pendingAttachments.splice(index, 1);
-      renderAttachPreview();
-    });
-
-    chip.appendChild(remove);
-    attachPreview.appendChild(chip);
-  });
-}
-
-analyzeBtn.addEventListener("click", () => {
-  sendToAI(
-    "Analise o estado atual da investigação e prepare a próxima sessão."
-  );
-});
-
-chatSendBtn.addEventListener("click", () => {
-  const text = chatInput.value.trim();
-  if (!text) return;
-  chatInput.value = "";
-  sendToAI(text);
-});
-
-chatInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    chatSendBtn.click();
-  }
-});
+          console.error(
+            "Inicialização:",
+            error
+          );
 
 
-      supabase.auth.onAuthStateChange(
-        async (
-          event,
-          session
-        ) => {
-
-          if (
-            event ===
-              "SIGNED_OUT"
-          ) {
-
-            showOnly(
-              loginScreen
-            );
-
-            return;
-
-          }
+          showOnly(
+            loginScreen
+          );
 
 
-          if (
-            session &&
-            (
-              event ===
-                "SIGNED_IN" ||
-              event ===
-                "INITIAL_SESSION"
-            )
-          ) {
-
-            try {
-
-              await checkMaster();
-
-            } catch (
-              error
-            ) {
-
-              console.error(
-                "Sessão:",
-                error
-              );
-
-            }
-
-          }
+          setLoginStatus(
+            "Não foi possível verificar a sessão.",
+            "error"
+          );
 
         }
       );
 
+  })();
 
-      checkMaster()
-        .catch(
-          error => {
-
-            console.error(
-              "Inicialização:",
-              error
-            );
-
-
-            showOnly(
-              loginScreen
-            );
-
-
-            setLoginStatus(
-              "Não foi possível verificar a sessão.",
-              "error"
-            );
-
-          }
-        );
-
-    })();
-
-  </script>
-
-</body>
-
-</html>
+</script>
