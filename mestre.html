@@ -1519,7 +1519,22 @@ function renderMessage(role, text) {
 }
 
 async function sendToAI(userText) {
-  conversation.push({ role: "user", content: userText });
+  const attachmentsToSend = pendingAttachments;
+pendingAttachments = [];
+renderAttachPreview();
+
+conversation.push({
+  role: "user",
+  content: userText,
+  attachments: attachmentsToSend,
+});
+
+renderMessage(
+  "user",
+  userText + (attachmentsToSend.length
+    ? `\n📎 ${attachmentsToSend.map(a => a.name).join(", ")}`
+    : "")
+););
   renderMessage("user", userText);
 
   chatSendBtn.disabled = true;
@@ -1555,6 +1570,67 @@ async function sendToAI(userText) {
     chatSendBtn.disabled = false;
     analyzeBtn.disabled = false;
   }
+}
+
+const attachInput = document.getElementById("attachInput");
+const attachBtn = document.getElementById("attachBtn");
+const attachPreview = document.getElementById("attachPreview");
+
+let pendingAttachments = [];
+const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15 MB no total
+
+attachBtn.addEventListener("click", () => attachInput.click());
+
+attachInput.addEventListener("change", async () => {
+  const files = Array.from(attachInput.files || []);
+
+  const currentTotal = pendingAttachments.reduce((sum, a) => sum + a.size, 0);
+  const newTotal = currentTotal + files.reduce((sum, f) => sum + f.size, 0);
+
+  if (newTotal > MAX_TOTAL_BYTES) {
+    alert("Os arquivos anexados juntos passaram de 15MB. Remova algum antes de continuar.");
+    attachInput.value = "";
+    return;
+  }
+
+  for (const file of files) {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    pendingAttachments.push({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      dataUrl,
+    });
+  }
+
+  attachInput.value = "";
+  renderAttachPreview();
+});
+
+function renderAttachPreview() {
+  attachPreview.innerHTML = "";
+  pendingAttachments.forEach((att, index) => {
+    const chip = document.createElement("div");
+    chip.className = "attach-chip";
+    chip.textContent = att.name;
+
+    const remove = document.createElement("span");
+    remove.textContent = " ✕";
+    remove.className = "attach-remove";
+    remove.addEventListener("click", () => {
+      pendingAttachments.splice(index, 1);
+      renderAttachPreview();
+    });
+
+    chip.appendChild(remove);
+    attachPreview.appendChild(chip);
+  });
 }
 
 analyzeBtn.addEventListener("click", () => {
